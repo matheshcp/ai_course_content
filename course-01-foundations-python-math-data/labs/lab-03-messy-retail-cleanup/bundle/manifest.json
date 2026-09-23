@@ -3,7 +3,7 @@
   "notebook": "lab-03-messy-retail-cleanup.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-03-messy-retail-cleanup/lab-03-messy-retail-cleanup.ipynb",
   "api_launch": "https://api.vlabs.test/colab/lab-03-messy-retail-cleanup/launch-url",
-  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/bundles/lab-03-messy-retail-cleanup/dataset.zip",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-03-messy-retail-cleanup/bundle/dataset.zip",
   "images_zip": null,
   "files": [
     "warehouse_messy_data.csv"
