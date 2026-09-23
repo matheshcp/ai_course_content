@@ -238,6 +238,7 @@ print(&quot;wrote&quot;, out_path, &quot;rows:&quot;, len(cleaned))</code></pre>
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Fix Quantity word-numbers</h4>
 <p>Convert every <code>Quantity</code> with <code>parse_qty</code>. Print how many rows were <code>"two hundred"</code>, how many <code>"NaN"</code>, and the sum of all parseable quantities. <em>Expected: 160 × "two hundred" → 200 each; 158 × NaN → None; 842 parseable rows; sum of parseable qty = 135,900 (run the sum yourself to confirm).</em></p>
+<p><strong>Follow-up:</strong> What fraction of rows have parseable quantities? Check: 0.842.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">from collections import Counter
 c = Counter(r[&quot;Quantity&quot;] for r in rows)
@@ -246,12 +247,14 @@ total = sum(parse_qty(r[&quot;Quantity&quot;]) or 0 for r in rows)</code></pre>
 <p>&lt;/details&gt;</p>
 <h4>Exercise 2 — Flag invalid Status</h4>
 <p>Using <code>ALLOWED_STATUS = {"In Stock", "Out of Stock"}</code>, count rows whose <code>Status</code> is <strong>not</strong> allowed. Which status value causes all of them? <em>Expected: 328 rows, all <code>"Low Stock"</code>.</em></p>
+<p><strong>Follow-up:</strong> What is the average stock value per usable row? Check: about 4462.84.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED_STATUS]
 print(len(bad), Counter(r[&quot;Status&quot;] for r in bad))</code></pre>
 <p>&lt;/details&gt;</p>
 <h4>Exercise 3 — Inventory value per Category</h4>
 <p>Compute <code>Stock Value = Quantity * Price</code> only when both parse; sum by <code>Category</code>. Print the four category totals and the grand total. <em>Expected (2 d.p.): Electronics 830214.00 · Clothing 716252.50 · Furniture 796211.50 · Toys 607261.00 · Grand total 2949939.00 (661 usable rows).</em></p>
+<p><strong>Follow-up:</strong> Which category holds the most value? Check: Electronics.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Skip rows where <code>parse_qty</code> or <code>parse_price</code> returns <code>None</code> — do <strong>not</strong> treat missing as 0 for value (that understates inventory). &lt;/details&gt;</p>
 <hr/>
@@ -289,7 +292,20 @@ print(f&quot;TOTAL: {sum(by_cat.values()):,.2f}  (rows={usable})&quot;)
 # Electronics: 830,214.00
 # Furniture: 796,211.50
 # Toys: 607,261.00
-# TOTAL: 2,949,939.00  (rows=661)</code></pre>
+# TOTAL: 2,949,939.00  (rows=661)# --- Follow-up 1 ---
+pshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)
+print(pshr)  # 0.842
+assert pshr == 0.842
+
+# --- Follow-up 2 ---
+per_row = round(sum(by_cat.values()) / usable, 2)
+print(per_row)  # ~4462.84
+assert per_row == 4462.84
+
+# --- Follow-up 3 ---
+top = max(by_cat, key=by_cat.get)
+print(top)  # Electronics
+assert top == &quot;Electronics&quot;</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>pandas equivalent: <code>pd.to_numeric(..., errors="coerce")</code> + <code>.fillna</code>.</li>

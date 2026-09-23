@@ -60,28 +60,35 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>Whole sheet</td><td>a <code>list of dicts</code></td><td><code>[{"OrderID":101, ...}, {"OrderID":102, ...}]</code></td></tr>
 </tbody></table>
 <p>Keep that map in mind — everything below follows it.</p>
-<h4>Setup: our messy data in code</h4>
-<p>Copy-paste this into a Python file or Jupyter cell. It mirrors <code>sales_spreadsheet.csv</code> so you can run without files first.</p>
-<pre><code class="language-python">sales = [
-    {&quot;OrderID&quot;: 101, &quot;Product&quot;: &quot;  Laptop &quot;, &quot;Quantity&quot;: 2,    &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;West&quot;},
-    {&quot;OrderID&quot;: 102, &quot;Product&quot;: &quot;Mouse&quot;,     &quot;Quantity&quot;: 5,    &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;East&quot;},
-    {&quot;OrderID&quot;: 103, &quot;Product&quot;: &quot;KEYBOARD&quot;,  &quot;Quantity&quot;: 1,    &quot;Price&quot;: 75.00,  &quot;Region&quot;: &quot;west&quot;},
-    {&quot;OrderID&quot;: 104, &quot;Product&quot;: &quot;&quot;,          &quot;Quantity&quot;: 3,    &quot;Price&quot;: 12.99,  &quot;Region&quot;: &quot;East&quot;},
-    {&quot;OrderID&quot;: 105, &quot;Product&quot;: &quot;Monitor&quot;,   &quot;Quantity&quot;: None, &quot;Price&quot;: 199.99, &quot;Region&quot;: &quot;North&quot;},
-    {&quot;OrderID&quot;: 106, &quot;Product&quot;: &quot; Laptop&quot;,   &quot;Quantity&quot;: 1,    &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;WEST&quot;},
-    {&quot;OrderID&quot;: 107, &quot;Product&quot;: &quot;mouse&quot;,     &quot;Quantity&quot;: 10,   &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;South&quot;},
-    {&quot;OrderID&quot;: 108, &quot;Product&quot;: &quot;Keyboard&quot;,  &quot;Quantity&quot;: 2,    &quot;Price&quot;: 75.00,  &quot;Region&quot;: &quot;East&quot;},
-    {&quot;OrderID&quot;: 109, &quot;Product&quot;: &quot; Monitor &quot;, &quot;Quantity&quot;: 1,    &quot;Price&quot;: 199.99, &quot;Region&quot;: &quot; North&quot;},
-    {&quot;OrderID&quot;: 110, &quot;Product&quot;: &quot;Headset&quot;,   &quot;Quantity&quot;: 4,    &quot;Price&quot;: 49.99,  &quot;Region&quot;: &quot;east&quot;},
-    {&quot;OrderID&quot;: 111, &quot;Product&quot;: &quot;Laptop&quot;,    &quot;Quantity&quot;: 1,    &quot;Price&quot;: None,   &quot;Region&quot;: &quot;West&quot;},
-    {&quot;OrderID&quot;: 112, &quot;Product&quot;: &quot;MOUSE&quot;,     &quot;Quantity&quot;: 2,    &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;West&quot;},
-]
+<h4>Setup: load the real dataset</h4>
+<p>Cell 0 already downloaded + unzipped <code>sales_spreadsheet.csv</code>. Load it below with the <code>csv</code> module — blanks become <code>None</code>, numbers become <code>int</code>/<code>float</code>. From here on, <code>sales</code> <strong>is</strong> the dataset file, and every exercise runs against it.</p>
+<pre><code class="language-python"># Load the real dataset file (Cell 0 fetched it via wget + unzip)
+import csv
 
-# Bonus: load the real CSV the same way (same result as above)
-# import csv
-# with open(&quot;sales_spreadsheet.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
-#     sales_from_csv = list(csv.DictReader(f))
-#     print(sales_from_csv[:2])</code></pre>
+def _int_or_none(v):
+    v = v.strip()
+    return int(v) if v else None
+
+def _float_or_none(v):
+    v = v.strip()
+    return float(v) if v else None
+
+with open(&quot;sales_spreadsheet.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+    sales = [
+        {
+            &quot;OrderID&quot;: int(r[&quot;OrderID&quot;]),
+            &quot;Product&quot;: r[&quot;Product&quot;],
+            &quot;Quantity&quot;: _int_or_none(r[&quot;Quantity&quot;]),
+            &quot;Price&quot;: _float_or_none(r[&quot;Price&quot;]),
+            &quot;Region&quot;: r[&quot;Region&quot;],
+        }
+        for r in csv.DictReader(f)
+    ]
+
+print(len(sales), &quot;rows from sales_spreadsheet.csv&quot;)  # 12
+print(sales[0])
+# {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;  Laptop &#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;}
+</code></pre>
 <p>Messy on purpose. Notice: extra spaces, ALL CAPS, empty string <code>""</code>, <code>None</code> for missing, <code>west</code> vs <code>West</code> vs <code>WEST</code>.</p>
 <hr/>
 <h3>1. Lists — your columns</h3>
@@ -264,10 +271,12 @@ print(json.dumps(analyse(sales), indent=2))
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — High-value orders (lists + loops)</h4>
 <p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. <em>Expected: 2 orders (101 and 106). Hint: <code>if qty is not None and price is not None:</code> then compute.</em></p>
+<p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders? Check: about 0.7184 (two orders drive ~72%).</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Loop, compute <code>qty * price</code>, collect matches in a list, then print. &lt;/details&gt;</p>
 <h4>Exercise 2 — Category counter (dicts + functions)</h4>
 <p>Write a function <code>category(product)</code> that returns <code>"Computer"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>"Audio"</code> for Headset, else <code>"Other"</code> (and <code>"Unknown"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>
+<p><strong>Follow-up:</strong> What share of the 12 orders are Computers? Check: 10/12, about 0.8333.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">def category(product):
     p = clean_text(product)
@@ -275,6 +284,7 @@ print(json.dumps(analyse(sales), indent=2))
 <p>Use a dict + <code>.get(cat, 0) + 1</code> to count. &lt;/details&gt;</p>
 <h4>Exercise 3 — One-line clean (comprehensions)</h4>
 <p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == "East"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. <em>Expected: Orders 102 (127.5), 108 (150.0), and 110 (199.96) — note 110’s Region is <code>"east"</code>, which <code>clean_text</code> normalises to <code>"East"</code>. Hint: <code>[clean_row(r) for r in sales if ...]</code> — but filter on cleaned values, so either clean twice or clean first then filter.</em></p>
+<p><strong>Follow-up:</strong> Confirm east_big sums to East's regional total. Check: 477.46.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment. &lt;/details&gt;</p>
 <hr/>
@@ -314,7 +324,23 @@ cleaned = [clean_row(r) for r in sales]
 east_big = [r for r in cleaned if r[&quot;Region&quot;] == &quot;East&quot; and r[&quot;Total&quot;] &gt;= 100]
 east_map = {r[&quot;OrderID&quot;]: r[&quot;Total&quot;] for r in east_big}
 print(east_big)
-print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}</code></pre>
+print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}# --- Follow-up 1 ---
+valid = [r for r in sales if str(r[&quot;Product&quot;]).strip()
+         and r[&quot;Quantity&quot;] is not None and r[&quot;Price&quot;] is not None]
+valid_rev = sum(r[&quot;Quantity&quot;] * r[&quot;Price&quot;] for r in valid)
+share = round(sum(t for _, t in big) / valid_rev, 4)
+print(share)  # ~0.7184 — two orders drive ~72% of valid revenue
+assert abs(share - 0.7184) &lt; 0.001
+
+# --- Follow-up 2 ---
+cshare = round(counts[&quot;Computer&quot;] / len(sales), 4)
+print(cshare)  # 0.8333
+assert cshare == 0.8333
+
+# --- Follow-up 3 ---
+etot = round(sum(east_map.values()), 2)
+print(etot)  # 477.46 == East regional total
+assert etot == 477.46</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li><code>csv.DictReader</code> / <code>csv.DictWriter</code> to load/save the real file without pandas.</li>

@@ -182,14 +182,17 @@ print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Tip % distribution by day</h4>
 <p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? <em>Expected: highest Fri 0.1699 · lowest Sat 0.1532 (overall 0.1608).</em></p>
+<p><strong>Follow-up:</strong> How large is the Fri minus Sat tip gap in points? Check: about 0.0167 (1.67pp).</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>tips["tip_pct"] = tips["tip"]/tips["total_bill"]</code> then <code>groupby("day")["tip_pct"].mean()</code>. &lt;/details&gt;</p>
 <h4>Exercise 2 — Stacked status bar for tickets</h4>
 <p>Build <code>pd.crosstab(priority, status)</code> on <strong>redacted</strong> tickets and plot stacked bars. Print the table. <em>Expected columns sum: open 42, in-progress 34, closed 31; priority rows low 41, medium 34, high 32.</em></p>
+<p><strong>Follow-up:</strong> What share of tickets are open? Check: about 0.3925.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind="bar", stacked=True)</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — Annotate insight on each chart</h4>
 <p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. <em>Expected: any four insights citing computed stats — e.g. “Fri mean tip 17.0%”, “42 open tickets”, “overall tip 16.1%”, “max bill $50.81”.</em></p>
+<p><strong>Follow-up:</strong> What share are closed? Check: about 0.2897.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>ax.annotate("text", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>. &lt;/details&gt;</p>
 <hr/>
@@ -218,7 +221,21 @@ insights = [
     f&quot;Max bill ${tips[&#x27;total_bill&#x27;].max():.2f} still ~15–20% tip band&quot;,
 ]
 for s in insights:
-    print(&quot;-&quot;, s)</code></pre>
+    print(&quot;-&quot;, s)# --- Follow-up 1 ---
+bd = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().round(4)
+gap = round(bd[&quot;Fri&quot;] - bd[&quot;Sat&quot;], 4)
+print(gap)  # ~0.0167
+assert gap == 0.0167
+
+# --- Follow-up 2 ---
+osh = round((tickets_clean[&quot;status&quot;] == &quot;open&quot;).mean(), 4)
+print(osh)  # ~0.3925
+assert osh == 0.3925
+
+# --- Follow-up 3 ---
+csh = round((tickets_clean[&quot;status&quot;] == &quot;closed&quot;).mean(), 4)
+print(csh)  # ~0.2897
+assert csh == 0.2897</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>seaborn <code>boxplot</code> / <code>violinplot</code> for group distributions.</li>

@@ -167,6 +167,7 @@ print(&quot;sample:&quot;, anomalies[:5])</code></pre>
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Monthly mean temps dict</h4>
 <p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. <em>Expected: 1981-01 ≈ 17.713; 1990-12 ≈ 14.368 (3 s.f. may differ slightly by rounding).</em></p>
+<p><strong>Follow-up:</strong> What is the full temperature range over the decade? Check: 26.3 C.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">by_month = defaultdict(list)
 for d, t in temps:
@@ -176,10 +177,12 @@ print(monthly_mean[(1981, 1)], monthly_mean[(1990, 12)])</code></pre>
 <p>&lt;/details&gt;</p>
 <h4>Exercise 2 — Count days Temp &gt; 25</h4>
 <p>How many days had <code>Temp &gt; 25</code>? Print the count and each <code>(date, temp)</code> pair. <em>Expected: 2 days — 1982-01-20 (25.2) and 1982-02-15 (26.3).</em></p>
+<p><strong>Follow-up:</strong> What fraction of 1982 (non-leap, 365 days) did the cold streak cover? Check: about 0.1945.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>List comprehension + <code>len()</code>: <code>hot = [(d,t) for d,t in temps if t &gt; 25]</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — Longest run Temp &lt; 10</h4>
 <p>Find the longest <strong>consecutive-calendar-day</strong> run where <code>Temp &lt; 10</code>. Print length and start/end dates. <em>Expected: 71 days, 1982-05-31 → 1982-08-09.</em></p>
+<p><strong>Follow-up:</strong> What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Check: 170 days, about 0.0466.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Reuse the streak walker from Section 5; the gap check is <code>(d - prev_date).days == 1</code>. &lt;/details&gt;</p>
 <hr/>
@@ -222,7 +225,24 @@ for d, t in temps:
         prev_cold = False
     prev_date = d
 print(f&quot;{best_len} days: {best_start} → {best_end}&quot;)
-# 71 days: 1982-05-31 → 1982-08-09</code></pre>
+# 71 days: 1982-05-31 → 1982-08-09# --- Follow-up 1 ---
+tr = round(max(t for _, t in temps) - min(t for _, t in temps), 1)
+print(tr)  # 26.3
+assert tr == 26.3
+
+# --- Follow-up 2 ---
+cov = round(best_len / 365, 4)
+print(cov)  # ~0.1945
+assert cov == 0.1945
+
+# --- Follow-up 3 ---
+import statistics as _st
+_mu = _st.mean(t for _, t in temps)
+_sd = _st.stdev(t for _, t in temps)
+_out = [d for d, t in temps if abs((t - _mu) / _sd) &gt; 2]
+shr = round(len(_out) / len(temps), 4)
+print(len(_out), shr)  # 170 0.0466
+assert len(_out) == 170 and shr == 0.0466</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Rolling means: implement a 7-day window with <code>collections.deque(maxlen=7)</code>.</li>

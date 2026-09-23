@@ -193,14 +193,17 @@ print(genres.to_string(index=False))
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Top 5 tracks by revenue</h4>
 <p>Run the Section 2 query. List track name and revenue for all 5. <em>Expected: five tracks each with revenue 3.98 — The Woman King, The Fix, Walkabout, Hot Girl, Gay Witch Hunt (ties).</em></p>
+<p><strong>Follow-up:</strong> What is mean monthly revenue? Check: 38.81.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Join <code>InvoiceLine → Track → Album → Artist</code>, <code>SUM(Quantity*UnitPrice)</code>, <code>ORDER BY revenue DESC LIMIT 5</code>. &lt;/details&gt;</p>
 <h4>Exercise 2 — Customers with no purchases</h4>
 <p>LEFT JOIN customers to invoices; count rows where invoice is NULL. <em>Expected: 0 (all 59 customers have ≥1 invoice). Print 0 and explain the anti-pattern.</em></p>
+<p><strong>Follow-up:</strong> What share of revenue is Rock? Check: 0.355.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>WHERE i.InvoiceId IS NULL</code> after <code>LEFT JOIN Invoice</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — Monthly revenue trend</h4>
 <p>Group invoices by <code>strftime('%Y-%m', InvoiceDate)</code>. How many months? What is total revenue? <em>Expected: 60 months · total ≈ 2328.60.</em></p>
+<p><strong>Follow-up:</strong> Compare mean vs median customer spend — which way is it skewed? Check: 39.47 above 37.62, right-skewed.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>SELECT strftime('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total),2) … GROUP BY ym ORDER BY ym</code>. &lt;/details&gt;</p>
 <hr/>
@@ -236,7 +239,28 @@ FROM Invoice GROUP BY ym ORDER BY ym
 &quot;&quot;&quot;
 m = pd.read_sql(q3, conn)
 print(len(m), round(m[&quot;revenue&quot;].sum(), 2))  # 60 2328.6
-conn.close()</code></pre>
+conn.close()# --- Follow-up 1 ---
+import sqlite3 as _sq3
+_c2 = _sq3.connect(&quot;chinook.sqlite&quot;)
+_tot = pd.read_sql(&quot;SELECT ROUND(SUM(Total),2) AS t FROM Invoice&quot;, _c2).iloc[0, 0]
+avg = round(_tot / 60, 2)
+print(avg)  # 38.81
+assert avg == 38.81
+_c2.close()
+
+# --- Follow-up 2 ---
+import sqlite3 as _sq3
+_c2 = _sq3.connect(&quot;chinook.sqlite&quot;)
+_rk = pd.read_sql(&quot;SELECT ROUND(SUM(il.Quantity*il.UnitPrice),2) AS r FROM InvoiceLine il JOIN Track t ON t.TrackId=il.TrackId JOIN Genre g ON g.GenreId=t.GenreId WHERE g.Name=&#x27;Rock&#x27;&quot;, _c2).iloc[0, 0]
+sh = round(_rk / 2328.6, 4)
+print(_rk, sh)  # 826.65 0.355
+assert _rk == 826.65 and sh == 0.355
+_c2.close()
+
+# --- Follow-up 3 ---
+mean_spend = round(2328.6 / 59, 2)
+print(mean_spend)  # 39.47 &gt; median 37.62 -&gt; right-skewed
+assert mean_spend == 39.47</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Window functions: <code>SUM(...) OVER (PARTITION BY …)</code> for running revenue.</li>

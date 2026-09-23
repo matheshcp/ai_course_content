@@ -184,14 +184,17 @@ print(report[:400])</code></pre>
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Attrition by OverTime</h4>
 <p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? <em>Expected: Yes 0.1869 · No 0.1387 · gap ≈ 0.0482 (4.8 pp).</em></p>
+<p><strong>Follow-up:</strong> How many leavers is that in absolute terms? Check: 298.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>. &lt;/details&gt;</p>
 <h4>Exercise 2 — Income quartiles vs attrition</h4>
 <p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. <em>Expected: Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780 · edges 1009, 5040.75, 6776, 9667.25, 28723.</em></p>
+<p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap? Check: 0.0542.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas. &lt;/details&gt;</p>
 <h4>Exercise 3 — Draft 3 hypotheses with numbers</h4>
 <p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. <em>Expected: free-form — e.g. OT pilot, R&amp;D career path, comp-ratio for Q4 leavers — each with rates/n from Sections 2–4.</em></p>
+<p><strong>Follow-up:</strong> How many R and D leavers? Check: 178.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].” &lt;/details&gt;</p>
 <hr/>
@@ -222,7 +225,21 @@ hypotheses = &quot;&quot;&quot;
 Validate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.
 &quot;&quot;&quot;
 print(hypotheses)
-# (Section 5 already writes attrition_report.md with this structure)</code></pre>
+# (Section 5 already writes attrition_report.md with this structure)# --- Follow-up 1 ---
+n_leavers = int((df[&quot;Attrition&quot;] == &quot;Yes&quot;).sum())
+print(n_leavers)  # 298
+assert n_leavers == 298
+
+# --- Follow-up 2 ---
+bq = df.groupby(&quot;IncomeQ&quot;, observed=True)[&quot;Attrition&quot;].apply(lambda s: (s == &quot;Yes&quot;).mean()).round(4)
+qgap = round(bq[&quot;Q4&quot;] - bq[&quot;Q2&quot;], 4)
+print(qgap)  # 0.0542
+assert qgap == 0.0542
+
+# --- Follow-up 3 ---
+n_rd = int(((df[&quot;Department&quot;] == &quot;Research &amp; Development&quot;) &amp; (df[&quot;Attrition&quot;] == &quot;Yes&quot;)).sum())
+print(n_rd)  # 178
+assert n_rd == 178</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Logistic regression / SHAP for driver ranking (Course 2).</li>

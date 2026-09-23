@@ -137,14 +137,17 @@ print(f&quot;MDE absolute: {mde:.6f}  (~{mde/p0*100:.2f}% relative to control)&q
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Conversion by group</h4>
 <p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). <em>Expected: control 17723/147202 = 0.120399 · treatment 17514/147276 = 0.118920.</em></p>
+<p><strong>Follow-up:</strong> Express the lift relative to control. Check: about minus 1.23 percent.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>. &lt;/details&gt;</p>
 <h4>Exercise 2 — Z-test + p-value</h4>
 <p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? <em>Expected: z ≈ −1.2369, p ≈ 0.2161 → not significant.</em></p>
+<p><strong>Follow-up:</strong> Confirm the observed diff lies inside the 95 percent CI. Check: minus 0.003824 &lt; diff &lt; 0.000865.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — MDE at 80% power</h4>
 <p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. <em>Expected: ≈ 0.00335 absolute ≈ 2.78% of 0.1204.</em></p>
+<p><strong>Follow-up:</strong> Is the observed effect even detectable — compare its size to the MDE. Check: no, the test is underpowered for this effect.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>. &lt;/details&gt;</p>
 <hr/>
@@ -169,7 +172,21 @@ print(&quot;significant?&quot;, pv &lt; 0.05)  # False
 # --- Solution 3 ---
 mde = (1.959964 + 0.841621) * se
 print(f&quot;MDE={mde:.6f} ({mde/p0*100:.2f}% of control)&quot;)
-# MDE=0.003351 (2.78% of control)</code></pre>
+# MDE=0.003351 (2.78% of control)# --- Follow-up 1 ---
+rel = round((p1 - p0) / p0, 4)
+print(rel)  # ~-0.0123
+assert rel == -0.0123
+
+# --- Follow-up 2 ---
+se_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)
+lo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u
+print(round(lo, 6), round(hi, 6))
+assert lo &lt; (p1 - p0) &lt; hi
+assert abs(lo + 0.003824) &lt; 1e-5 and abs(hi - 0.000865) &lt; 1e-5
+
+# --- Follow-up 3 ---
+print(abs(p1 - p0) &lt; mde)  # True -&gt; underpowered for this effect
+assert abs(p1 - p0) &lt; mde</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Chi-square test of independence on the same 2×2 table (should agree with z).</li>

@@ -212,14 +212,17 @@ print(&quot;offline mode: skipping live fetch (set AILAB_ALLOW_NET=1 to enable)&
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Parse table rows to dicts</h4>
 <p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. <em>Expected: 5 rows · names: Widget A, Widget B, Gadget C, Gadget D, Doohickey E.</em></p>
+<p><strong>Follow-up:</strong> How many units are in stock across all products? Check: 472.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>header, body = parse_table(html)</code> then <code>rows_to_dicts(header, body)</code>; collect <code>r["Name"]</code>. &lt;/details&gt;</p>
 <h4>Exercise 2 — Handle missing cells</h4>
 <p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? <em>Expected: Gadget C · 1 missing · store <code>None</code> (not <code>0</code> — zero price is a real value).</em></p>
+<p><strong>Follow-up:</strong> What is the mean price over priced products? Check: about 12.685.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>[r for r in records if r["Price"] is None]</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — Write CSV + row-count assert</h4>
 <p>Write <code>scraped.csv</code> and assert <code>lines == 1 + len(records)</code>. Print the assertion message. <em>Expected: 5 data rows → 6 lines; assert passes.</em></p>
+<p><strong>Follow-up:</strong> Prove the CSV header. Check: ID,Name,Price,Stock.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>sum(1 for _ in open(path))</code> includes the header. &lt;/details&gt;</p>
 <hr/>
@@ -241,7 +244,22 @@ with open(&quot;scraped.csv&quot;, encoding=&quot;utf-8&quot;) as f:
     lines = sum(1 for _ in f)
 assert lines == 1 + len(records)
 print(&quot;OK&quot;, lines, &quot;lines for&quot;, len(records), &quot;records&quot;)
-# OK 6 lines for 5 records</code></pre>
+# OK 6 lines for 5 records# --- Follow-up 1 ---
+units = sum(r[&quot;Stock&quot;] for r in records)
+print(units)  # 472
+assert units == 472
+
+# --- Follow-up 2 ---
+priced = [r[&quot;Price&quot;] for r in records if r[&quot;Price&quot;] is not None]
+mp = sum(priced) / len(priced)
+print(round(mp, 3))  # ~12.685
+assert abs(mp - 12.685) &lt; 1e-9
+
+# --- Follow-up 3 ---
+with open(&quot;scraped.csv&quot;, encoding=&quot;utf-8&quot;) as f:
+    header_line = f.readline().strip()
+print(header_line)
+assert header_line == &quot;ID,Name,Price,Stock&quot;</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>CSS selectors with BeautifulSoup: <code>soup.select_one("td.price")</code>.</li>

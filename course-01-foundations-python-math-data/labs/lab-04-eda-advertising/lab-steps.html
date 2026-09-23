@@ -151,6 +151,7 @@ print(&quot;wrote eda_findings.md&quot;)</code></pre>
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Full correlation matrix</h4>
 <p>Print <code>df[["TV","Radio","Newspaper","Sales"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? <em>Expected: Radio–Newspaper ≈ 0.3541 is the strongest feature–feature pair (TV pairs are ≈ 0.05).</em></p>
+<p><strong>Follow-up:</strong> What fraction of Sales variance does TV alone explain (R squared)? Check: about 0.6118.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">c = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]].corr()
 print(c)
@@ -158,10 +159,12 @@ print(c)
 <p>&lt;/details&gt;</p>
 <h4>Exercise 2 — Highest single-feature R vs Sales</h4>
 <p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? <em>Expected: TV, r ≈ 0.7822.</em></p>
+<p><strong>Follow-up:</strong> How large is the Q4 minus Q1 mean-sales lift? Check: 10.076.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>df.corr()["Sales"].drop("Sales").abs().idxmax()</code> / <code>.max()</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — TV quartiles → mean Sales</h4>
 <p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. <em>Expected: Q1 8.39 · Q2 12.686 · Q3 16.548 · Q4 18.466 (50 rows each).</em></p>
+<p><strong>Follow-up:</strong> How much variance do Radio and Newspaper share (r squared)? Check: about 0.1254.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>pd.qcut(df["TV"], 4, labels=["Q1","Q2","Q3","Q4"])</code> then <code>groupby(...).mean()</code>. &lt;/details&gt;</p>
 <hr/>
@@ -181,7 +184,22 @@ print(df.groupby(&quot;TV_bin&quot;, observed=True)[&quot;Sales&quot;].mean().ro
 # Q1  8.390
 # Q2 12.686
 # Q3 16.548
-# Q4 18.466</code></pre>
+# Q4 18.466# --- Follow-up 1 ---
+r = round(float(corr.loc[&quot;TV&quot;, &quot;Sales&quot;]), 4)
+r2 = round(r ** 2, 4)
+print(r2)  # ~0.6118
+assert r2 == 0.6118
+
+# --- Follow-up 2 ---
+lift = round(tv_bins[&quot;mean&quot;][&quot;Q4&quot;] - tv_bins[&quot;mean&quot;][&quot;Q1&quot;], 3)
+print(lift)  # 10.076
+assert lift == 10.076
+
+# --- Follow-up 3 ---
+r_rn = round(float(corr.loc[&quot;Radio&quot;, &quot;Newspaper&quot;]), 4)
+shared = round(r_rn ** 2, 4)
+print(shared)  # ~0.1254
+assert shared == 0.1254</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Simple OLS: <code>sm.OLS(Sales, add_constant(df[["TV","Radio"]])).fit()</code> — does Newspaper add anything?</li>

@@ -189,14 +189,17 @@ for row in top:
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Top-10 spam-indicative tokens</h4>
 <p>Using training counts only, rank tokens by <code>log P(w|spam) − log P(w|ham)</code> (support ≥ 10). Print the top 10. <em>Expected (approx): claim, prize, won, 150p, tone, 18, www, guaranteed, 1000, 500.</em></p>
+<p><strong>Follow-up:</strong> What is spam recall on the holdout? Check: about 0.9489.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting. &lt;/details&gt;</p>
 <h4>Exercise 2 — Accuracy on 20% holdout (seed 42)</h4>
 <p>Report accuracy to 4 d.p. and the 4 confusion counts. <em>Expected: accuracy ≈ 0.9803 · TP_spam=130, FN_spam=7, FP_spam=15, TN=962.</em></p>
+<p><strong>Follow-up:</strong> What is ham precision? Check: about 0.9928.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters. &lt;/details&gt;</p>
 <h4>Exercise 3 — Why “free” alone misclassifies marketing ham</h4>
 <p>How many holdout messages contain <code>"free"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. <em>Expected: 48 test messages contain “free”; 14 are ham (e.g. “When you get free, call me”). Naive Bayes multiplies independent token evidence — a rare spammy co-occurrence pattern can tip borderline ham over the decision boundary.</em></p>
+<p><strong>Follow-up:</strong> Compare P free given spam vs P free given ham in test — why is free so spammy? Check: about 0.2482 vs 0.0143.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-python">free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
 print(len(free_test), sum(1 for _, g in free_test if g == &quot;ham&quot;))</code></pre>
@@ -231,7 +234,25 @@ example = next(t for t, g in free_test if g == &quot;ham&quot;)
 print(n_free, n_ham)
 print(example[:80])
 # 48 14
-# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;</code></pre>
+# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;# --- Follow-up 1 ---
+rec = sum(1 for g, p in zip(gold, preds) if g == &quot;spam&quot; and p == &quot;spam&quot;) / sum(1 for g in gold if g == &quot;spam&quot;)
+rec = round(rec, 4)
+print(rec)  # ~0.9489
+assert rec == 0.9489
+
+# --- Follow-up 2 ---
+hp = sum(1 for g, p in zip(gold, preds) if g == &quot;ham&quot; and p == &quot;ham&quot;) / sum(1 for p in preds if p == &quot;ham&quot;)
+hp = round(hp, 4)
+print(hp)  # ~0.9928
+assert hp == 0.9928
+
+# --- Follow-up 3 ---
+n_spam = sum(1 for g in gold if g == &quot;spam&quot;)
+n_ham = sum(1 for g in gold if g == &quot;ham&quot;)
+p_fs = round(sum(1 for _, g in free_test if g == &quot;spam&quot;) / n_spam, 4)
+p_fh = round(n_ham and sum(1 for _, g in free_test if g == &quot;ham&quot;) / n_ham, 4)
+print(p_fs, p_fh)  # ~0.2482 0.0143
+assert p_fs == 0.2482 and p_fh == 0.0143</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li>Add bigrams (<code>"free entry"</code>) — reduces “free” false positives.</li>

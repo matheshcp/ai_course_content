@@ -164,6 +164,7 @@ if os.path.exists(CACHE):
 <h3>Exercises (do these!)</h3>
 <h4>Exercise 1 — Retry with exponential backoff</h4>
 <p>Simulate three 429 responses then success: write a loop that sleeps <code>2**attempt</code> seconds (use <code>0.01</code> as a stand-in sleep in tests) and returns a payload after the 4th try. Print the sleep schedule. <em>Expected sleeps: 1, 2, 4 (then success on attempt 3 → return). With <code>max_retries=4</code>: sequence of waits 1,2,4,8 if all fail.</em></p>
+<p><strong>Follow-up:</strong> What total seconds did the demo backoff wait? Check: 3.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <pre><code class="language-text">max_retries = 4
 for attempt in range(max_retries):
@@ -175,10 +176,12 @@ for attempt in range(max_retries):
 <p>&lt;/details&gt;</p>
 <h4>Exercise 2 — Flatten nested JSON to columns</h4>
 <p>Given <code>payload["daily"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. <em>Expected: 3 rows (forecast_days=3); first row keys <code>date, tmax, tmin, precip_prob</code>.</em></p>
+<p><strong>Follow-up:</strong> Prove rows match the API day count. Check: 3 equals 3.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>. &lt;/details&gt;</p>
 <h4>Exercise 3 — Save <code>api_snapshot.csv</code></h4>
 <p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. <em>Expected: <code>api_snapshot.csv</code> with 1 header + 3 data rows.</em></p>
+<p><strong>Follow-up:</strong> Prove every row carries the required keys. Check: date, tmax, tmin, precip_prob all present.</p>
 <p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
 <p><code>df.to_csv("api_snapshot.csv", index=False)</code> or <code>csv.DictWriter</code>. &lt;/details&gt;</p>
 <hr/>
@@ -218,7 +221,19 @@ import os
 assert os.path.exists(&quot;api_snapshot.csv&quot;)
 with open(&quot;api_snapshot.csv&quot;, encoding=&quot;utf-8&quot;) as f:
     n_lines = sum(1 for _ in f)
-print(&quot;lines including header:&quot;, n_lines)  # 4</code></pre>
+print(&quot;lines including header:&quot;, n_lines)  # 4# --- Follow-up 1 ---
+waited = sum(schedule)
+print(waited, &quot;-&gt; success at&quot;, data[&quot;attempt&quot;])  # 3 -&gt; success at 2
+assert waited == 3 and data[&quot;attempt&quot;] == 2
+
+# --- Follow-up 2 ---
+print(len(rows), len(daily[&quot;time&quot;]))
+assert len(rows) == len(daily[&quot;time&quot;]) == 3
+
+# --- Follow-up 3 ---
+need = {&quot;date&quot;, &quot;tmax&quot;, &quot;tmin&quot;, &quot;precip_prob&quot;}
+print(sorted(rows[0].keys()))
+assert all(need &lt;= set(r.keys()) for r in rows)</code></pre>
 <h4>What to learn next</h4>
 <ul>
 <li><code>requests</code> library (<code>response.raise_for_status()</code>, sessions).</li>
