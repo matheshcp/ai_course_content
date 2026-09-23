@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 03 — Messy Retail Cleanup Pipeline</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 03 — Messy Retail Cleanup Pipeline</h1>
+<div class="meta">
+<p><strong>Track</strong> Data Quality Track</p>
+<p><strong>Level</strong> Beginner–Intermediate · <strong>Time</strong> ~60 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-03-messy-retail-cleanup.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>warehouse_messy_data.csv</code> — <a href="https://raw.githubusercontent.com/eyowhite/Messy-dataset/main/warehouse_messy_data.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Profile a dirty 1000-row inventory export before cleaning</li><li>Parse word-numbers (&#x27;two hundred&#x27;) and reject NaN prices</li><li>Validate Status against an allowed set with a flag column</li><li>Compute stock value by Category and export warehouse_clean.csv</li></ul>
+
+<hr/>
+<h2>Messy Retail Cleanup Pipeline</h2>
+<h3>Data Quality Track: From Dirty Warehouse Export to Clean CSV</h3>
+<blockquote><strong>Scenario:</strong> Warehouse hands you <code>warehouse_messy_data.csv</code> — 1000 rows of product inventory with mixed-case names, <code>Quantity</code> as <code>"two hundred"</code> / <code>"NaN"</code>, missing prices, inconsistent <code>Status</code>. Clean it with a reproducible pipeline and report <strong>stock value by Category</strong>.  <strong>You will learn:</strong> string normalisation, numeric coercion with fallbacks, date parsing (<code>dd/mm/yyyy</code>), validation rules, writing a cleaned CSV. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Beginner–Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Dirty-data mental map</h4>
+<table><thead><tr><th>Mess in the file</th><th>Clean rule</th><th>Python tool</th></tr></thead><tbody>
+<tr><td><code>" gadget y "</code> / <code>"WIDGET A"</code></td><td>strip + title-case</td><td><code>.strip().title()</code></td></tr>
+<tr><td><code>"two hundred"</code> / <code>"NaN"</code> qty</td><td>word-number map or <code>None</code></td><td>custom <code>parse_qty</code></td></tr>
+<tr><td><code>"NaN"</code> price</td><td>treat as missing</td><td><code>parse_price</code> → <code>None</code></td></tr>
+<tr><td><code>"Low Stock"</code> status</td><td>flag outside allowed set</td><td>set membership</td></tr>
+<tr><td><code>"20/12/2022"</code> restock date</td><td>parse <code>dd/mm/yyyy</code></td><td><code>datetime.strptime</code></td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load and profile (local first, Colab fallback)</h4>
+<pre><code class="language-python">import csv, os, math, re
+from datetime import datetime
+from collections import defaultdict, Counter
+
+def load_rows():
+    local = &quot;warehouse_messy_data.csv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/eyowhite/Messy-dataset/main/warehouse_messy_data.csv&quot;,
+            local,
+        )
+    with open(local, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as f:
+        return list(csv.DictReader(f))
+
+rows = load_rows()
+print(len(rows), &quot;rows&quot;)
+print(&quot;columns:&quot;, list(rows[0].keys()))
+# 1000 rows
+# columns: [&#x27;Product ID&#x27;, &#x27;Product Name&#x27;, &#x27;Category&#x27;, &#x27;Warehouse&#x27;, &#x27;Location&#x27;,
+#           &#x27;Quantity&#x27;, &#x27;Price&#x27;, &#x27;Supplier&#x27;, &#x27;Status&#x27;, &#x27;Last Restocked&#x27;]
+
+print(&quot;Status values:&quot;, Counter(r[&quot;Status&quot;] for r in rows))
+# {&#x27;In Stock&#x27;: 340, &#x27;Out of Stock&#x27;: 332, &#x27;Low Stock&#x27;: 328}
+
+print(&quot;Quantity samples:&quot;, Counter(r[&quot;Quantity&quot;] for r in rows).most_common(6))
+# includes &#x27;two hundred&#x27;: 160, &#x27;NaN&#x27;: 158</code></pre>
+<blockquote>Profile first: value counts on categorical fields catch dirty levels (<code>Low Stock</code>) before you write cleaning code.</blockquote>
+<hr/>
+<h4>2. Clean text columns</h4>
+<pre><code class="language-python">def clean_text(value):
+    if value is None:
+        return &quot;&quot;
+    s = str(value).strip()
+    if s.lower() in (&quot;nan&quot;, &quot;none&quot;, &quot;&quot;):
+        return &quot;&quot;
+    return s.title()  # &#x27; gadget y &#x27; -&gt; &#x27;Gadget Y&#x27;, &#x27;ELECTRONICS&#x27; -&gt; &#x27;Electronics&#x27;
+
+for r in rows[:3]:
+    print(repr(r[&quot;Product Name&quot;]), &quot;-&gt;&quot;, clean_text(r[&quot;Product Name&quot;]),
+          &quot;|&quot;, r[&quot;Category&quot;], &quot;-&gt;&quot;, clean_text(r[&quot;Category&quot;]))
+# &#x27; gadget y &#x27; -&gt; &#x27;Gadget Y&#x27; | ELECTRONICS -&gt; Electronics</code></pre>
+<hr/>
+<h4>3. Parse Quantity (word-numbers + missing)</h4>
+<pre><code class="language-python">WORDMAP = {
+    &quot;zero&quot;: 0, &quot;one&quot;: 1, &quot;two&quot;: 2, &quot;three&quot;: 3, &quot;four&quot;: 4, &quot;five&quot;: 5,
+    &quot;six&quot;: 6, &quot;seven&quot;: 7, &quot;eight&quot;: 8, &quot;nine&quot;: 9, &quot;ten&quot;: 10,
+    &quot;twenty&quot;: 20, &quot;thirty&quot;: 30, &quot;forty&quot;: 40, &quot;fifty&quot;: 50,
+    &quot;hundred&quot;: 100, &quot;thousand&quot;: 1000,
+}
+
+def parse_qty(q):
+    &quot;&quot;&quot;Return int quantity or None. Handles &#x27;300&#x27;, &#x27;two hundred&#x27;, &#x27;NaN&#x27;.&quot;&quot;&quot;
+    q = str(q).strip().lower()
+    if q in (&quot;&quot;, &quot;nan&quot;, &quot;none&quot;):
+        return None
+    try:
+        return int(float(q))
+    except ValueError:
+        total = 0
+        tokens = q.replace(&quot;-&quot;, &quot; &quot;).replace(&quot;and&quot;, &quot; &quot;).split()
+        if &quot;hundred&quot; in tokens:
+            i = tokens.index(&quot;hundred&quot;)
+            total += (WORDMAP.get(tokens[i - 1], 1) if i &gt; 0 else 1) * 100
+            tokens = tokens[i + 1:]
+        if &quot;thousand&quot; in tokens:
+            i = tokens.index(&quot;thousand&quot;)
+            total += (WORDMAP.get(tokens[i - 1], 1) if i &gt; 0 else 1) * 1000
+            tokens = tokens[i + 1:]
+        for t in tokens:
+            total += WORDMAP.get(t, 0)
+        return total if total else None
+
+print(parse_qty(&quot;300&quot;), parse_qty(&quot;two hundred&quot;), parse_qty(&quot;NaN&quot;))
+# 300 200 None
+
+qty_ok = sum(1 for r in rows if parse_qty(r[&quot;Quantity&quot;]) is not None)
+print(&quot;qty parseable:&quot;, qty_ok)  # 842 of 1000 (158 are NaN)</code></pre>
+<hr/>
+<h4>4. Parse Price (reject NaN) and dates</h4>
+<pre><code class="language-python">def parse_price(p):
+    &quot;&quot;&quot;Float price or None. Rejects NaN/empty.&quot;&quot;&quot;
+    s = str(p).strip().replace(&quot;$&quot;, &quot;&quot;).replace(&quot;,&quot;, &quot;&quot;)
+    if s.lower() in (&quot;&quot;, &quot;nan&quot;, &quot;none&quot;):
+        return None
+    try:
+        v = float(s)
+        return None if math.isnan(v) else v
+    except ValueError:
+        return None
+
+def parse_date(s):
+    &quot;&quot;&quot;dd/mm/yyyy or ISO; None if missing.&quot;&quot;&quot;
+    s = str(s).strip()
+    if s.lower() in (&quot;nan&quot;, &quot;none&quot;, &quot;&quot;):
+        return None
+    for fmt in (&quot;%d/%m/%Y&quot;, &quot;%Y-%m-%d&quot;, &quot;%m/%d/%Y&quot;):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+print(parse_price(&quot;19.99&quot;), parse_price(&quot;NaN&quot;))   # 19.99 None
+print(parse_date(&quot;20/12/2022&quot;), parse_date(&quot;NaN&quot;))  # 2022-12-20 None
+
+price_ok = sum(1 for r in rows if parse_price(r[&quot;Price&quot;]) is not None)
+date_ok  = sum(1 for r in rows if parse_date(r[&quot;Last Restocked&quot;]) is not None)
+print(&quot;price ok:&quot;, price_ok, &quot;date ok:&quot;, date_ok)  # 793 price, 800 date</code></pre>
+<hr/>
+<h4>5. Validate Status and build cleaned rows</h4>
+<pre><code class="language-python">ALLOWED_STATUS = {&quot;In Stock&quot;, &quot;Out of Stock&quot;}
+
+def clean_row(r):
+    qty = parse_qty(r[&quot;Quantity&quot;])
+    price = parse_price(r[&quot;Price&quot;])
+    status_raw = str(r[&quot;Status&quot;]).strip()
+    return {
+        &quot;Product ID&quot;: str(r[&quot;Product ID&quot;]).strip(),
+        &quot;Product Name&quot;: clean_text(r[&quot;Product Name&quot;]),
+        &quot;Category&quot;: clean_text(r[&quot;Category&quot;]),
+        &quot;Warehouse&quot;: clean_text(r[&quot;Warehouse&quot;]),
+        &quot;Location&quot;: clean_text(r[&quot;Location&quot;]),
+        &quot;Quantity&quot;: qty,
+        &quot;Price&quot;: price,
+        &quot;Supplier&quot;: clean_text(r[&quot;Supplier&quot;]),
+        &quot;Status&quot;: status_raw,
+        &quot;Status OK&quot;: status_raw in ALLOWED_STATUS,
+        &quot;Last Restocked&quot;: parse_date(r[&quot;Last Restocked&quot;]),
+        &quot;Stock Value&quot;: round(qty * price, 2) if (qty and price) else None,
+    }
+
+cleaned = [clean_row(r) for r in rows]
+bad_status = [c for c in cleaned if not c[&quot;Status OK&quot;]]
+print(&quot;invalid status rows:&quot;, len(bad_status), &quot;-&gt;&quot;, Counter(c[&quot;Status&quot;] for c in bad_status))
+# 328 -&gt; {&#x27;Low Stock&#x27;: 328}
+print(&quot;sample cleaned:&quot;, cleaned[0])</code></pre>
+<blockquote><code>Status OK</code> is a <strong>flag column</strong>, not a silent drop — auditors need to see what you excluded.</blockquote>
+<hr/>
+<h4>6. Stock value by Category + write clean CSV</h4>
+<pre><code class="language-python">by_cat = defaultdict(lambda: {&quot;rows&quot;: 0, &quot;value&quot;: 0.0, &quot;units&quot;: 0})
+for c in cleaned:
+    cat = c[&quot;Category&quot;] or &quot;Unknown&quot;
+    by_cat[cat][&quot;rows&quot;] += 1
+    if c[&quot;Stock Value&quot;]:
+        by_cat[cat][&quot;value&quot;] += c[&quot;Stock Value&quot;]
+        by_cat[cat][&quot;units&quot;] += c[&quot;Quantity&quot;] or 0
+
+for cat in sorted(by_cat):
+    b = by_cat[cat]
+    print(f&quot;{cat:12s}  rows={b[&#x27;rows&#x27;]:4d}  units={b[&#x27;units&#x27;]:6d}  value=${b[&#x27;value&#x27;]:,.2f}&quot;)
+# Electronics  rows= 248  ... value=$830,214.00
+# Clothing     rows= 257  ... value=$716,252.50
+# Furniture    rows= 265  ... value=$796,211.50
+# Toys         rows= 230  ... value=$607,261.00
+print(&quot;TOTAL value:&quot;, round(sum(b[&quot;value&quot;] for b in by_cat.values()), 2))
+# TOTAL value: 2949939.0  (only rows with both qty and price: 661)
+
+# Persist clean file next to the notebook
+out_path = &quot;warehouse_clean.csv&quot;
+fields = [&quot;Product ID&quot;, &quot;Product Name&quot;, &quot;Category&quot;, &quot;Warehouse&quot;, &quot;Location&quot;,
+          &quot;Quantity&quot;, &quot;Price&quot;, &quot;Supplier&quot;, &quot;Status&quot;, &quot;Status OK&quot;,
+          &quot;Last Restocked&quot;, &quot;Stock Value&quot;]
+with open(out_path, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+    w = csv.DictWriter(f, fieldnames=fields, extrasaction=&quot;ignore&quot;)
+    w.writeheader()
+    for c in cleaned:
+        row = dict(c)
+        row[&quot;Last Restocked&quot;] = str(c[&quot;Last Restocked&quot;] or &quot;&quot;)
+        w.writerow(row)
+print(&quot;wrote&quot;, out_path, &quot;rows:&quot;, len(cleaned))</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Fix Quantity word-numbers</h4>
+<p>Convert every <code>Quantity</code> with <code>parse_qty</code>. Print how many rows were <code>"two hundred"</code>, how many <code>"NaN"</code>, and the sum of all parseable quantities. <em>Expected: 160 × "two hundred" → 200 each; 158 × NaN → None; 842 parseable rows; sum of parseable qty = 135,900 (run the sum yourself to confirm).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-python">from collections import Counter
+c = Counter(r[&quot;Quantity&quot;] for r in rows)
+words = c[&quot;two hundred&quot;]; missing = c[&quot;NaN&quot;]
+total = sum(parse_qty(r[&quot;Quantity&quot;]) or 0 for r in rows)</code></pre>
+<p>&lt;/details&gt;</p>
+<h4>Exercise 2 — Flag invalid Status</h4>
+<p>Using <code>ALLOWED_STATUS = {"In Stock", "Out of Stock"}</code>, count rows whose <code>Status</code> is <strong>not</strong> allowed. Which status value causes all of them? <em>Expected: 328 rows, all <code>"Low Stock"</code>.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-python">bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED_STATUS]
+print(len(bad), Counter(r[&quot;Status&quot;] for r in bad))</code></pre>
+<p>&lt;/details&gt;</p>
+<h4>Exercise 3 — Inventory value per Category</h4>
+<p>Compute <code>Stock Value = Quantity * Price</code> only when both parse; sum by <code>Category</code>. Print the four category totals and the grand total. <em>Expected (2 d.p.): Electronics 830214.00 · Clothing 716252.50 · Furniture 796211.50 · Toys 607261.00 · Grand total 2949939.00 (661 usable rows).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Skip rows where <code>parse_qty</code> or <code>parse_price</code> returns <code>None</code> — do <strong>not</strong> treat missing as 0 for value (that understates inventory). &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+from collections import Counter
+c = Counter(r[&quot;Quantity&quot;] for r in rows)
+print(&quot;two hundred:&quot;, c[&quot;two hundred&quot;], &quot;NaN:&quot;, c[&quot;NaN&quot;])
+parseable = [parse_qty(r[&quot;Quantity&quot;]) for r in rows]
+print(&quot;parseable:&quot;, sum(1 for q in parseable if q is not None))
+print(&quot;sum qty:&quot;, sum(q for q in parseable if q is not None))
+# two hundred: 160 NaN: 158
+# parseable: 842
+# sum qty: 135900
+
+# --- Solution 2 ---
+ALLOWED = {&quot;In Stock&quot;, &quot;Out of Stock&quot;}
+bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED]
+print(len(bad), Counter(str(r[&quot;Status&quot;]).strip() for r in bad))
+# 328 Counter({&#x27;Low Stock&#x27;: 328})
+
+# --- Solution 3 ---
+by_cat = defaultdict(float)
+usable = 0
+for r in rows:
+    q, p = parse_qty(r[&quot;Quantity&quot;]), parse_price(r[&quot;Price&quot;])
+    if q and p:
+        by_cat[clean_text(r[&quot;Category&quot;])] += q * p
+        usable += 1
+for cat in sorted(by_cat):
+    print(f&quot;{cat}: {by_cat[cat]:,.2f}&quot;)
+print(f&quot;TOTAL: {sum(by_cat.values()):,.2f}  (rows={usable})&quot;)
+# Clothing: 716,252.50
+# Electronics: 830,214.00
+# Furniture: 796,211.50
+# Toys: 607,261.00
+# TOTAL: 2,949,939.00  (rows=661)</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>pandas equivalent: <code>pd.to_numeric(..., errors="coerce")</code> + <code>.fillna</code>.</li>
+<li>Great Expectations / pandera for reusable column schemas.</li>
+<li>Then: unit tests for <code>parse_qty</code> (edge cases: <code>"twenty five"</code>, <code>""</code>, <code>"1e3"</code>).</li>
+<li>Cheat sheet: profile → parse → flag → aggregate → export; never drop rows silently.</li>
+</ul>
+<p><em>Files in this folder: <code>warehouse_messy_data.csv</code> · output <code>warehouse_clean.csv</code> (created when you run Section 6). Paste any block into Python/Jupyter and run top-to-bottom.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 03 · Executable notebook: <code>lab-03-messy-retail-cleanup.ipynb</code></footer>
+</body>
+</html>

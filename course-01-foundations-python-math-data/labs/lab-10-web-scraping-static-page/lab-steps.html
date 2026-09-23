@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 10 — Web Scraping a Static Public Page</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 10 — Web Scraping a Static Public Page</h1>
+<div class="meta">
+<p><strong>Track</strong> Data Acquisition Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~45 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-10-web-scraping-static-page.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>fixture.html</code> — upload in Colab</li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Parse an HTML table with html.parser (BeautifulSoup optional)</li><li>Normalise rows to dicts and handle missing cells</li><li>Export scraped.csv with a row-count assertion</li><li>Practice polite scraping rules and robots.txt awareness</li></ul>
+
+<hr/>
+<h2>Web Scraping a Static Public Page</h2>
+<h3>Data Acquisition Track: HTML Tables → CSV (Offline Fixture First)</h3>
+<blockquote><strong>Scenario:</strong> Extract a product table from HTML with <code>urllib</code> + <code>html.parser</code> (or BeautifulSoup if available), handle missing cells, and save <code>scraped.csv</code>. A local <code>fixture.html</code> ships with this lab so <strong>everything runs without network</strong>. An optional live target (<code>quotes.toscrape.com</code>) is included for when you do have egress.  <strong>You will learn:</strong> HTML structure, table parsing, polite scraping (User-Agent, delay), robots.txt awareness, anti-patterns warning. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (BeautifulSoup optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Scraping mental map</h4>
+<table><thead><tr><th>HTML piece</th><th>Python view</th><th>Extract how</th></tr></thead><tbody>
+<tr><td><code>&lt;table&gt;</code></td><td>container</td><td><code>HTMLParser</code> handle_starttag</td></tr>
+<tr><td><code>&lt;tr&gt;</code></td><td>row</td><td>accumulate cells</td></tr>
+<tr><td><code>&lt;td&gt;</code></td><td>cell text</td><td><code>handle_data</code> between tags</td></tr>
+<tr><td>empty <code>&lt;td&gt;</code></td><td>missing value</td><td><code>""</code> → flag / impute</td></tr>
+<tr><td>CSS selector</td><td>BeautifulSoup</td><td><code>soup.select("table#products tr")</code></td></tr>
+</tbody></table>
+<blockquote><strong>Politeness rules:</strong> identify yourself with a <code>User-Agent</code>, cache results, don’t hammer servers, and respect <code>robots.txt</code> + ToS. Scraping behind logins or against explicit disallow paths is not okay.</blockquote>
+<hr/>
+<h4>1. Load local fixture (offline path — always works)</h4>
+<pre><code class="language-python">import csv, os, re, time
+from html.parser import HTMLParser
+
+FIXTURE = &quot;fixture.html&quot;
+LIVE_URL = &quot;https://quotes.toscrape.com/&quot;  # optional, public practice site
+
+def read_local(path=FIXTURE):
+    with open(path, encoding=&quot;utf-8&quot;) as f:
+        return f.read()
+
+html = read_local()
+print(&quot;fixture bytes:&quot;, len(html))
+assert &quot;&lt;table&quot; in html and &quot;Widget A&quot; in html</code></pre>
+<p>If the fixture is missing, the notebook writes a minimal one:</p>
+<pre><code class="language-python">if not os.path.exists(FIXTURE):
+    open(FIXTURE, &quot;w&quot;, encoding=&quot;utf-8&quot;).write(
+        &quot;&lt;table id=&#x27;products&#x27;&gt;&lt;tr&gt;&lt;th&gt;ID&lt;/th&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Price&lt;/th&gt;&lt;th&gt;Stock&lt;/th&gt;&lt;/tr&gt;&quot;
+        &quot;&lt;tr&gt;&lt;td&gt;1&lt;/td&gt;&lt;td&gt;Widget A&lt;/td&gt;&lt;td&gt;9.99&lt;/td&gt;&lt;td&gt;120&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&quot;
+    )</code></pre>
+<hr/>
+<h4>2. Stdlib parser: table rows → list of lists</h4>
+<pre><code class="language-python">class TableParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_td = False
+        self.in_tr = False
+        self.cell = &quot;&quot;
+        self.row = []
+        self.rows = []
+        self.in_header = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag == &quot;tr&quot;:
+            self.in_tr = True
+            self.row = []
+        elif tag in (&quot;td&quot;, &quot;th&quot;):
+            self.in_td = True
+            self.cell = &quot;&quot;
+        if tag == &quot;th&quot;:
+            self.in_header = True
+
+    def handle_endtag(self, tag):
+        if tag in (&quot;td&quot;, &quot;th&quot;):
+            self.in_td = False
+            self.row.append(self.cell.strip())
+        elif tag == &quot;tr&quot;:
+            self.in_tr = False
+            if self.row:
+                self.rows.append(self.row)
+            self.in_header = False
+
+    def handle_data(self, data):
+        if self.in_td:
+            self.cell += data
+
+def parse_table(html_text):
+    p = TableParser()
+    p.feed(html_text)
+    if not p.rows:
+        return [], []
+    header, *body = p.rows
+    return header, body
+
+header, body = parse_table(html)
+print(&quot;header:&quot;, header)
+# [&#x27;ID&#x27;, &#x27;Name&#x27;, &#x27;Price&#x27;, &#x27;Stock&#x27;]
+print(&quot;n data rows:&quot;, len(body))
+# 5
+print(&quot;first row:&quot;, body[0])
+# [&#x27;1&#x27;, &#x27;Widget A&#x27;, &#x27;9.99&#x27;, &#x27;120&#x27;]</code></pre>
+<hr/>
+<h4>3. Rows → dicts; handle missing cells</h4>
+<p>Fixture intentionally has a <strong>blank Price</strong> on Gadget C:</p>
+<pre><code class="language-python">def rows_to_dicts(header, body):
+    out = []
+    for r in body:
+        # pad short rows
+        r = list(r) + [&quot;&quot;] * (len(header) - len(r))
+        rec = dict(zip(header, r))
+        # normalise numerics with fallbacks
+        rec[&quot;Price&quot;] = float(rec[&quot;Price&quot;]) if rec[&quot;Price&quot;] not in (&quot;&quot;, None) else None
+        rec[&quot;Stock&quot;] = int(rec[&quot;Stock&quot;]) if str(rec[&quot;Stock&quot;]).strip().isdigit() else None
+        out.append(rec)
+    return out
+
+records = rows_to_dicts(header, body)
+for rec in records:
+    print(rec)
+# {&#x27;ID&#x27;: 1, &#x27;Name&#x27;: &#x27;Widget A&#x27;, &#x27;Price&#x27;: 9.99, &#x27;Stock&#x27;: 120}
+# ...
+# {&#x27;ID&#x27;: 3, &#x27;Name&#x27;: &#x27;Gadget C&#x27;, &#x27;Price&#x27;: None, &#x27;Stock&#x27;: 7}   # missing price
+
+missing_price = [r for r in records if r[&quot;Price&quot;] is None]
+print(&quot;missing prices:&quot;, len(missing_price))  # 1</code></pre>
+<blockquote>Always assert row counts and required keys after parsing — silent empty scrapes are the #1 bug.</blockquote>
+<hr/>
+<h4>4. Write <code>scraped.csv</code> + row-count assert</h4>
+<pre><code class="language-python">out_path = &quot;scraped.csv&quot;
+fields = [&quot;ID&quot;, &quot;Name&quot;, &quot;Price&quot;, &quot;Stock&quot;]
+with open(out_path, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+    w = csv.DictWriter(f, fieldnames=fields)
+    w.writeheader()
+    for r in records:
+        w.writerow({
+            &quot;ID&quot;: r[&quot;ID&quot;],
+            &quot;Name&quot;: r[&quot;Name&quot;],
+            &quot;Price&quot;: &quot;&quot; if r[&quot;Price&quot;] is None else f&quot;{r[&#x27;Price&#x27;]:.2f}&quot;,
+            &quot;Stock&quot;: &quot;&quot; if r[&quot;Stock&quot;] is None else r[&quot;Stock&quot;],
+        })
+
+with open(out_path, encoding=&quot;utf-8&quot;) as f:
+    n = sum(1 for _ in f)
+assert n == 1 + len(records), f&quot;expected {1+len(records)} lines, got {n}&quot;
+print(f&quot;wrote {out_path}: {len(records)} data rows, {n} lines total&quot;)
+# wrote scraped.csv: 5 data rows, 6 lines total</code></pre>
+<hr/>
+<h4>5. Optional: BeautifulSoup (if installed)</h4>
+<pre><code class="language-python">try:
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(html, &quot;html.parser&quot;)
+    trs = soup.select(&quot;table#products tbody tr&quot;)
+    print(&quot;bs4 rows:&quot;, len(trs))  # 5
+    bs_rows = []
+    for tr in trs:
+        tds = [td.get_text(strip=True) for td in tr.find_all(&quot;td&quot;)]
+        bs_rows.append(tds)
+    print(bs_rows[0])  # [&#x27;1&#x27;, &#x27;Widget A&#x27;, &#x27;9.99&#x27;, &#x27;120&#x27;]
+except ImportError:
+    print(&quot;BeautifulSoup not installed — stdlib parser above is sufficient&quot;)</code></pre>
+<hr/>
+<h4>6. Optional live fetch (network only)</h4>
+<pre><code class="language-python">def fetch_live(url, delay=1.0, timeout=10):
+    import urllib.request
+    time.sleep(delay)  # be polite
+    req = urllib.request.Request(url, headers={&quot;User-Agent&quot;: &quot;ailab-lab10/1.0 (educational)&quot;})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        return resp.read().decode(&quot;utf-8&quot;, errors=&quot;replace&quot;)
+
+# Live scrape is optional; lab verification uses fixture.html only.
+# if os.environ.get(&quot;AILAB_ALLOW_NET&quot;):
+#     page = fetch_live(LIVE_URL)
+#     print(&quot;live bytes:&quot;, len(page))
+print(&quot;offline mode: skipping live fetch (set AILAB_ALLOW_NET=1 to enable)&quot;)</code></pre>
+<blockquote>Check <code>https://quotes.toscrape.com/robots.txt</code> before scraping any live site. Practice domains exist for a reason.</blockquote>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Parse table rows to dicts</h4>
+<p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. <em>Expected: 5 rows · names: Widget A, Widget B, Gadget C, Gadget D, Doohickey E.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>header, body = parse_table(html)</code> then <code>rows_to_dicts(header, body)</code>; collect <code>r["Name"]</code>. &lt;/details&gt;</p>
+<h4>Exercise 2 — Handle missing cells</h4>
+<p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? <em>Expected: Gadget C · 1 missing · store <code>None</code> (not <code>0</code> — zero price is a real value).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>[r for r in records if r["Price"] is None]</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — Write CSV + row-count assert</h4>
+<p>Write <code>scraped.csv</code> and assert <code>lines == 1 + len(records)</code>. Print the assertion message. <em>Expected: 5 data rows → 6 lines; assert passes.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>sum(1 for _ in open(path))</code> includes the header. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+header, body = parse_table(read_local())
+records = rows_to_dicts(header, body)
+print(len(records), [r[&quot;Name&quot;] for r in records])
+# 5 [&#x27;Widget A&#x27;, &#x27;Widget B&#x27;, &#x27;Gadget C&#x27;, &#x27;Gadget D&#x27;, &#x27;Doohickey E&#x27;]
+
+# --- Solution 2 ---
+missing = [r[&quot;Name&quot;] for r in records if r[&quot;Price&quot;] is None]
+print(missing, len(missing), &quot;-&gt; Price stored as None&quot;)
+# [&#x27;Gadget C&#x27;] 1 -&gt; Price stored as None
+
+# --- Solution 3 ---
+# (Section 4 already writes scraped.csv)
+with open(&quot;scraped.csv&quot;, encoding=&quot;utf-8&quot;) as f:
+    lines = sum(1 for _ in f)
+assert lines == 1 + len(records)
+print(&quot;OK&quot;, lines, &quot;lines for&quot;, len(records), &quot;records&quot;)
+# OK 6 lines for 5 records</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>CSS selectors with BeautifulSoup: <code>soup.select_one("td.price")</code>.</li>
+<li>APIs behind the page (view Network tab) often beat HTML scraping.</li>
+<li><code>scrapy</code> / <code>playwright</code> for JS-heavy sites — and legal review first.</li>
+<li>Cheat sheet: fixture-first → parse → normalise missings → assert counts → export → only then go live.</li>
+</ul>
+<p><em>Files in this folder: <code>fixture.html</code> (offline table) · output <code>scraped.csv</code>.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 10 · Executable notebook: <code>lab-10-web-scraping-static-page.ipynb</code></footer>
+</body>
+</html>

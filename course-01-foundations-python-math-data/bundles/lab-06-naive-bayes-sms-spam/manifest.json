@@ -1,0 +1,12 @@
+{
+  "lab_id": "lab-06-naive-bayes-sms-spam",
+  "notebook": "lab-06-naive-bayes-sms-spam.ipynb",
+  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-06-naive-bayes-sms-spam/notebook.ipynb",
+  "api_launch": "https://api.vlabs.test/colab/lab-06-naive-bayes-sms-spam/launch-url",
+  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-06-naive-bayes-sms-spam/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "sms.tsv"
+  ],
+  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+}

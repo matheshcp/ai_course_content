@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 11 — Visualisation Studio</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 11 — Visualisation Studio</h1>
+<div class="meta">
+<p><strong>Track</strong> Charts That Communicate Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~45 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-11-visualisation-studio.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>tips.csv</code> — <a href="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv">raw GitHub</a></li><li><code>tickets.csv</code> — <a href="https://raw.githubusercontent.com/vihar/datasets/master/tickets.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Choose appropriate charts for distribution and composition questions</li><li>Redact PII (emails) before any plot leaves your machine</li><li>Produce four annotated publication-quality figures</li><li>Read tip% and ticket-status insights from the charts</li></ul>
+
+<hr/>
+<h2>Visualisation Studio</h2>
+<h3>Charts That Communicate Track: Tips + Tickets (4 Publication-Quality Plots)</h3>
+<blockquote><strong>Scenario:</strong> Two briefs, two datasets: (1) <code>tips.csv</code> — <em>who tips more?</em> (2) <code>tickets.csv</code> — <em>SLA status mix</em>; the tickets file contains <strong>emails (PII)</strong> so redact before any plot leaves your machine. Produce four charts with annotated insights.  <strong>You will learn:</strong> figure anatomy, chart choice, PII redaction, subplots, annotation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Chart-choice mental map</h4>
+<table><thead><tr><th>Question</th><th>Chart</th><th>Do not use</th></tr></thead><tbody>
+<tr><td>Distribution of a measure</td><td>histogram / box</td><td>pie for many bins</td></tr>
+<tr><td>Share of categories</td><td>stacked/bar (few cats)</td><td>3-D pie</td></tr>
+<tr><td>Relationship bill vs tip</td><td>scatter</td><td>bar</td></tr>
+<tr><td>Trend over time</td><td>line</td><td>scatter if ordered</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load both datasets (local first, Colab fallback)</h4>
+<pre><code class="language-python">import os, re
+import pandas as pd
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+
+def ensure(name, url):
+    if not os.path.exists(name):
+        import urllib.request
+        urllib.request.urlretrieve(url, name)
+    return name
+
+ensure(&quot;tips.csv&quot;,
+       &quot;https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv&quot;)
+ensure(&quot;tickets.csv&quot;,
+       &quot;https://raw.githubusercontent.com/vihar/datasets/master/tickets.csv&quot;)
+
+tips = pd.read_csv(&quot;tips.csv&quot;)
+tickets = pd.read_csv(&quot;tickets.csv&quot;)
+print(tips.shape, tickets.shape)  # (244, 7) (107, 9)
+tips[&quot;tip_pct&quot;] = tips[&quot;tip&quot;] / tips[&quot;total_bill&quot;]
+print(tips[&quot;tip_pct&quot;].mean().round(4))  # 0.1608 overall
+print(tickets[&quot;status&quot;].value_counts())
+# open 42, in-progress 34, closed 31</code></pre>
+<hr/>
+<h4>2. Redact PII before plotting tickets</h4>
+<pre><code class="language-python">EMAIL_RE = re.compile(r&quot;[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}&quot;)
+
+def redact_email(s):
+    return EMAIL_RE.sub(&quot;[EMAIL]&quot;, str(s))
+
+# How much PII is in here?
+raw_hits = sum(len(EMAIL_RE.findall(str(v))) for v in tickets.astype(str).values.ravel())
+print(&quot;email-like hits before redaction:&quot;, raw_hits)  # 184+
+
+tickets_clean = tickets.copy()
+for col in tickets_clean.columns:
+    tickets_clean[col] = tickets_clean[col].apply(
+        lambda v: redact_email(v) if isinstance(v, str) and &quot;@&quot; in str(v) else v
+    )
+
+still = sum(len(EMAIL_RE.findall(str(v))) for v in tickets_clean.astype(str).values.ravel())
+print(&quot;hits after redaction:&quot;, still)  # 0
+assert still == 0</code></pre>
+<blockquote>Redaction is <strong>pre-plot hygiene</strong>. Don’t put raw emails in chart titles, legends, or exported PNGs.</blockquote>
+<hr/>
+<h4>3. Chart 1 — Tip % distribution by day (histogram overlay)</h4>
+<pre><code class="language-python">fig, ax = plt.subplots(figsize=(7, 4))
+for day, sub in tips.groupby(&quot;day&quot;):
+    ax.hist(sub[&quot;tip_pct&quot;], bins=15, alpha=0.45, label=f&quot;{day} (n={len(sub)})&quot;)
+ax.set_xlabel(&quot;Tip % of bill&quot;)
+ax.set_ylabel(&quot;Count&quot;)
+ax.set_title(&quot;Tip percentage distribution by day&quot;)
+ax.legend()
+ax.annotate(&quot;Overall mean ≈ 16.1%&quot;,
+            xy=(0.1608, tips.groupby(&quot;day&quot;).size().max() * 0.45),
+            fontsize=9)
+fig.tight_layout(); fig.savefig(&quot;chart1_tip_pct_by_day.png&quot;, dpi=120)
+print(&quot;saved chart1_tip_pct_by_day.png&quot;)</code></pre>
+<p>Mean tip % by day (for the caption): <strong>Fri 17.0% · Thur 16.1% · Sun 16.7% · Sat 15.3%</strong>.</p>
+<hr/>
+<h4>4. Chart 2 — Mean tip % by day + time (grouped bar)</h4>
+<pre><code class="language-python">pivot = tips.pivot_table(index=&quot;day&quot;, columns=&quot;time&quot;,
+                         values=&quot;tip_pct&quot;, aggfunc=&quot;mean&quot;).reindex([&quot;Thur&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;])
+print(pivot.round(4))
+
+ax = pivot.plot(kind=&quot;bar&quot;, figsize=(7, 4), rot=0)
+ax.set_ylabel(&quot;Mean tip %&quot;)
+ax.set_title(&quot;Mean tip % by day and sitting&quot;)
+ax.set_ylim(0, 0.25)
+ax.legend(title=&quot;Sitting&quot;)
+fig = ax.get_figure(); fig.tight_layout()
+fig.savefig(&quot;chart2_tip_pct_day_time.png&quot;, dpi=120)
+print(&quot;saved chart2_tip_pct_day_time.png&quot;)</code></pre>
+<p>Insight to annotate: lunch tips slightly higher on average (Lunch 16.4% vs Dinner 16.0% overall).</p>
+<hr/>
+<h4>5. Chart 3 — Tickets: stacked status × priority (redacted data only)</h4>
+<pre><code class="language-python">ct = pd.crosstab(tickets_clean[&quot;priority&quot;], tickets_clean[&quot;status&quot;])
+# order columns for readability
+for c in [&quot;open&quot;, &quot;in-progress&quot;, &quot;closed&quot;]:
+    if c not in ct.columns:
+        ct[c] = 0
+ct = ct[[&quot;open&quot;, &quot;in-progress&quot;, &quot;closed&quot;]]
+print(ct)
+
+ax = ct.plot(kind=&quot;bar&quot;, stacked=True, figsize=(7, 4), rot=0,
+             color=[&quot;#4C72B0&quot;, &quot;#DD8452&quot;, &quot;#55A868&quot;])
+ax.set_ylabel(&quot;Tickets&quot;)
+ax.set_title(&quot;Ticket status mix by priority (PII redacted)&quot;)
+ax.annotate(&quot;Open work concentrated in low/med priority&quot;,
+            xy=(0.02, 0.92), xycoords=&quot;axes fraction&quot;, fontsize=9)
+fig = ax.get_figure(); fig.tight_layout()
+fig.savefig(&quot;chart3_tickets_status.png&quot;, dpi=120)
+print(&quot;saved chart3_tickets_status.png&quot;)</code></pre>
+<p>Expected status totals: open 42 · in-progress 34 · closed 31 (n = 107).</p>
+<hr/>
+<h4>6. Chart 4 — Total bill vs tip scatter (annotated insight)</h4>
+<pre><code class="language-python">fig, ax = plt.subplots(figsize=(7, 4))
+colors = {&quot;Male&quot;: &quot;#4C72B0&quot;, &quot;Female&quot;: &quot;#C44E52&quot;}
+for sex, sub in tips.groupby(&quot;sex&quot;):
+    ax.scatter(sub[&quot;total_bill&quot;], sub[&quot;tip&quot;], s=28, alpha=0.7,
+               label=f&quot;{sex} (mean tip% {sub[&#x27;tip_pct&#x27;].mean():.1%})&quot;,
+               color=colors.get(sex, None))
+ax.set_xlabel(&quot;Total bill ($)&quot;)
+ax.set_ylabel(&quot;Tip ($)&quot;)
+ax.set_title(&quot;Tip vs total bill&quot;)
+ax.legend()
+# annotate the largest bill
+i = tips[&quot;total_bill&quot;].idxmax()
+ax.annotate(f&quot;max bill ${tips.loc[i, &#x27;total_bill&#x27;]:.2f}&quot;,
+            xy=(tips.loc[i, &quot;total_bill&quot;], tips.loc[i, &quot;tip&quot;]),
+            xytext=(tips.loc[i, &quot;total_bill&quot;] - 12, tips.loc[i, &quot;tip&quot;] + 1.2),
+            arrowprops=dict(arrowstyle=&quot;-&gt;&quot;, lw=0.8))
+fig.tight_layout(); fig.savefig(&quot;chart4_tip_vs_bill.png&quot;, dpi=120)
+print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
+<p>Female mean tip % ≈ 16.7% · Male ≈ 15.8% (small gap, don’t over-claim).</p>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Tip % distribution by day</h4>
+<p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? <em>Expected: highest Fri 0.1699 · lowest Sat 0.1532 (overall 0.1608).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>tips["tip_pct"] = tips["tip"]/tips["total_bill"]</code> then <code>groupby("day")["tip_pct"].mean()</code>. &lt;/details&gt;</p>
+<h4>Exercise 2 — Stacked status bar for tickets</h4>
+<p>Build <code>pd.crosstab(priority, status)</code> on <strong>redacted</strong> tickets and plot stacked bars. Print the table. <em>Expected columns sum: open 42, in-progress 34, closed 31; priority rows low 41, medium 34, high 32.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind="bar", stacked=True)</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — Annotate insight on each chart</h4>
+<p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. <em>Expected: any four insights citing computed stats — e.g. “Fri mean tip 17.0%”, “42 open tickets”, “overall tip 16.1%”, “max bill $50.81”.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>ax.annotate("text", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+tips[&quot;tip_pct&quot;] = tips[&quot;tip&quot;] / tips[&quot;total_bill&quot;]
+by_day = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().sort_values(ascending=False)
+print(by_day.round(4))
+# Fri    0.1699  (highest)
+# Sun    0.1669
+# Thur   0.1613
+# Sat    0.1532  (lowest)
+
+# --- Solution 2 ---
+# tickets_clean already redacted in Section 2
+ct = pd.crosstab(tickets_clean[&quot;priority&quot;], tickets_clean[&quot;status&quot;])
+print(ct)
+print(&quot;col sums:&quot;, ct.sum().to_dict())
+# expect open=42, in-progress=34, closed=31
+
+# --- Solution 3 --- (example annotations used above)
+insights = [
+    &quot;Overall mean tip ≈ 16.1% across 244 bills&quot;,
+    &quot;Lunch mean tip% 16.4% slightly above Dinner 16.0%&quot;,
+    &quot;42 open / 34 in-progress / 31 closed (PII redacted)&quot;,
+    f&quot;Max bill ${tips[&#x27;total_bill&#x27;].max():.2f} still ~15–20% tip band&quot;,
+]
+for s in insights:
+    print(&quot;-&quot;, s)</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>seaborn <code>boxplot</code> / <code>violinplot</code> for group distributions.</li>
+<li>Consistent style: <code>plt.rcParams</code>, colourblind-safe palettes.</li>
+<li>Export for slides: <code>dpi=300</code>, tight bbox, no chartjunk.</li>
+<li>Cheat sheet: redact PII → pick chart → compute the number → plot → annotate the insight.</li>
+</ul>
+<p><em>Files in this folder: <code>tips.csv</code>, <code>tickets.csv</code> · outputs <code>chart1_tip_pct_by_day.png</code>, <code>chart2_tip_pct_day_time.png</code>, <code>chart3_tickets_status.png</code>, <code>chart4_tip_vs_bill.png</code>.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 11 · Executable notebook: <code>lab-11-visualisation-studio.ipynb</code></footer>
+</body>
+</html>

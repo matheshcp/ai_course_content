@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 01 — Python Refresher for Data People</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 01 — Python Refresher for Data People</h1>
+<div class="meta">
+<p><strong>Track</strong> Junior Analyst Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~45 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-01-python-refresher-for-data-people.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sales_spreadsheet.csv</code> — upload in Colab</li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Map Excel columns/rows/sheets to Python lists, dicts, and lists-of-dicts</li><li>Clean messy text and numbers with strip/title and None handling</li><li>Build reusable cleaning functions and comprehensions</li><li>Answer revenue-by-region from a 12-row messy sales sheet</li></ul>
+
+<hr/>
+<h2>Python Refresher for Data People</h2>
+<h3>Junior Analyst Track: Cleaning a Sales Spreadsheet</h3>
+<blockquote><strong>Scenario:</strong> You're a junior analyst. Someone sends you <code>sales_spreadsheet.csv</code> — 12 rows, messy product names, missing quantities, inconsistent regions. Your job: clean it with pure Python and answer: <em>what's our total revenue by region?</em>  <strong>You will learn:</strong> lists, dicts, loops, functions, comprehensions — all with sales-data examples. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas needed).</blockquote>
+<h4>Excel → Python mental map</h4>
+<table><thead><tr><th>Excel idea</th><th>Python idea</th><th>Example</th></tr></thead><tbody>
+<tr><td>A column (e.g. all Prices)</td><td>a <code>list</code></td><td><code>[899.99, 25.5, 75.0]</code></td></tr>
+<tr><td>One row (e.g. Order 101)</td><td>a <code>dict</code></td><td><code>{"OrderID": 101, "Product": "Laptop"}</code></td></tr>
+<tr><td>Whole sheet</td><td>a <code>list of dicts</code></td><td><code>[{"OrderID":101, ...}, {"OrderID":102, ...}]</code></td></tr>
+</tbody></table>
+<p>Keep that map in mind — everything below follows it.</p>
+<h4>Setup: our messy data in code</h4>
+<p>Copy-paste this into a Python file or Jupyter cell. It mirrors <code>sales_spreadsheet.csv</code> so you can run without files first.</p>
+<pre><code class="language-python">sales = [
+    {&quot;OrderID&quot;: 101, &quot;Product&quot;: &quot;  Laptop &quot;, &quot;Quantity&quot;: 2,    &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;West&quot;},
+    {&quot;OrderID&quot;: 102, &quot;Product&quot;: &quot;Mouse&quot;,     &quot;Quantity&quot;: 5,    &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;East&quot;},
+    {&quot;OrderID&quot;: 103, &quot;Product&quot;: &quot;KEYBOARD&quot;,  &quot;Quantity&quot;: 1,    &quot;Price&quot;: 75.00,  &quot;Region&quot;: &quot;west&quot;},
+    {&quot;OrderID&quot;: 104, &quot;Product&quot;: &quot;&quot;,          &quot;Quantity&quot;: 3,    &quot;Price&quot;: 12.99,  &quot;Region&quot;: &quot;East&quot;},
+    {&quot;OrderID&quot;: 105, &quot;Product&quot;: &quot;Monitor&quot;,   &quot;Quantity&quot;: None, &quot;Price&quot;: 199.99, &quot;Region&quot;: &quot;North&quot;},
+    {&quot;OrderID&quot;: 106, &quot;Product&quot;: &quot; Laptop&quot;,   &quot;Quantity&quot;: 1,    &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;WEST&quot;},
+    {&quot;OrderID&quot;: 107, &quot;Product&quot;: &quot;mouse&quot;,     &quot;Quantity&quot;: 10,   &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;South&quot;},
+    {&quot;OrderID&quot;: 108, &quot;Product&quot;: &quot;Keyboard&quot;,  &quot;Quantity&quot;: 2,    &quot;Price&quot;: 75.00,  &quot;Region&quot;: &quot;East&quot;},
+    {&quot;OrderID&quot;: 109, &quot;Product&quot;: &quot; Monitor &quot;, &quot;Quantity&quot;: 1,    &quot;Price&quot;: 199.99, &quot;Region&quot;: &quot; North&quot;},
+    {&quot;OrderID&quot;: 110, &quot;Product&quot;: &quot;Headset&quot;,   &quot;Quantity&quot;: 4,    &quot;Price&quot;: 49.99,  &quot;Region&quot;: &quot;east&quot;},
+    {&quot;OrderID&quot;: 111, &quot;Product&quot;: &quot;Laptop&quot;,    &quot;Quantity&quot;: 1,    &quot;Price&quot;: None,   &quot;Region&quot;: &quot;West&quot;},
+    {&quot;OrderID&quot;: 112, &quot;Product&quot;: &quot;MOUSE&quot;,     &quot;Quantity&quot;: 2,    &quot;Price&quot;: 25.50,  &quot;Region&quot;: &quot;West&quot;},
+]
+
+# Bonus: load the real CSV the same way (same result as above)
+# import csv
+# with open(&quot;sales_spreadsheet.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+#     sales_from_csv = list(csv.DictReader(f))
+#     print(sales_from_csv[:2])</code></pre>
+<p>Messy on purpose. Notice: extra spaces, ALL CAPS, empty string <code>""</code>, <code>None</code> for missing, <code>west</code> vs <code>West</code> vs <code>WEST</code>.</p>
+<hr/>
+<h3>1. Lists — your columns</h3>
+<p>A list is an ordered collection. Think: one Excel column.</p>
+<pre><code class="language-python">prices = [899.99, 25.50, 75.00, 12.99]
+products = [&quot;Laptop&quot;, &quot;Mouse&quot;, &quot;Keyboard&quot;]
+
+# Indexing (0-based!) and slicing
+print(prices[0])      # 899.99 — first item
+print(prices[-1])     # 12.99 — last item
+print(products[0:2])  # [&#x27;Laptop&#x27;, &#x27;Mouse&#x27;] — slice, end is exclusive
+
+# Useful list ops for analysts
+print(len(prices))    # 4 — row count
+print(sum(prices))    # 1013.48 — like =SUM()
+print(min(prices), max(prices))  # 12.99 899.99 — like =MIN(), =MAX()
+print(sorted(products))  # alphabetical copy</code></pre>
+<p>Mutating a list (cleaning in place):</p>
+<pre><code class="language-python">raw_products = [&quot;  Laptop &quot;, &quot;KEYBOARD&quot;, &quot;mouse&quot;, &quot;&quot;]
+cleaned = []
+for p in raw_products:
+    cleaned.append(p.strip())  # strip() removes spaces
+print(cleaned)  # [&#x27;Laptop&#x27;, &#x27;KEYBOARD&#x27;, &#x27;mouse&#x27;, &#x27;&#x27;]
+
+# Remove empties, normalise case
+cleaned = [p.strip().title() for p in cleaned if p.strip() != &quot;&quot;]
+print(cleaned)  # [&#x27;Laptop&#x27;, &#x27;Keyboard&#x27;, &#x27;Mouse&#x27;]
+# .title() -&gt; &#x27;KEYBOARD&#x27; becomes &#x27;Keyboard&#x27;. Perfect for product names.</code></pre>
+<p><strong>Key methods to memorise:</strong> <code>.append(x)</code>, <code>.remove(x)</code>, <code>len()</code>, <code>sum()</code>, <code>sorted()</code>, <code>list.count(x)</code>.</p>
+<blockquote>Try it: what does <code>prices + [49.99]</code> do? (Answer: returns a new longer list, original unchanged.)</blockquote>
+<hr/>
+<h3>2. Dicts — your rows</h3>
+<p>A dict is labelled fields. Think: one spreadsheet row where headers are keys.</p>
+<pre><code class="language-python">order = {&quot;OrderID&quot;: 101, &quot;Product&quot;: &quot;  Laptop &quot;, &quot;Quantity&quot;: 2, &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;West&quot;}
+
+print(order[&quot;Product&quot;])          # &#x27;  Laptop &#x27; — direct access (errors if key missing)
+print(order.get(&quot;Discount&quot;, 0))  # 0 — safe access with default, never crashes
+
+order[&quot;Product&quot;] = order[&quot;Product&quot;].strip().title()  # clean that cell
+order[&quot;Total&quot;] = order[&quot;Quantity&quot;] * order[&quot;Price&quot;]  # add a calculated column
+print(order)
+# {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;Laptop&#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;, &#x27;Total&#x27;: 1799.98}
+
+print(list(order.keys()))    # headers
+print(list(order.values()))  # row values
+print(list(order.items()))   # pairs — you&#x27;ll loop over these a lot</code></pre>
+<p>A whole sheet = list of dicts (you already have <code>sales</code>):</p>
+<pre><code class="language-python">print(sales[0])              # first row (Order 101)
+print(sales[0][&quot;Region&quot;])    # &#x27;West&#x27;
+print(len(sales))            # 12 rows
+
+# Like =VLOOKUP: find Order 108
+order_108 = None
+for row in sales:
+    if row[&quot;OrderID&quot;] == 108:
+        order_108 = row
+        break
+print(order_108)</code></pre>
+<hr/>
+<h3>3. Loops — your cleaning engine</h3>
+<h4>3a. <code>for</code> loop (you'll use this 95% of the time)</h4>
+<pre><code class="language-python"># Pattern 1: total revenue, skipping bad rows
+total = 0
+for row in sales:
+    qty = row[&quot;Quantity&quot;]
+    price = row[&quot;Price&quot;]
+    if qty is None or price is None:
+        continue  # skip incomplete rows, like filtering blanks in Excel
+    total += qty * price
+print(f&quot;Total (skip missing): ${total:.2f}&quot;)
+
+# Pattern 2: enumerate when you need row numbers
+for i, row in enumerate(sales, start=2):  # start=2 mimics Excel (header is row 1)
+    if not str(row[&quot;Product&quot;]).strip():
+        print(f&quot;Row {i}: missing product (Order {row[&#x27;OrderID&#x27;]})&quot;)
+
+# Pattern 3: counting by group (like a PivotTable COUNTIF)
+region_counts = {}
+for row in sales:
+    region = str(row[&quot;Region&quot;]).strip().title()  # &#x27;west&#x27; -&gt; &#x27;West&#x27;, &#x27; WEST&#x27; -&gt; &#x27;West&#x27;
+    region_counts[region] = region_counts.get(region, 0) + 1
+print(region_counts)  # {&#x27;West&#x27;: 4, &#x27;East&#x27;: 4, &#x27;North&#x27;: 2, &#x27;South&#x27;: 1}</code></pre>
+<h4>3b. <code>if / elif / else</code> inside loops</h4>
+<pre><code class="language-python">for row in sales:
+    raw = str(row[&quot;Product&quot;]).strip()
+    if raw == &quot;&quot;:
+        status = &quot;NEEDS PRODUCT&quot;
+    elif row[&quot;Quantity&quot;] is None or row[&quot;Price&quot;] is None:
+        status = &quot;NEEDS NUMBERS&quot;
+    else:
+        status = &quot;OK&quot;
+    print(row[&quot;OrderID&quot;], status)</code></pre>
+<blockquote>Rule of thumb: <code>strip()</code> text first, <em>then</em> compare. <code>" west " == "west"</code> is <code>False</code> — a classic junior bug.</blockquote>
+<hr/>
+<h3>4. Functions — reusable cleaning steps</h3>
+<p>If you copy-paste cleaning logic twice, make it a function.</p>
+<pre><code class="language-python">def clean_text(value):
+    &quot;&quot;&quot;Strip spaces and title-case. Empty/None -&gt; &#x27;&#x27;.&quot;&quot;&quot;
+    if value is None:
+        return &quot;&quot;
+    return str(value).strip().title()
+
+
+def clean_row(row):
+    &quot;&quot;&quot;Return a cleaned copy of a sales row + computed Total. Never mutates input.&quot;&quot;&quot;
+    cleaned = {
+        &quot;OrderID&quot;: row[&quot;OrderID&quot;],
+        &quot;Product&quot;: clean_text(row[&quot;Product&quot;]),
+        &quot;Quantity&quot;: row[&quot;Quantity&quot;] if row[&quot;Quantity&quot;] is not None else 0,
+        &quot;Price&quot;: row[&quot;Price&quot;] if row[&quot;Price&quot;] is not None else 0.0,
+        &quot;Region&quot;: clean_text(row[&quot;Region&quot;]),
+    }
+    cleaned[&quot;Total&quot;] = round(cleaned[&quot;Quantity&quot;] * cleaned[&quot;Price&quot;], 2)
+    return cleaned
+
+
+def revenue_by_region(rows):
+    &quot;&quot;&quot;Sum Total per Region. Expects already-cleaned rows.&quot;&quot;&quot;
+    totals = {}
+    for r in rows:
+        totals[r[&quot;Region&quot;]] = totals.get(r[&quot;Region&quot;], 0) + r[&quot;Total&quot;]
+    return totals
+
+
+# Use them:
+clean_sales = [clean_row(r) for r in sales]  # preview of next section!
+print(clean_sales[0])
+# {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;Laptop&#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;, &#x27;Total&#x27;: 1799.98}
+
+print(revenue_by_region(clean_sales))</code></pre>
+<p>Why functions help analysts:</p>
+<ul>
+<li><code>clean_text</code> fixes <em>every</em> text column the same way.</li>
+<li><code>clean_row</code> is testable: feed one row, check output.</li>
+<li>Default pattern <code>x if x is not None else 0</code> safely fills blanks (like Excel <code>=IF(ISBLANK(A2),0,A2)</code>).</li>
+</ul>
+<hr/>
+<h3>5. Comprehensions — one-line transforms</h3>
+<p>Comprehensions are compact loops for building lists/dicts. Analysts love them for column ops.</p>
+<pre><code class="language-python"># List comprehension: [expression for item in iterable if condition]
+
+# All totals in one line
+totals = [r[&quot;Quantity&quot;] * r[&quot;Price&quot;] for r in sales
+          if r[&quot;Quantity&quot;] is not None and r[&quot;Price&quot;] is not None]
+print(totals)
+
+# Clean product list, dropping blanks — compare to the loop in Section 1
+products_clean = [r[&quot;Product&quot;].strip().title() for r in sales if str(r[&quot;Product&quot;]).strip()]
+print(products_clean)
+
+# Dict comprehension: {key_expr: value_expr for item in iterable}
+# Revenue per order id
+revenue_per_order = {r[&quot;OrderID&quot;]: (r[&quot;Quantity&quot;] or 0) * (r[&quot;Price&quot;] or 0) for r in sales}
+print(revenue_per_order[101])  # 1799.98
+# (r[&quot;Quantity&quot;] or 0) trick: None, 0, &#x27;&#x27; all become 0. Handy for messy sheets.
+
+# Full clean pipeline in 2 lines (uses functions from Section 4)
+clean_sales = [clean_row(r) for r in sales]
+valid_sales = [r for r in clean_sales if r[&quot;Product&quot;] != &quot;&quot; and r[&quot;Total&quot;] &gt; 0]
+print(f&quot;{len(valid_sales)} valid orders out of {len(sales)}&quot;)
+print(revenue_by_region(valid_sales))</code></pre>
+<p>When <em>not</em> to use a comprehension: if the logic needs 3+ <code>if</code>s or side effects (printing, appending elsewhere) — use a plain loop for readability.</p>
+<hr/>
+<h3>Putting it together</h3>
+<pre><code class="language-python">def analyse(sales_rows):
+    cleaned = [clean_row(r) for r in sales_rows]
+    valid = [r for r in cleaned if r[&quot;Product&quot;] and r[&quot;Total&quot;] &gt; 0]
+    return {
+        &quot;rows_in&quot;: len(sales_rows),
+        &quot;rows_valid&quot;: len(valid),
+        &quot;rows_dropped&quot;: len(sales_rows) - len(valid),
+        &quot;total_revenue&quot;: round(sum(r[&quot;Total&quot;] for r in valid), 2),
+        &quot;by_region&quot;: revenue_by_region(valid),
+    }
+
+import json
+print(json.dumps(analyse(sales), indent=2))
+# Expect ~ total 4451.83, West highest. Run it!</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — High-value orders (lists + loops)</h4>
+<p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. <em>Expected: 2 orders (101 and 106). Hint: <code>if qty is not None and price is not None:</code> then compute.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Loop, compute <code>qty * price</code>, collect matches in a list, then print. &lt;/details&gt;</p>
+<h4>Exercise 2 — Category counter (dicts + functions)</h4>
+<p>Write a function <code>category(product)</code> that returns <code>"Computer"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>"Audio"</code> for Headset, else <code>"Other"</code> (and <code>"Unknown"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-python">def category(product):
+    p = clean_text(product)
+    ...</code></pre>
+<p>Use a dict + <code>.get(cat, 0) + 1</code> to count. &lt;/details&gt;</p>
+<h4>Exercise 3 — One-line clean (comprehensions)</h4>
+<p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == "East"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. <em>Expected: Orders 102 (127.5), 108 (150.0), and 110 (199.96) — note 110’s Region is <code>"east"</code>, which <code>clean_text</code> normalises to <code>"East"</code>. Hint: <code>[clean_row(r) for r in sales if ...]</code> — but filter on cleaned values, so either clean twice or clean first then filter.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+big = []
+for r in sales:
+    qty, price = r[&quot;Quantity&quot;], r[&quot;Price&quot;]
+    if qty is None or price is None:
+        continue
+    total = qty * price
+    if total &gt; 500:
+        big.append((r[&quot;OrderID&quot;], round(total, 2)))
+        print(r[&quot;OrderID&quot;], round(total, 2))
+print(&quot;count:&quot;, len(big))  # 101 1799.98 / 106 899.99 / count: 2
+
+# --- Solution 2 ---
+def category(product):
+    p = clean_text(product)
+    if p == &quot;&quot;:
+        return &quot;Unknown&quot;
+    if p in (&quot;Laptop&quot;, &quot;Monitor&quot;, &quot;Keyboard&quot;, &quot;Mouse&quot;):
+        return &quot;Computer&quot;
+    if p == &quot;Headset&quot;:
+        return &quot;Audio&quot;
+    return &quot;Other&quot;
+
+counts = {}
+for r in sales:
+    cat = category(r[&quot;Product&quot;])
+    counts[cat] = counts.get(cat, 0) + 1
+print(counts)  # {&#x27;Computer&#x27;: 10, &#x27;Unknown&#x27;: 1, &#x27;Audio&#x27;: 1}
+
+# --- Solution 3 ---
+cleaned = [clean_row(r) for r in sales]
+east_big = [r for r in cleaned if r[&quot;Region&quot;] == &quot;East&quot; and r[&quot;Total&quot;] &gt;= 100]
+east_map = {r[&quot;OrderID&quot;]: r[&quot;Total&quot;] for r in east_big}
+print(east_big)
+print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li><code>csv.DictReader</code> / <code>csv.DictWriter</code> to load/save the real file without pandas.</li>
+<li><code>pathlib</code>, <code>datetime</code> for file dates.</li>
+<li>Then pandas: <code>DataFrame</code> = supercharged list-of-dicts.</li>
+<li>Cheat sheet: <code>list</code> → column, <code>dict</code> → row, <code>for</code> → row-by-row, <code>def</code> → reusable step, <code>[... for ... if ...]</code> → one-line transform.</li>
+</ul>
+<p><em>Files in this folder: <code>sales_spreadsheet.csv</code> (messy input) + this notebook in Markdown. Paste any block into Python/Jupyter and run top-to-bottom.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 01 · Executable notebook: <code>lab-01-python-refresher-for-data-people.ipynb</code></footer>
+</body>
+</html>

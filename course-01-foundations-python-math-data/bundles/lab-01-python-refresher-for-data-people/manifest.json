@@ -1,0 +1,12 @@
+{
+  "lab_id": "lab-01-python-refresher-for-data-people",
+  "notebook": "lab-01-python-refresher-for-data-people.ipynb",
+  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-01-python-refresher-for-data-people/notebook.ipynb",
+  "api_launch": "https://api.vlabs.test/colab/lab-01-python-refresher-for-data-people/launch-url",
+  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-01-python-refresher-for-data-people/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "sales_spreadsheet.csv"
+  ],
+  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+}

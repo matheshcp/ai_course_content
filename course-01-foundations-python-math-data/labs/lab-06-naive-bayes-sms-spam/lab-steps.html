@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 06 — SMS Spam Classifier (Naive Bayes, no sklearn)</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 06 — SMS Spam Classifier (Naive Bayes, no sklearn)</h1>
+<div class="meta">
+<p><strong>Track</strong> Probability Meets Text Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~60 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-06-naive-bayes-sms-spam.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sms.tsv</code> — <a href="https://raw.githubusercontent.com/justmarkham/DAT8/master/data/sms.tsv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Tokenise SMS text and remove stopwords</li><li>Train multinomial Naive Bayes with Laplace smoothing from scratch</li><li>Evaluate on a seed=42 holdout with a confusion matrix</li><li>Rank spam-indicative tokens by log-likelihood ratio</li></ul>
+
+<hr/>
+<h2>SMS Spam Classifier (Naive Bayes, no sklearn)</h2>
+<h3>Probability Meets Text Track: Multinomial NB from Scratch</h3>
+<blockquote><strong>Scenario:</strong> <code>sms.tsv</code> has ~5572 labeled SMS messages (ham/spam). Build a <strong>multinomial Naive Bayes</strong> classifier with Laplace smoothing using only the Python standard library — then evaluate on a 20% holdout with <code>seed=42</code>.  <strong>You will learn:</strong> tokenisation, stopwords, word counts, log-priors, Bayes rule, train/test split, confusion matrix by hand. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ only. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Naive Bayes mental map</h4>
+<table><thead><tr><th>Concept</th><th>Code shape</th></tr></thead><tbody>
+<tr><td>Prior P(label)</td><td><code>count(label) / N</code> in log space</td></tr>
+<tr><td>Likelihood P(word\</td><td>label)</td><td><code>(count[word] + α) / (total + α·V)</code></td></tr>
+<tr><td>Score a message</td><td><code>log prior + Σ log likelihood(token)</code></td></tr>
+<tr><td>Predict</td><td><code>argmax</code> over the two labels</td></tr>
+<tr><td>Holdout</td><td><code>random.seed(42)</code> + <code>shuffle</code> + 80/20 split</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load data (local first, Colab fallback)</h4>
+<pre><code class="language-python">import csv, math, os, random, re
+from collections import Counter
+
+def load_sms():
+    local = &quot;sms.tsv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/justmarkham/DAT8/master/data/sms.tsv&quot;,
+            local,
+        )
+    rows = []
+    with open(local, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+        for r in csv.reader(f, delimiter=&quot;\t&quot;):
+            if len(r) &gt;= 2 and r[0] in (&quot;ham&quot;, &quot;spam&quot;):
+                rows.append((r[0], r[1]))
+    return rows
+
+msgs = load_sms()
+print(len(msgs), &quot;messages&quot;)
+print(Counter(l for l, _ in msgs))
+# 5572 messages  Counter({&#x27;ham&#x27;: 4825, &#x27;spam&#x27;: 747})
+print(msgs[0])</code></pre>
+<hr/>
+<h4>2. Tokenise</h4>
+<pre><code class="language-python">STOP = set(
+    &quot;a an the and or but if in on at to for of is are was were be been &quot;
+    &quot;i you he she it we they my your our their this that with as so not &quot;
+    &quot;no do does did have has had will would can could&quot;.split()
+)
+
+def tokens(text):
+    return [w for w in re.findall(r&quot;[a-z0-9&#x27;]+&quot;, text.lower())
+            if w not in STOP and len(w) &gt; 1]
+
+print(tokens(&quot;FREE entry in 2 a weekly comp to win FA cup final tickets!&quot;))
+# [&#x27;free&#x27;, &#x27;entry&#x27;, &#x27;2&#x27;, &#x27;weekly&#x27;, &#x27;comp&#x27;, &#x27;win&#x27;, &#x27;fa&#x27;, &#x27;cup&#x27;, &#x27;final&#x27;, &#x27;tickets&#x27;]</code></pre>
+<hr/>
+<h4>3. Train / test split (seed = 42)</h4>
+<pre><code class="language-python">random.seed(42)
+shuffled = msgs[:]
+random.shuffle(shuffled)
+n_test = int(len(shuffled) * 0.2)
+test, train = shuffled[:n_test], shuffled[n_test:]
+print(len(train), len(test))   # 4458 1114
+print(&quot;train labels:&quot;, Counter(l for l, _ in train))
+# train labels: Counter({&#x27;ham&#x27;: 3848, &#x27;spam&#x27;: 610})</code></pre>
+<hr/>
+<h4>4. Fit multinomial NB with Laplace (α = 1)</h4>
+<pre><code class="language-python">ALPHA = 1.0
+label_counts = Counter(l for l, _ in train)
+N_train = len(train)
+prior_log = {lab: math.log(label_counts[lab] / N_train) for lab in label_counts}
+# ham ≈ -0.1471, spam ≈ -1.989
+
+word_counts = {lab: Counter() for lab in label_counts}
+vocab = set()
+for lab, text in train:
+    for w in tokens(text):
+        word_counts[lab][w] += 1
+        vocab.add(w)
+V = len(vocab)
+# vocab_size ≈ 7826
+
+totals = {lab: sum(word_counts[lab].values()) + ALPHA * V for lab in label_counts}
+
+def log_likelihood(lab, w):
+    return math.log((word_counts[lab][w] + ALPHA) / totals[lab])
+
+def classify(text):
+    best, best_score = None, -math.inf
+    for lab in label_counts:
+        score = prior_log[lab]
+        for w in tokens(text):
+            if w in vocab:
+                score += log_likelihood(lab, w)
+            else:
+                # OOV token: same α / total for every label → constant offset;
+                # still include for correctness of the sum
+                score += math.log(ALPHA / totals[lab])
+        if score &gt; best_score:
+            best, best_score = lab, score
+    return best
+
+print(classify(&quot;Congratulations! You&#x27;ve won a free prize. Claim now!&quot;))  # spam
+print(classify(&quot;Hey, are we still on for lunch at noon?&quot;))               # ham</code></pre>
+<hr/>
+<h4>5. Evaluate on holdout</h4>
+<pre><code class="language-python">preds = [classify(t) for _, t in test]
+gold  = [l for l, _ in test]
+acc = sum(p == g for p, g in zip(preds, gold)) / len(gold)
+print(f&quot;accuracy: {acc:.4f}&quot;)  # 0.9803
+print(&quot;correct:&quot;, sum(p == g for p, g in zip(preds, gold)), &quot;/&quot;, len(gold))  # 1092 / 1114
+
+conf = Counter(zip(gold, preds))
+print(&quot;ham-&gt;ham&quot;, conf[(&quot;ham&quot;, &quot;ham&quot;)], &quot; ham-&gt;spam&quot;, conf[(&quot;ham&quot;, &quot;spam&quot;)])
+print(&quot;spam-&gt;ham&quot;, conf[(&quot;spam&quot;, &quot;ham&quot;)], &quot; spam-&gt;spam&quot;, conf[(&quot;spam&quot;, &quot;spam&quot;)])
+# ham-&gt;ham 962  ham-&gt;spam 15
+# spam-&gt;ham 7   spam-&gt;spam 130</code></pre>
+<p>Confusion matrix layout (rows = true, cols = predicted):</p>
+<table><thead><tr><th></th><th>pred ham</th><th>pred spam</th></tr></thead><tbody>
+<tr><td><strong>true ham</strong></td><td>962</td><td>15</td></tr>
+<tr><td><strong>true spam</strong></td><td>7</td><td>130</td></tr>
+</tbody></table>
+<hr/>
+<h4>6. Top spam-indicative tokens (log lift)</h4>
+<pre><code class="language-python">spam_lift = []
+for w in vocab:
+    ps = (word_counts[&quot;spam&quot;][w] + ALPHA) / totals[&quot;spam&quot;]
+    ph = (word_counts[&quot;ham&quot;][w] + ALPHA) / totals[&quot;ham&quot;]
+    spam_lift.append((w, math.log(ps / ph),
+                      word_counts[&quot;spam&quot;][w], word_counts[&quot;ham&quot;][w]))
+spam_lift.sort(key=lambda x: -x[1])
+top = [(w, round(lift, 3), s, h) for w, lift, s, h in spam_lift if s + h &gt;= 10][:10]
+for row in top:
+    print(row)
+# claim 5.343 (90 spam / 0 ham in train)
+# prize 5.109
+# won 4.959
+# 150p 4.875
+# tone 4.724
+# ...</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Top-10 spam-indicative tokens</h4>
+<p>Using training counts only, rank tokens by <code>log P(w|spam) − log P(w|ham)</code> (support ≥ 10). Print the top 10. <em>Expected (approx): claim, prize, won, 150p, tone, 18, www, guaranteed, 1000, 500.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting. &lt;/details&gt;</p>
+<h4>Exercise 2 — Accuracy on 20% holdout (seed 42)</h4>
+<p>Report accuracy to 4 d.p. and the 4 confusion counts. <em>Expected: accuracy ≈ 0.9803 · TP_spam=130, FN_spam=7, FP_spam=15, TN=962.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters. &lt;/details&gt;</p>
+<h4>Exercise 3 — Why “free” alone misclassifies marketing ham</h4>
+<p>How many holdout messages contain <code>"free"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. <em>Expected: 48 test messages contain “free”; 14 are ham (e.g. “When you get free, call me”). Naive Bayes multiplies independent token evidence — a rare spammy co-occurrence pattern can tip borderline ham over the decision boundary.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-python">free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
+print(len(free_test), sum(1 for _, g in free_test if g == &quot;ham&quot;))</code></pre>
+<p>Single tokens cannot capture context; that’s the “naive” independence assumption. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+lift = []
+for w in vocab:
+    ps = (word_counts[&quot;spam&quot;][w] + ALPHA) / totals[&quot;spam&quot;]
+    ph = (word_counts[&quot;ham&quot;][w] + ALPHA) / totals[&quot;ham&quot;]
+    s = word_counts[&quot;spam&quot;][w]; h = word_counts[&quot;ham&quot;][w]
+    if s + h &gt;= 10:
+        lift.append((w, math.log(ps/ph), s, h))
+lift.sort(key=lambda x: -x[1])
+print([w for w, *_ in lift[:10]])
+# [&#x27;claim&#x27;, &#x27;prize&#x27;, &#x27;won&#x27;, &#x27;150p&#x27;, &#x27;tone&#x27;, &#x27;18&#x27;, &#x27;www&#x27;, &#x27;guaranteed&#x27;, &#x27;1000&#x27;, &#x27;500&#x27;]
+
+# --- Solution 2 ---
+preds = [classify(t) for _, t in test]
+gold  = [l for l, _ in test]
+acc = sum(p == g for p, g in zip(preds, gold)) / len(gold)
+print(f&quot;{acc:.4f}&quot;)  # 0.9803
+print(Counter(zip(gold, preds)))
+# 962 ham-&gt;ham, 15 ham-&gt;spam, 7 spam-&gt;ham, 130 spam-&gt;spam
+
+# --- Solution 3 ---
+free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
+n_free = len(free_test)
+n_ham = sum(1 for _, g in free_test if g == &quot;ham&quot;)
+example = next(t for t, g in free_test if g == &quot;ham&quot;)
+print(n_free, n_ham)
+print(example[:80])
+# 48 14
+# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Add bigrams (<code>"free entry"</code>) — reduces “free” false positives.</li>
+<li>Compare to <code>sklearn.naive_bayes.MultinomialNB</code> (should land ≈ same accuracy).</li>
+<li>TF-IDF weights; threshold tuning for precision vs recall on spam.</li>
+<li>Cheat sheet: tokenize → count → log-priors + log-likelihoods → argmax → confusion matrix.</li>
+</ul>
+<p><em>Files in this folder: <code>sms.tsv</code>. Paste any block into Python/Jupyter and run top-to-bottom.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 06 · Executable notebook: <code>lab-06-naive-bayes-sms-spam.ipynb</code></footer>
+</body>
+</html>

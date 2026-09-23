@@ -1,0 +1,12 @@
+{
+  "lab_id": "lab-07-iris-deep-dive",
+  "notebook": "lab-07-iris-deep-dive.ipynb",
+  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-07-iris-deep-dive/notebook.ipynb",
+  "api_launch": "https://api.vlabs.test/colab/lab-07-iris-deep-dive/launch-url",
+  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-07-iris-deep-dive/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "iris.csv"
+  ],
+  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+}

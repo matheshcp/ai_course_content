@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 08 — Working with a Live Public API</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 08 — Working with a Live Public API</h1>
+<div class="meta">
+<p><strong>Track</strong> Data Outside Files Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~40 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-08-live-public-api.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>offline_fixture.json</code> — upload in Colab</li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>GET JSON from a public API with urllib and a User-Agent</li><li>Retry 429/5xx with exponential backoff</li><li>Cache responses and flatten nested JSON to rows</li><li>Save api_snapshot.csv; fall back to offline fixture</li></ul>
+
+<hr/>
+<h2>Working with a Live Public API</h2>
+<h3>Data Outside Files Track: HTTP, JSON, Caching, Backoff</h3>
+<blockquote><strong>Scenario:</strong> Fetch a free public JSON API (Open-Meteo forecast — no API key), handle timeouts and 429s with exponential backoff, cache the response to <code>api_cache.json</code>, flatten nested JSON into a DataFrame, and save <code>api_snapshot.csv</code>. An <strong>offline fixture</strong> is shipped so the lab runs with no network.  <strong>You will learn:</strong> <code>urllib.request</code>, JSON parsing, status codes, caching, schema flattening, polite retry. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>API mental map</h4>
+<table><thead><tr><th>Web concept</th><th>Python</th><th>Failure mode</th></tr></thead><tbody>
+<tr><td>GET URL</td><td><code>urllib.request.urlopen</code></td><td>timeout / DNS</td></tr>
+<tr><td>JSON body</td><td><code>json.loads</code></td><td>decode error</td></tr>
+<tr><td>200 / 429 / 5xx</td><td>check <code>status</code></td><td>rate limit</td></tr>
+<tr><td>Retry</td><td>sleep <code>2**attempt</code></td><td>thundering herd</td></tr>
+<tr><td>Cache</td><td>write local JSON</td><td>stale data</td></tr>
+<tr><td>Nested → table</td><td>dict flatten</td><td>missing keys</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Fetch with retry / backoff (fixture fallback)</h4>
+<pre><code class="language-python">import json, os, time, urllib.error, urllib.request
+
+API_URL = (
+    &quot;https://api.open-meteo.com/v1/forecast&quot;
+    &quot;?latitude=-37.81&amp;longitude=144.96&quot;
+    &quot;&amp;daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&quot;
+    &quot;&amp;timezone=auto&amp;forecast_days=3&quot;
+)
+FIXTURE = &quot;offline_fixture.json&quot;
+CACHE = &quot;api_cache.json&quot;
+
+def fetch_json(url, cache_path=CACHE, fixture=FIXTURE,
+               timeout=10, max_retries=4, use_network=True):
+    &quot;&quot;&quot;GET JSON with exponential backoff. Falls back to local fixture.&quot;&quot;&quot;
+    if os.path.exists(cache_path) and use_network is not None:
+        # Prefer fresh cache only if caller allows; default: try network first below
+        pass
+    if not use_network:
+        with open(fixture, encoding=&quot;utf-8&quot;) as f:
+            return json.load(f), &quot;fixture&quot;
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, headers={&quot;User-Agent&quot;: &quot;ailab-lab08/1.0&quot;})
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                if resp.status == 429:
+                    raise urllib.error.HTTPError(url, 429, &quot;Too Many Requests&quot;, resp.headers, None)
+                data = json.loads(resp.read().decode(&quot;utf-8&quot;))
+            with open(cache_path, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+                json.dump(data, f, indent=2)
+            return data, &quot;network&quot;
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code == 429 or e.code &gt;= 500:
+                time.sleep(2 ** attempt)  # 1s, 2s, 4s, 8s
+                continue
+            break  # 4xx other than 429: don&#x27;t retry
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last_err = e
+            time.sleep(2 ** attempt)
+    print(f&quot;network failed ({last_err}); using fixture&quot;)
+    with open(fixture, encoding=&quot;utf-8&quot;) as f:
+        return json.load(f), &quot;fixture&quot;
+
+# Try network; if you&#x27;re offline or Colab blocks egress, fixture kicks in.
+payload, source = fetch_json(API_URL, use_network=True)
+print(&quot;source:&quot;, source)  # network | fixture
+print(list(payload.keys()))</code></pre>
+<blockquote>Why backoff? Hammering a 429 endpoint gets your IP banned. <code>2**attempt</code> spreads retries out; always set a User-Agent.</blockquote>
+<hr/>
+<h4>2. Inspect and flatten nested JSON</h4>
+<pre><code class="language-python">print(&quot;timezone:&quot;, payload.get(&quot;timezone&quot;))
+daily = payload[&quot;daily&quot;]          # nested object
+times = daily[&quot;time&quot;]             # parallel arrays
+print(&quot;days:&quot;, times)
+
+# Flatten: one dict per day
+records = []
+for i, day in enumerate(times):
+    records.append({
+        &quot;date&quot;: day,
+        &quot;tmax&quot;: daily[&quot;temperature_2m_max&quot;][i],
+        &quot;tmin&quot;: daily[&quot;temperature_2m_min&quot;][i],
+        &quot;precip_prob&quot;: daily[&quot;precipitation_probability_max&quot;][i],
+        &quot;source&quot;: source,
+    })
+print(records[0])
+# e.g. {&#x27;date&#x27;: &#x27;2026-09-22&#x27;, &#x27;tmax&#x27;: 15.4, &#x27;tmin&#x27;: 8.2, &#x27;precip_prob&#x27;: 20, &#x27;source&#x27;: &#x27;fixture&#x27;}</code></pre>
+<p>Mental model: API gave you <strong>column-oriented</strong> JSON; analysts want <strong>row-oriented</strong> records.</p>
+<hr/>
+<h4>3. DataFrame (or list) + save CSV</h4>
+<pre><code class="language-python">try:
+    import pandas as pd
+    df = pd.DataFrame(records)
+    print(df)
+    df.to_csv(&quot;api_snapshot.csv&quot;, index=False)
+except ImportError:
+    import csv
+    with open(&quot;api_snapshot.csv&quot;, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+        w = csv.DictWriter(f, fieldnames=list(records[0].keys()))
+        w.writeheader(); w.writerows(records)
+    print(&quot;wrote api_snapshot.csv (stdlib)&quot;)
+
+print(&quot;saved api_snapshot.csv rows:&quot;, len(records))  # 3</code></pre>
+<hr/>
+<h4>4. Cache behaviour</h4>
+<pre><code class="language-python"># Second call with use_network=False reads the fixture (or your cache) — no HTTP.
+payload2, src2 = fetch_json(API_URL, use_network=False)
+print(&quot;second source:&quot;, src2)  # fixture
+print(&quot;fixture keys:&quot;, sorted(payload2.keys()))
+assert &quot;daily&quot; in payload2, &quot;fixture must expose a daily block&quot;
+
+# If you saved a real network response, inspect the cache file:
+if os.path.exists(CACHE):
+    with open(CACHE, encoding=&quot;utf-8&quot;) as f:
+        print(&quot;cache bytes:&quot;, len(f.read()))</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Retry with exponential backoff</h4>
+<p>Simulate three 429 responses then success: write a loop that sleeps <code>2**attempt</code> seconds (use <code>0.01</code> as a stand-in sleep in tests) and returns a payload after the 4th try. Print the sleep schedule. <em>Expected sleeps: 1, 2, 4 (then success on attempt 3 → return). With <code>max_retries=4</code>: sequence of waits 1,2,4,8 if all fail.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-text">max_retries = 4
+for attempt in range(max_retries):
+    try:
+        ...  # request
+        break
+    except RateLimited:
+        time.sleep(2 ** attempt)</code></pre>
+<p>&lt;/details&gt;</p>
+<h4>Exercise 2 — Flatten nested JSON to columns</h4>
+<p>Given <code>payload["daily"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. <em>Expected: 3 rows (forecast_days=3); first row keys <code>date, tmax, tmin, precip_prob</code>.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — Save <code>api_snapshot.csv</code></h4>
+<p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. <em>Expected: <code>api_snapshot.csv</code> with 1 header + 3 data rows.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>df.to_csv("api_snapshot.csv", index=False)</code> or <code>csv.DictWriter</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+import time
+def retry_demo(max_retries=4, sleep=time.sleep):
+    sleeps = []
+    for attempt in range(max_retries):
+        # pretend attempt &lt; 2 raises 429
+        if attempt &lt; 2:
+            w = 2 ** attempt
+            sleeps.append(w)
+            sleep(w)
+            continue
+        return {&quot;ok&quot;: True, &quot;attempt&quot;: attempt}, sleeps
+    return None, sleeps
+# Use real time.sleep in production; in tests inject sleep=lambda s: None.
+data, schedule = retry_demo(sleep=lambda s: None)
+print(&quot;sleeps:&quot;, schedule, &quot;-&gt; success at&quot;, data[&quot;attempt&quot;])
+# sleeps: [1, 2] -&gt; success at 2
+
+# --- Solution 2 ---
+daily = payload[&quot;daily&quot;]
+rows = [
+    {&quot;date&quot;: t,
+     &quot;tmax&quot;: daily[&quot;temperature_2m_max&quot;][i],
+     &quot;tmin&quot;: daily[&quot;temperature_2m_min&quot;][i],
+     &quot;precip_prob&quot;: daily[&quot;precipitation_probability_max&quot;][i]}
+    for i, t in enumerate(daily[&quot;time&quot;])
+]
+print(len(rows), rows[0])  # 3 {date: ..., tmax: ..., ...}
+
+# --- Solution 3 ---
+# (from Section 3) after writing:
+import os
+assert os.path.exists(&quot;api_snapshot.csv&quot;)
+with open(&quot;api_snapshot.csv&quot;, encoding=&quot;utf-8&quot;) as f:
+    n_lines = sum(1 for _ in f)
+print(&quot;lines including header:&quot;, n_lines)  # 4</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li><code>requests</code> library (<code>response.raise_for_status()</code>, sessions).</li>
+<li>OpenAPI/Swagger docs; API keys via environment variables — never commit secrets.</li>
+<li>Pagination + <code>asyncio</code> for many endpoints.</li>
+<li>Cheer sheet: GET → check status → backoff on 429/5xx → cache → flatten → CSV.</li>
+</ul>
+<p><em>Files in this folder: <code>offline_fixture.json</code> (always works offline) · outputs <code>api_cache.json</code>, <code>api_snapshot.csv</code>.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 08 · Executable notebook: <code>lab-08-live-public-api.ipynb</code></footer>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 09 — Relational Queries — Chinook Music DB</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 09 — Relational Queries — Chinook Music DB</h1>
+<div class="meta">
+<p><strong>Track</strong> SQL for Analysts Track</p>
+<p><strong>Level</strong> Beginner–Intermediate · <strong>Time</strong> ~50 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-09-chinook-sqlite.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>chinook.sqlite</code> — <a href="https://raw.githubusercontent.com/lerocha/chinook-database/master/ChinookDatabase/DataSources/Chinook_Sqlite.sqlite">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Connect to SQLite and list schema tables</li><li>Write JOIN + GROUP BY revenue queries</li><li>Use LEFT JOIN anti-patterns to find orphan rows</li><li>Load SQL results into pandas and plot monthly revenue</li></ul>
+
+<hr/>
+<h2>Relational Queries — Chinook Music DB</h2>
+<h3>SQL for Analysts Track: JOIN, GROUP BY, Results → pandas</h3>
+<blockquote><strong>Scenario:</strong> <code>chinook.sqlite</code> is a music-store schema (artists, albums, tracks, invoices, customers). Answer revenue and customer questions with SQL, then load results into pandas for a monthly trend.  <strong>You will learn:</strong> <code>sqlite3.connect</code>, SELECT / JOIN / GROUP BY, subqueries, <code>pandas.read_sql</code>. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Beginner–Intermediate. <strong>Needs:</strong> sqlite3 (stdlib) + pandas. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>SQL mental map</h4>
+<table><thead><tr><th>Spreadsheet idea</th><th>SQL</th><th>Python</th></tr></thead><tbody>
+<tr><td>Filter rows</td><td><code>WHERE</code></td><td><code>df[df.col == …]</code></td></tr>
+<tr><td>VLOOKUP across sheets</td><td><code>JOIN</code></td><td><code>merge</code></td></tr>
+<tr><td>PivotTable values</td><td><code>SUM(...) GROUP BY</code></td><td><code>groupby().sum()</code></td></tr>
+<tr><td>Top N</td><td><code>ORDER BY … LIMIT n</code></td><td><code>nlargest</code></td></tr>
+<tr><td>Two-step pivot</td><td>subquery / CTE</td><td>chain groupbys</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Connect and list tables (local first, Colab fallback)</h4>
+<pre><code class="language-python">import os, sqlite3
+import pandas as pd
+
+def connect_chinook():
+    local = &quot;chinook.sqlite&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/lerocha/chinook-database/master/&quot;
+            &quot;ChinookDatabase/DataSources/Chinook_Sqlite.sqlite&quot;,
+            local,
+        )
+    return sqlite3.connect(local)
+
+conn = connect_chinook()
+tables = pd.read_sql(
+    &quot;SELECT name FROM sqlite_master WHERE type=&#x27;table&#x27; ORDER BY name&quot;, conn
+)[&quot;name&quot;].tolist()
+print(tables)
+# [&#x27;Album&#x27;, &#x27;Artist&#x27;, &#x27;Customer&#x27;, &#x27;Employee&#x27;, &#x27;Genre&#x27;, &#x27;Invoice&#x27;,
+#  &#x27;InvoiceLine&#x27;, &#x27;MediaType&#x27;, &#x27;Playlist&#x27;, &#x27;PlaylistTrack&#x27;, &#x27;Track&#x27;]
+
+print(pd.read_sql(&quot;SELECT COUNT(*) AS n_customers FROM Customer&quot;, conn))
+# 59
+print(pd.read_sql(&quot;SELECT ROUND(SUM(Total),2) AS revenue FROM Invoice&quot;, conn))
+# 2328.60</code></pre>
+<p>Schema chain for track revenue:</p>
+<pre><code class="language-text">Invoice ──&lt; InvoiceLine &gt;── Track ──&lt; Album &gt;── Artist</code></pre>
+<hr/>
+<h4>2. Top 5 tracks by revenue</h4>
+<pre><code class="language-python">top5 = pd.read_sql(&quot;&quot;&quot;
+SELECT t.Name        AS track,
+       al.Title      AS album,
+       ar.Name       AS artist,
+       ROUND(SUM(il.Quantity * il.UnitPrice), 2) AS revenue
+FROM InvoiceLine il
+JOIN Track t    ON t.TrackId  = il.TrackId
+JOIN Album al   ON al.AlbumId = t.AlbumId
+JOIN Artist ar  ON ar.ArtistId= al.ArtistId
+GROUP BY t.TrackId
+ORDER BY revenue DESC
+LIMIT 5
+&quot;&quot;&quot;, conn)
+print(top5.to_string(index=False))</code></pre>
+<p>Expected (ties at the top are common — unit prices cluster at 0.99×qty):</p>
+<table><thead><tr><th>track</th><th>album</th><th>artist</th><th>revenue</th></tr></thead><tbody>
+<tr><td>The Woman King</td><td>Battlestar Galactica, Season 3</td><td>Battlestar Galactica</td><td>3.98</td></tr>
+<tr><td>The Fix</td><td>Heroes, Season 1</td><td>Heroes</td><td>3.98</td></tr>
+<tr><td>Walkabout</td><td>Lost, Season 1</td><td>Lost</td><td>3.98</td></tr>
+<tr><td>Hot Girl</td><td>The Office, Season 1</td><td>The Office</td><td>3.98</td></tr>
+<tr><td>Gay Witch Hunt</td><td>The Office, Season 3</td><td>The Office</td><td>3.98</td></tr>
+</tbody></table>
+<pre><code class="language-python">top5.to_csv(&quot;top_tracks.csv&quot;, index=False)
+print(&quot;wrote top_tracks.csv&quot;)</code></pre>
+<hr/>
+<h4>3. Customers with no purchases (LEFT JOIN anti-pattern)</h4>
+<pre><code class="language-python">no_buy = pd.read_sql(&quot;&quot;&quot;
+SELECT c.CustomerId, c.FirstName, c.LastName, c.Email
+FROM Customer c
+LEFT JOIN Invoice i ON i.CustomerId = c.CustomerId
+WHERE i.InvoiceId IS NULL
+ORDER BY c.CustomerId
+&quot;&quot;&quot;, conn)
+print(len(no_buy), &quot;customers with zero invoices&quot;)
+# 0 customers with zero invoices  (every Chinook customer has purchased)</code></pre>
+<blockquote>Empty result is a valid answer — document it. The pattern (LEFT JOIN + <code>IS NULL</code>) is how you find orphans for any schema.</blockquote>
+<p>Equivalent NOT IN:</p>
+<pre><code class="language-python">no_buy2 = pd.read_sql(&quot;&quot;&quot;
+SELECT * FROM Customer
+WHERE CustomerId NOT IN (SELECT DISTINCT CustomerId FROM Invoice)
+&quot;&quot;&quot;, conn)
+assert len(no_buy) == len(no_buy2)</code></pre>
+<p><strong>Variant for a non-empty demo</strong> — customers whose total spend is below the median:</p>
+<pre><code class="language-python">cust_spend = pd.read_sql(&quot;&quot;&quot;
+SELECT c.CustomerId,
+       c.FirstName || &#x27; &#x27; || c.LastName AS name,
+       COALESCE(ROUND(SUM(i.Total), 2), 0) AS spend
+FROM Customer c
+LEFT JOIN Invoice i ON i.CustomerId = c.CustomerId
+GROUP BY c.CustomerId
+ORDER BY spend
+&quot;&quot;&quot;, conn)
+print(cust_spend.head(5).to_string(index=False))
+print(&quot;median spend:&quot;, cust_spend[&quot;spend&quot;].median())</code></pre>
+<hr/>
+<h4>4. Monthly revenue trend</h4>
+<pre><code class="language-python">monthly = pd.read_sql(&quot;&quot;&quot;
+SELECT strftime(&#x27;%Y-%m&#x27;, InvoiceDate) AS ym,
+       ROUND(SUM(Total), 2) AS revenue,
+       COUNT(*) AS invoices
+FROM Invoice
+GROUP BY ym
+ORDER BY ym
+&quot;&quot;&quot;, conn)
+print(monthly.head(6).to_string(index=False))
+print(&quot;months:&quot;, len(monthly), &quot;total:&quot;, monthly[&quot;revenue&quot;].sum().round(2))
+# months: 60, total ≈ 2328.60</code></pre>
+<p>Plot:</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots(figsize=(10, 3))
+ax.plot(monthly[&quot;ym&quot;], monthly[&quot;revenue&quot;], marker=&quot;o&quot;, ms=3)
+ax.set_title(&quot;Chinook monthly revenue&quot;)
+ax.set_ylabel(&quot;Revenue ($)&quot;)
+plt.xticks(rotation=90, fontsize=6)
+fig.tight_layout(); fig.savefig(&quot;monthly_revenue.png&quot;, dpi=120)
+print(&quot;saved monthly_revenue.png&quot;)</code></pre>
+<p>Peaks to notice: <strong>2022-01 (52.62)</strong>, <strong>2023-04 (51.62)</strong>, <strong>2023-06 (50.62)</strong>; a dip at <strong>2023-11 (23.76)</strong>.</p>
+<hr/>
+<h4>5. Bonus: top genres by revenue</h4>
+<pre><code class="language-python">genres = pd.read_sql(&quot;&quot;&quot;
+SELECT g.Name AS genre,
+       ROUND(SUM(il.Quantity * il.UnitPrice), 2) AS revenue
+FROM InvoiceLine il
+JOIN Track t ON t.TrackId = il.TrackId
+JOIN Genre g ON g.GenreId = t.GenreId
+GROUP BY g.GenreId
+ORDER BY revenue DESC
+LIMIT 3
+&quot;&quot;&quot;, conn)
+print(genres.to_string(index=False))
+# Rock    826.65
+# Latin   382.14
+# Metal   261.36</code></pre>
+<pre><code class="language-python">conn.close()</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Top 5 tracks by revenue</h4>
+<p>Run the Section 2 query. List track name and revenue for all 5. <em>Expected: five tracks each with revenue 3.98 — The Woman King, The Fix, Walkabout, Hot Girl, Gay Witch Hunt (ties).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Join <code>InvoiceLine → Track → Album → Artist</code>, <code>SUM(Quantity*UnitPrice)</code>, <code>ORDER BY revenue DESC LIMIT 5</code>. &lt;/details&gt;</p>
+<h4>Exercise 2 — Customers with no purchases</h4>
+<p>LEFT JOIN customers to invoices; count rows where invoice is NULL. <em>Expected: 0 (all 59 customers have ≥1 invoice). Print 0 and explain the anti-pattern.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>WHERE i.InvoiceId IS NULL</code> after <code>LEFT JOIN Invoice</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — Monthly revenue trend</h4>
+<p>Group invoices by <code>strftime('%Y-%m', InvoiceDate)</code>. How many months? What is total revenue? <em>Expected: 60 months · total ≈ 2328.60.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>SELECT strftime('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total),2) … GROUP BY ym ORDER BY ym</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+import sqlite3, os, pandas as pd
+conn = sqlite3.connect(&quot;chinook.sqlite&quot;)
+q1 = &quot;&quot;&quot;
+SELECT t.Name AS track, al.Title AS album, ar.Name AS artist,
+       ROUND(SUM(il.Quantity*il.UnitPrice),2) AS revenue
+FROM InvoiceLine il
+JOIN Track t ON t.TrackId=il.TrackId
+JOIN Album al ON al.AlbumId=t.AlbumId
+JOIN Artist ar ON ar.ArtistId=al.ArtistId
+GROUP BY t.TrackId ORDER BY revenue DESC LIMIT 5
+&quot;&quot;&quot;
+print(pd.read_sql(q1, conn).to_string(index=False))
+# all revenues 3.98
+
+# --- Solution 2 ---
+q2 = &quot;&quot;&quot;
+SELECT COUNT(*) AS n FROM Customer c
+LEFT JOIN Invoice i ON i.CustomerId=c.CustomerId
+WHERE i.InvoiceId IS NULL
+&quot;&quot;&quot;
+print(pd.read_sql(q2, conn)[&quot;n&quot;][0])  # 0
+
+# --- Solution 3 ---
+q3 = &quot;&quot;&quot;
+SELECT strftime(&#x27;%Y-%m&#x27;, InvoiceDate) AS ym,
+       ROUND(SUM(Total),2) AS revenue
+FROM Invoice GROUP BY ym ORDER BY ym
+&quot;&quot;&quot;
+m = pd.read_sql(q3, conn)
+print(len(m), round(m[&quot;revenue&quot;].sum(), 2))  # 60 2328.6
+conn.close()</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Window functions: <code>SUM(...) OVER (PARTITION BY …)</code> for running revenue.</li>
+<li>CTEs (<code>WITH</code>) for multi-step pivots.</li>
+<li>EXPLAIN QUERY PLAN on the invoice tables.</li>
+<li>Then SQLAlchemy / DuckDB for larger-than-memory analytics.</li>
+<li>Cheat sheet: connect → explore <code>sqlite_master</code> → JOIN path → GROUP BY → export.</li>
+</ul>
+<p><em>Files in this folder: <code>chinook.sqlite</code> · optional outputs <code>top_tracks.csv</code>, <code>monthly_revenue.png</code>.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 09 · Executable notebook: <code>lab-09-chinook-sqlite.ipynb</code></footer>
+</body>
+</html>

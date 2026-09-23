@@ -1,0 +1,13 @@
+OrderID,Product,Quantity,Price,Region
+101,  Laptop ,2,899.99,West
+102,Mouse,5,25.50,East
+103,KEYBOARD,1,75.00,west
+104,,3,12.99,East
+105,Monitor,,199.99,North
+106, Laptop,1,899.99,WEST
+107,mouse,10,25.50,South
+108,Keyboard,2,75.00,East
+109, Monitor ,1,199.99, North
+110,Headset,4,49.99,east
+111,Laptop,1,,West
+112,MOUSE,2,25.50,West

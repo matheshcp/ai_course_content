@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 10 Overview — Web Scraping a Static Public Page</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 10 Overview — Web Scraping a Static Public Page</h1>
+<div class="meta">
+<p><strong>Track</strong> Data Acquisition Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~45 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-10-web-scraping-static-page.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>fixture.html</code> — upload in Colab</li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Parse an HTML table with html.parser (BeautifulSoup optional)</li><li>Normalise rows to dicts and handle missing cells</li><li>Export scraped.csv with a row-count assertion</li><li>Practice polite scraping rules and robots.txt awareness</li></ul>
+
+<hr/>
+<h2>Lab intro</h2>
+<h3>Data Acquisition Track: HTML Tables → CSV (Offline Fixture First)</h3>
+<blockquote><strong>Scenario:</strong> Extract a product table from HTML with <code>urllib</code> + <code>html.parser</code> (or BeautifulSoup if available), handle missing cells, and save <code>scraped.csv</code>. A local <code>fixture.html</code> ships with this lab so <strong>everything runs without network</strong>. An optional live target (<code>quotes.toscrape.com</code>) is included for when you do have egress.  <strong>You will learn:</strong> HTML structure, table parsing, polite scraping (User-Agent, delay), robots.txt awareness, anti-patterns warning. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (BeautifulSoup optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+
+<div class="next">
+<strong>Keep going</strong>
+<ul style="margin:0.4rem 0; padding-left:1.2rem">
+<li><strong>Do the lab:</strong> open <code>lab-10-web-scraping-static-page.ipynb</code> (Colab-ready, lesson + runnable code).</li>
+<li><strong>Full steps:</strong> open <code>lab-steps.html</code> in this folder for the complete lesson.</li>
+</ul>
+</div>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Overview for Lab 10 · Executable notebook: <code>lab-10-web-scraping-static-page.ipynb</code> · Full steps: <code>lab-steps.html</code></footer>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "lab_id": "lab-04-eda-advertising",
+  "notebook": "lab-04-eda-advertising.ipynb",
+  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-04-eda-advertising/notebook.ipynb",
+  "api_launch": "https://api.vlabs.test/colab/lab-04-eda-advertising/launch-url",
+  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-04-eda-advertising/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "Advertising.csv"
+  ],
+  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+}

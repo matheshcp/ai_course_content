@@ -1,0 +1,13 @@
+{
+  "lab_id": "lab-12-hr-attrition-capstone",
+  "notebook": "lab-12-hr-attrition-capstone.ipynb",
+  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-12-hr-attrition-capstone/notebook.ipynb",
+  "api_launch": "https://api.vlabs.test/colab/lab-12-hr-attrition-capstone/launch-url",
+  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-12-hr-attrition-capstone/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "HR-Employee-Attrition-synth.csv",
+    "emp_attrition.csv"
+  ],
+  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+}

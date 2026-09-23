@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 05 — A/B Test Analysis — Old vs New Page</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 05 — A/B Test Analysis — Old vs New Page</h1>
+<div class="meta">
+<p><strong>Track</strong> Experimentation Basics Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~50 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-05-ab-test-analysis.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>ab_test.csv</code> — <a href="https://raw.githubusercontent.com/TimileyinSamuel/A-B-Testing-for-E-Commerce-Website/main/ab_test.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Compute conversion rates by experiment group</li><li>Run a two-proportion z-test and interpret p-value</li><li>Build a 95% CI for the conversion difference</li><li>Estimate MDE at 80% power and make a ship decision</li></ul>
+
+<hr/>
+<h2>A/B Test Analysis — Old vs New Page</h2>
+<h3>Experimentation Basics Track: Rates, Z-Test, Ship/No-Ship</h3>
+<blockquote><strong>Scenario:</strong> <code>ab_test.csv</code> logs <strong>294,478 sessions</strong> with <code>con_treat</code> (control/treatment), <code>page</code>, <code>converted</code> (0/1). Compute conversion rates, a two-proportion z-test, a 95% CI, and a minimum detectable effect — then <strong>conclude whether to ship</strong>.  <strong>You will learn:</strong> group-by rates, standard error, z-test (manual or scipy), power sketch, peeking pitfall. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + math/scipy. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Experiment mental map</h4>
+<table><thead><tr><th>Concept</th><th>Formula / code</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Conversion rate</td><td><code>conversions / n</code></td><td>p̂ per group</td></tr>
+<tr><td>Pooled SE</td><td><code>√(p(1-p)(1/n₁+1/n₀))</code></td><td>null variance for z</td></tr>
+<tr><td>z-stat</td><td><code>(p₁ − p₀) / SE</code></td><td>how extreme is the gap</td></tr>
+<tr><td>95% CI (diff)</td><td><code>(p̂₁−p̂₀) ± 1.96·SE_unpooled</code></td><td>plausible range for lift</td></tr>
+<tr><td>MDE @ 80% power</td><td><code>(1.96+0.84)·SE₀</code></td><td>smallest gap you can reliably see</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load data (local first, Colab fallback)</h4>
+<pre><code class="language-python">import math, os
+import pandas as pd
+from scipy import stats
+
+def load_ab():
+    local = &quot;ab_test.csv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/TimileyinSamuel/A-B-Testing-for-E-Commerce-Website/main/ab_test.csv&quot;,
+            local,
+        )
+    return pd.read_csv(local)
+
+df = load_ab()
+print(df.shape)          # (294478, 5)
+print(df.head(3))
+print(df[&quot;con_treat&quot;].value_counts())
+# control     147202
+# treatment   147276
+print(df[&quot;page&quot;].value_counts())
+# old_page / new_page each 147239 (note: page and group are almost aligned —
+# a few mismatched rows exist in this dataset; classic QA check)</code></pre>
+<blockquote>Always cross-tab <code>group × page</code>. Mismatches mean logging bugs or bot traffic — fix before testing.</blockquote>
+<pre><code class="language-python">print(pd.crosstab(df[&quot;con_treat&quot;], df[&quot;page&quot;]))</code></pre>
+<hr/>
+<h4>2. Conversion rates by group</h4>
+<pre><code class="language-python">rates = df.groupby(&quot;con_treat&quot;)[&quot;converted&quot;].agg([&quot;sum&quot;, &quot;count&quot;, &quot;mean&quot;])
+rates.columns = [&quot;conversions&quot;, &quot;n&quot;, &quot;rate&quot;]
+print(rates.round(6))</code></pre>
+<p>Expected:</p>
+<table><thead><tr><th>group</th><th>conversions</th><th>n</th><th>rate</th></tr></thead><tbody>
+<tr><td>control</td><td>17723</td><td>147202</td><td><strong>0.120399</strong></td></tr>
+<tr><td>treatment</td><td>17514</td><td>147276</td><td><strong>0.118920</strong></td></tr>
+</tbody></table>
+<p>Treatment is <strong>lower</strong>, not higher: raw diff ≈ <strong>−0.00148</strong> (−1.23% relative).</p>
+<hr/>
+<h4>3. Two-proportion z-test</h4>
+<p>Manual (no scipy required):</p>
+<pre><code class="language-python">c0, n0 = 17723, 147202   # control
+c1, n1 = 17514, 147276   # treatment
+p0, p1 = c0 / n0, c1 / n1
+p_pool = (c0 + c1) / (n0 + n1)
+se_pool = math.sqrt(p_pool * (1 - p_pool) * (1/n0 + 1/n1))
+z = (p1 - p0) / se_pool
+p_value = 2 * (1 - stats.norm.cdf(abs(z)))
+print(f&quot;p0={p0:.6f}  p1={p1:.6f}  diff={p1-p0:.6f}&quot;)
+print(f&quot;z={z:.4f}  p={p_value:.4f}&quot;)
+# p0=0.120399  p1=0.118920  diff=-0.001480
+# z=-1.2369  p=0.2161</code></pre>
+<p>Equivalent scipy:</p>
+<pre><code class="language-python">from statsmodels.stats.proportion import proportions_ztest
+# optional: counts = [c1, c0]; nobs = [n1, n0]; z, p = proportions_ztest(counts, nobs)</code></pre>
+<p><strong>Decision at α = 0.05:</strong> p ≈ 0.216 &gt; 0.05 → <strong>fail to reject</strong> H₀. No significant difference.</p>
+<hr/>
+<h4>4. 95% CI for the difference</h4>
+<pre><code class="language-python">se_unpooled = math.sqrt(p1*(1-p1)/n1 + p0*(1-p0)/n0)
+diff = p1 - p0
+ci = (diff - 1.96*se_unpooled, diff + 1.96*se_unpooled)
+print(f&quot;diff={diff:.6f}  95% CI=({ci[0]:.6f}, {ci[1]:.6f})&quot;)
+# diff=-0.001480  95% CI=(-0.003824, 0.000865)</code></pre>
+<p>CI <strong>contains 0</strong> → ship decision: <strong>do not ship</strong> the new page on this evidence (and the point estimate is slightly worse).</p>
+<hr/>
+<h4>5. Minimum detectable effect @ 80% power</h4>
+<pre><code class="language-python"># alpha=0.05 two-sided, power=0.80 → z_a + z_b ≈ 1.96 + 0.84
+mde = (1.959964 + 0.841621) * se_pool
+print(f&quot;MDE absolute: {mde:.6f}  (~{mde/p0*100:.2f}% relative to control)&quot;)
+# MDE absolute: 0.003351  (~2.78% relative to control)</code></pre>
+<p>With these sample sizes you can only reliably detect lifts ≳ 0.34 percentage points.</p>
+<blockquote><strong>Peeking pitfall:</strong> checking the z-test every hour and stopping when p &lt; 0.05 inflates false positives. Pre-register sample size / duration; use sequential methods if you must peek.</blockquote>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Conversion by group</h4>
+<p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). <em>Expected: control 17723/147202 = 0.120399 · treatment 17514/147276 = 0.118920.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>. &lt;/details&gt;</p>
+<h4>Exercise 2 — Z-test + p-value</h4>
+<p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? <em>Expected: z ≈ −1.2369, p ≈ 0.2161 → not significant.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — MDE at 80% power</h4>
+<p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. <em>Expected: ≈ 0.00335 absolute ≈ 2.78% of 0.1204.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+rates = df.groupby(&quot;con_treat&quot;)[&quot;converted&quot;].agg([&quot;sum&quot;, &quot;count&quot;, &quot;mean&quot;])
+print(rates)
+# control:   17723 / 147202 = 0.120399
+# treatment: 17514 / 147276 = 0.118920
+
+# --- Solution 2 ---
+c0, n0 = 17723, 147202
+c1, n1 = 17514, 147276
+p0, p1 = c0/n0, c1/n1
+p = (c0+c1)/(n0+n1)
+se = math.sqrt(p*(1-p)*(1/n0 + 1/n1))
+z = (p1-p0)/se
+pv = 2*(1 - stats.norm.cdf(abs(z)))
+print(f&quot;z={z:.4f} p={pv:.4f}&quot;)   # z=-1.2369 p=0.2161
+print(&quot;significant?&quot;, pv &lt; 0.05)  # False
+
+# --- Solution 3 ---
+mde = (1.959964 + 0.841621) * se
+print(f&quot;MDE={mde:.6f} ({mde/p0*100:.2f}% of control)&quot;)
+# MDE=0.003351 (2.78% of control)</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Chi-square test of independence on the same 2×2 table (should agree with z).</li>
+<li>CUPED / variance reduction; sequential testing (mSPRT).</li>
+<li>Power <em>before</em> launch: choose n from business MDE, not after the fact.</li>
+<li>Cheat sheet: rates → z/p → CI → MDE → decision; never peek-and-stop naïvely.</li>
+</ul>
+<p><em>Files in this folder: <code>ab_test.csv</code> (local; raw GitHub URL in <code>load_ab()</code>). Paste any block into Python/Jupyter and run top-to-bottom.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 05 · Executable notebook: <code>lab-05-ab-test-analysis.ipynb</code></footer>
+</body>
+</html>

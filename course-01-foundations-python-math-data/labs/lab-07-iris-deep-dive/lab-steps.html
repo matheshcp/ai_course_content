@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 07 — Iris Deep-Dive — Stats + First Plot</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 07 — Iris Deep-Dive — Stats + First Plot</h1>
+<div class="meta">
+<p><strong>Track</strong> Statistics for Analysts Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~40 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-07-iris-deep-dive.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>iris.csv</code> — <a href="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Compute per-species means and standard deviations</li><li>Measure class separation with Cohen&#x27;s d</li><li>Run one-way ANOVA and a t-based 95% confidence interval</li><li>Publish a pair-plot (seaborn or matplotlib fallback)</li></ul>
+
+<hr/>
+<h2>Iris Deep-Dive — Stats + First Plot</h2>
+<h3>Statistics for Analysts Track: Group Stats, ANOVA, Confidence Intervals</h3>
+<blockquote><strong>Scenario:</strong> Classic <code>iris.csv</code> (150 rows, 4 numeric features + species). Compute per-species statistics, a one-way ANOVA on petal length, a 95% CI for virginica sepal width, and publish a pair-plot.  <strong>You will learn:</strong> <code>groupby.agg</code>, variance, F-stat intuition, Cohen’s d, confidence intervals, seaborn/matplotlib pair plots. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + scipy + matplotlib/seaborn. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Stats mental map</h4>
+<table><thead><tr><th>Excel / idea</th><th>Python</th><th>Output</th></tr></thead><tbody>
+<tr><td>AVERAGEIFS by species</td><td><code>groupby.mean()</code></td><td>per-species means</td></tr>
+<tr><td>Spread</td><td><code>.std(ddof=1)</code></td><td>sample SD</td></tr>
+<tr><td>“Do groups differ?”</td><td>one-way ANOVA</td><td>F, p</td></tr>
+<tr><td>“How sure of a mean?”</td><td>t-based 95% CI</td><td>mean ± t·s/√n</td></tr>
+<tr><td>“How separated?”</td><td>Cohen’s d</td><td>effect size</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load data (local first, Colab fallback)</h4>
+<pre><code class="language-python">import math, os
+import pandas as pd
+from scipy import stats
+
+def load_iris():
+    local = &quot;iris.csv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/mwaskom/seaborn-data/master/iris.csv&quot;,
+            local,
+        )
+    return pd.read_csv(local)
+
+df = load_iris()
+print(df.shape)    # (150, 5)
+print(df[&quot;species&quot;].value_counts())  # 50 each
+print(df.head(3))</code></pre>
+<hr/>
+<h4>2. Per-species means and SDs</h4>
+<pre><code class="language-python">g = df.groupby(&quot;species&quot;)
+means = g[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]].mean().round(3)
+sds   = g[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]].std().round(3)
+print(means)
+print(sds)</code></pre>
+<p>Expected mean <code>petal_length</code>: <strong>setosa 1.462 · versicolor 4.260 · virginica 5.552</strong>.</p>
+<hr/>
+<h4>3. Which feature best separates setosa vs versicolor?</h4>
+<p>Cohen’s d = (mean₂ − mean₁) / pooled SD:</p>
+<pre><code class="language-python">sv = df[df[&quot;species&quot;].isin([&quot;setosa&quot;, &quot;versicolor&quot;])]
+print(f&quot;{&#x27;feature&#x27;:14s} {&#x27;setosa&#x27;:&gt;8s} {&#x27;versicolor&#x27;:&gt;10s} {&#x27;gap&#x27;:&gt;8s} {&#x27;cohen_d&#x27;:&gt;8s}&quot;)
+for c in [&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]:
+    a = sv.loc[sv[&quot;species&quot;] == &quot;setosa&quot;, c]
+    b = sv.loc[sv[&quot;species&quot;] == &quot;versicolor&quot;, c]
+    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1) + (len(b)-1)*b.var(ddof=1)) / (len(a)+len(b)-2))
+    d = (b.mean() - a.mean()) / pooled
+    print(f&quot;{c:14s} {a.mean():8.3f} {b.mean():10.3f} {abs(b.mean()-a.mean()):8.3f} {d:8.3f}&quot;)</code></pre>
+<p>Expected: <strong>petal_length wins</strong> (gap 2.798, |d| ≈ 7.9) — far larger than sepal measures.</p>
+<blockquote>Rule of thumb: |d| &gt; 0.8 is a “large” separation in behavioural science; 7.9 is enormous (the classes barely overlap).</blockquote>
+<hr/>
+<h4>4. One-way ANOVA on petal_length</h4>
+<pre><code class="language-python">groups = [df.loc[df[&quot;species&quot;] == sp, &quot;petal_length&quot;].values
+          for sp in df[&quot;species&quot;].unique()]
+F, p = stats.f_oneway(*groups)
+print(f&quot;F = {F:.3f}, p = {p:.3e}&quot;)
+# F = 1180.161, p = 2.86e-91</code></pre>
+<p>H₀: all three species share the same mean petal length. p ≈ 0 → reject H₀ decisively.</p>
+<p>F intuition: <code>variance_between_groups / variance_within_groups</code>. Huge F ⇒ between-group gaps dwarf within-group noise.</p>
+<hr/>
+<h4>5. 95% CI for virginica sepal_width</h4>
+<pre><code class="language-python">x = df.loc[df[&quot;species&quot;] == &quot;virginica&quot;, &quot;sepal_width&quot;]
+n, mean, sd = len(x), x.mean(), x.std(ddof=1)
+se = sd / math.sqrt(n)
+t = stats.t.ppf(0.975, df=n - 1)
+ci = (mean - t * se, mean + t * se)
+print(f&quot;n={n} mean={mean:.4f} sd={sd:.4f} t={t:.4f}&quot;)
+print(f&quot;95% CI = ({ci[0]:.4f}, {ci[1]:.4f})&quot;)
+# n=50 mean=2.9740 sd=0.3225 t=2.0096
+# 95% CI = (2.8823, 3.0657)</code></pre>
+<hr/>
+<h4>6. Pair plot (seaborn or matplotlib fallback)</h4>
+<pre><code class="language-python">try:
+    import seaborn as sns
+    import matplotlib.pyplot as plt
+    sns.pairplot(df, hue=&quot;species&quot;, corner=True)
+    plt.savefig(&quot;iris_pairplot.png&quot;, dpi=120)
+    print(&quot;saved iris_pairplot.png (seaborn)&quot;)
+except ImportError:
+    import matplotlib.pyplot as plt
+    feats = [&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]
+    colors = {&quot;setosa&quot;: &quot;tab:red&quot;, &quot;versicolor&quot;: &quot;tab:blue&quot;, &quot;virginica&quot;: &quot;tab:green&quot;}
+    fig, axes = plt.subplots(4, 4, figsize=(9, 9))
+    for i, ri in enumerate(feats):
+        for j, ci_ in enumerate(feats):
+            ax = axes[i, j]
+            if i == j:
+                for sp, col in colors.items():
+                    ax.hist(df.loc[df.species == sp, ri], alpha=0.5, label=sp, color=col)
+            else:
+                for sp, col in colors.items():
+                    sub = df[df.species == sp]
+                    ax.scatter(sub[ci_], sub[ri], s=8, alpha=0.7, color=col)
+            if i == 3: ax.set_xlabel(ci_, fontsize=8)
+            if j == 0: ax.set_ylabel(ri, fontsize=8)
+    fig.tight_layout(); fig.savefig(&quot;iris_pairplot.png&quot;, dpi=120)
+    print(&quot;saved iris_pairplot.png (matplotlib)&quot;)</code></pre>
+<p>Look for: petal_length vs petal_width cleanly splits setosa from the other two.</p>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Mean petal_length by species</h4>
+<p>Print mean <code>petal_length</code> for each species (3 d.p.). <em>Expected: setosa 1.462 · versicolor 4.260 · virginica 5.552.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>df.groupby("species")["petal_length"].mean().round(3)</code> &lt;/details&gt;</p>
+<h4>Exercise 2 — Best separator setosa vs versicolor</h4>
+<p>For each of the 4 features, compute Cohen’s d between setosa and versicolor. Which feature has the largest |d|? <em>Expected: petal_length (|d| ≈ 7.90); petal_width second (≈ 6.82).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Pooled SD formula in Section 3; compare absolute values. &lt;/details&gt;</p>
+<h4>Exercise 3 — 95% CI for virginica sepal_width</h4>
+<p>Using t with df = n−1, report mean and CI to 4 d.p. <em>Expected: mean 2.9740 · 95% CI (2.8823, 3.0657).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>mean ± t.ppf(0.975, n-1) * std(ddof=1) / sqrt(n)</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+print(df.groupby(&quot;species&quot;)[&quot;petal_length&quot;].mean().round(3))
+# setosa      1.462
+# versicolor  4.260
+# virginica   5.552
+
+# --- Solution 2 ---
+sv = df[df.species.isin([&quot;setosa&quot;, &quot;versicolor&quot;])]
+best, best_d = None, 0
+for c in [&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]:
+    a = sv.loc[sv.species == &quot;setosa&quot;, c]
+    b = sv.loc[sv.species == &quot;versicolor&quot;, c]
+    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))
+    d = abs((b.mean()-a.mean())/pooled)
+    if d &gt; best_d:
+        best, best_d = c, d
+print(best, round(best_d, 3))  # petal_length 7.899
+
+# --- Solution 3 ---
+x = df.loc[df.species == &quot;virginica&quot;, &quot;sepal_width&quot;]
+n = len(x); m = x.mean(); s = x.std(ddof=1)
+t = stats.t.ppf(0.975, n-1)
+lo, hi = m - t*s/math.sqrt(n), m + t*s/math.sqrt(n)
+print(f&quot;{m:.4f} ({lo:.4f}, {hi:.4f})&quot;)  # 2.9740 (2.8823, 3.0657)</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Kruskal–Wallis (non-parametric alternative to ANOVA).</li>
+<li>Pairwise t-tests with Bonferroni correction.</li>
+<li>Effect sizes beyond d (η² from ANOVA).</li>
+<li>Then: logistic regression predicting species from measurements (Course 2).</li>
+<li>Cheat sheet: groupby → mean/sd → ANOVA for ≥3 groups → t-CI for one mean → plot to verify.</li>
+</ul>
+<p><em>Files in this folder: <code>iris.csv</code> · output <code>iris_pairplot.png</code>. Paste any block into Python/Jupyter and run top-to-bottom.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 07 · Executable notebook: <code>lab-07-iris-deep-dive.ipynb</code></footer>
+</body>
+</html>

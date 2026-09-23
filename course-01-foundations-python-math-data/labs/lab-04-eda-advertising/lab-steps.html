@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 04 — EDA — TV, Radio, Newspaper vs Sales</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 04 — EDA — TV, Radio, Newspaper vs Sales</h1>
+<div class="meta">
+<p><strong>Track</strong> First Real EDA Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~45 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-04-eda-advertising.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Advertising.csv</code> — <a href="https://raw.githubusercontent.com/justmarkham/scikit-learn-videos/master/data/Advertising.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Load data with pandas and summarise with describe()</li><li>Compute and interpret a correlation matrix</li><li>Create scatter plots and quartile-binned means</li><li>Write a 5-bullet findings memo with design caveats</li></ul>
+
+<hr/>
+<h2>EDA — TV, Radio, Newspaper vs Sales</h2>
+<h3>First Real EDA Track: Correlation, Plots, Findings Memo</h3>
+<blockquote><strong>Scenario:</strong> Marketing asks <em>which channel drives Sales</em>. Load <code>Advertising.csv</code> (200 rows), compute correlations, plot scatters, bin TV into quartiles, and write a 5-bullet findings memo.  <strong>You will learn:</strong> pandas <code>read_csv</code> / <code>describe</code> / <code>corr</code>, matplotlib scatter, correlation vs causation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>EDA mental map</h4>
+<table><thead><tr><th>Question</th><th>Statistic / view</th><th>Code</th></tr></thead><tbody>
+<tr><td>How big / spread?</td><td><code>describe()</code></td><td><code>df.describe()</code></td></tr>
+<tr><td>What moves with Sales?</td><td>Pearson r</td><td><code>df.corr()["Sales"]</code></td></tr>
+<tr><td>Linear relationship?</td><td>scatter</td><td><code>plt.scatter(df["TV"], df["Sales"])</code></td></tr>
+<tr><td>Dose–response?</td><td>binned means</td><td><code>pd.qcut</code> + <code>groupby.mean</code></td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load data (local first, Colab fallback)</h4>
+<pre><code class="language-python">import os
+import pandas as pd
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)  # headless-safe; drop in interactive notebooks
+import matplotlib.pyplot as plt
+
+def load_ads():
+    local = &quot;Advertising.csv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/justmarkham/scikit-learn-videos/master/data/Advertising.csv&quot;,
+            local,
+        )
+    df = pd.read_csv(local)
+    # First column is an unnamed index
+    if str(df.columns[0]).startswith(&quot;Unnamed&quot;):
+        df = df.rename(columns={df.columns[0]: &quot;index&quot;})
+    return df
+
+df = load_ads()
+print(df.shape)   # (200, 5)
+print(df.head(3))
+print(df.describe().round(2))</code></pre>
+<p>Expected highlights: <code>Sales</code> mean ≈ 14.02, min 1.6, max 27.0; <code>TV</code> mean ≈ 147.04.</p>
+<hr/>
+<h4>2. Correlation matrix</h4>
+<pre><code class="language-python">corr = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;, &quot;Sales&quot;]].corr().round(4)
+print(corr)</code></pre>
+<p>Expected <code>Sales</code> column:</p>
+<table><thead><tr><th>Feature</th><th>r with Sales</th></tr></thead><tbody>
+<tr><td>TV</td><td><strong>0.7822</strong></td></tr>
+<tr><td>Radio</td><td>0.5762</td></tr>
+<tr><td>Newspaper</td><td>0.2283</td></tr>
+</tbody></table>
+<pre><code class="language-python">print(&quot;strongest single-feature |r| with Sales:&quot;,
+      corr[&quot;Sales&quot;].drop(&quot;Sales&quot;).abs().idxmax())  # TV</code></pre>
+<blockquote>Correlation ≠ causation: this is observational spend data, not a randomized test. Say “associated with”, not “drives”, in the memo.</blockquote>
+<hr/>
+<h4>3. Scatter matrix (three panels)</h4>
+<pre><code class="language-python">fig, axes = plt.subplots(1, 3, figsize=(12, 3.5), sharey=True)
+for ax, col in zip(axes, [&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]):
+    ax.scatter(df[col], df[&quot;Sales&quot;], alpha=0.6, edgecolors=&quot;none&quot;)
+    ax.set_xlabel(col)
+    ax.set_ylabel(&quot;Sales&quot;)
+    ax.set_title(f&quot;{col} vs Sales  r={df[col].corr(df[&#x27;Sales&#x27;]):.3f}&quot;)
+fig.tight_layout()
+fig.savefig(&quot;eda_scatters.png&quot;, dpi=120)
+print(&quot;saved eda_scatters.png&quot;)</code></pre>
+<hr/>
+<h4>4. TV quartiles → mean Sales</h4>
+<pre><code class="language-python">df[&quot;TV_bin&quot;] = pd.qcut(df[&quot;TV&quot;], 4, labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
+tv_bins = df.groupby(&quot;TV_bin&quot;, observed=True)[&quot;Sales&quot;].agg([&quot;mean&quot;, &quot;count&quot;]).round(3)
+print(tv_bins)</code></pre>
+<p>Expected (edges ≈ 74.38 / 149.75 / 218.83):</p>
+<table><thead><tr><th>TV_bin</th><th>mean Sales</th><th>n</th></tr></thead><tbody>
+<tr><td>Q1</td><td>8.390</td><td>50</td></tr>
+<tr><td>Q2</td><td>12.686</td><td>50</td></tr>
+<tr><td>Q3</td><td>16.548</td><td>50</td></tr>
+<tr><td>Q4</td><td>18.466</td><td>50</td></tr>
+</tbody></table>
+<p>Monotone increase with TV spend — stronger evidence than raw r alone.</p>
+<pre><code class="language-python">ax = tv_bins[&quot;mean&quot;].plot(kind=&quot;bar&quot;, figsize=(6, 3), rot=0,
+                          title=&quot;Mean Sales by TV quartile&quot;)
+ax.set_ylabel(&quot;Mean Sales&quot;)
+fig = ax.get_figure(); fig.tight_layout(); fig.savefig(&quot;eda_tv_quartiles.png&quot;, dpi=120)</code></pre>
+<hr/>
+<h4>5. Five-bullet findings memo</h4>
+<p>Write <code>labs/eda_findings.md</code> (or cell markdown) with bullets like:</p>
+<ol>
+<li><strong>TV is the strongest linear associate of Sales</strong> (r ≈ 0.78), ahead of Radio (0.58) and Newspaper (0.23).</li>
+<li><strong>Mean Sales rises monotonically across TV quartiles</strong> (8.4 → 18.5), so the relationship is not driven by a few outliers alone.</li>
+<li><strong>Newspaper’s weak r (0.23) largely tracks Radio</strong> (r(Newspaper, Radio) ≈ 0.35); partial correlation / regression would likely shrink Newspaper’s unique contribution.</li>
+<li><strong>TV and Radio spend are nearly uncorrelated</strong> (r ≈ 0.05) — channels can be evaluated independently in this sample.</li>
+<li><strong>Design limit:</strong> observational data, n = 200, one market — treat findings as hypotheses for a geo test, not proof of causality.</li>
+</ol>
+<pre><code class="language-python">memo = &quot;&quot;&quot;# EDA findings — Advertising channels
+- TV strongest correlate of Sales (r=0.78).
+- Mean Sales rises monotonically by TV quartile (8.4→18.5).
+- Newspaper weak alone (r=0.23); overlaps Radio.
+- TV vs Radio spend ~uncorrelated (r=0.05).
+- Observational, n=200: associations only, not causal proof.
+&quot;&quot;&quot;
+open(&quot;eda_findings.md&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;).write(memo)
+print(&quot;wrote eda_findings.md&quot;)</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Full correlation matrix</h4>
+<p>Print <code>df[["TV","Radio","Newspaper","Sales"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? <em>Expected: Radio–Newspaper ≈ 0.3541 is the strongest feature–feature pair (TV pairs are ≈ 0.05).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<pre><code class="language-python">c = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]].corr()
+print(c)
+# upper triangle only to avoid duplicates</code></pre>
+<p>&lt;/details&gt;</p>
+<h4>Exercise 2 — Highest single-feature R vs Sales</h4>
+<p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? <em>Expected: TV, r ≈ 0.7822.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>df.corr()["Sales"].drop("Sales").abs().idxmax()</code> / <code>.max()</code>. &lt;/details&gt;</p>
+<h4>Exercise 3 — TV quartiles → mean Sales</h4>
+<p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. <em>Expected: Q1 8.39 · Q2 12.686 · Q3 16.548 · Q4 18.466 (50 rows each).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>pd.qcut(df["TV"], 4, labels=["Q1","Q2","Q3","Q4"])</code> then <code>groupby(...).mean()</code>. &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+print(df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;, &quot;Sales&quot;]].corr().round(4))
+# Radio-Newspaper ≈ 0.3541 is the strongest non-Sales pair.
+
+# --- Solution 2 ---
+s = df.corr(numeric_only=True)[&quot;Sales&quot;].drop(&quot;Sales&quot;)
+top = s.abs().idxmax()
+print(top, round(s[top], 4))  # TV 0.7822
+
+# --- Solution 3 ---
+df[&quot;TV_bin&quot;] = pd.qcut(df[&quot;TV&quot;], 4, labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
+print(df.groupby(&quot;TV_bin&quot;, observed=True)[&quot;Sales&quot;].mean().round(3))
+# Q1  8.390
+# Q2 12.686
+# Q3 16.548
+# Q4 18.466</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Simple OLS: <code>sm.OLS(Sales, add_constant(df[["TV","Radio"]])).fit()</code> — does Newspaper add anything?</li>
+<li>Seaborn <code>pairplot(df, hue=None)</code> for a one-line scatter matrix.</li>
+<li>Then train/test split before trusting fit metrics (Course 2).</li>
+<li>Cheat sheet: describe → corr → scatter → binned means → memo; always state n and design limits.</li>
+</ul>
+<p><em>Files in this folder: <code>Advertising.csv</code> · outputs <code>eda_scatters.png</code>, <code>eda_tv_quartiles.png</code>, <code>eda_findings.md</code> when you run the lab.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 04 · Executable notebook: <code>lab-04-eda-advertising.ipynb</code></footer>
+</body>
+</html>

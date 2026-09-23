@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 12 — HR Attrition Mini Case Study</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 12 — HR Attrition Mini Case Study</h1>
+<div class="meta">
+<p><strong>Track</strong> Course Capstone Track</p>
+<p><strong>Level</strong> Intermediate Capstone · <strong>Time</strong> ~75 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-12-hr-attrition-capstone.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<ol>
+<li>Click <strong>Start Lab</strong> — the hosted notebook opens directly in Colab under your Google account (auto-saved to your Drive).</li>
+<li>Run <strong>Cell 0 (bootstrap)</strong> — it pulls <code>dataset.zip</code> from the lab manifest into <code>/content/ml_lab</code> (falls back to raw URLs, then local files).</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>HR-Employee-Attrition-synth.csv</code> — <a href="https://raw.githubusercontent.com/aaubs/ds-master/main/apps/M1-attrition-streamlit/HR-Employee-Attrition-synth.csv">raw GitHub</a></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Compute overall attrition and slice by Department / OverTime</li><li>Bin income into quartiles and compare attrition rates</li><li>Spot confounders and non-monotonic signals</li><li>Write 3 actionable hypotheses into attrition_report.md</li></ul>
+
+<hr/>
+<h2>HR Attrition Mini Case Study</h2>
+<h3>Course Capstone Track: EDA → Insight → Executive One-Pager</h3>
+<blockquote><strong>Scenario:</strong> People analytics shares <code>HR-Employee-Attrition-synth.csv</code> (2000 rows, IBM-style HR schema, 35 columns). Deliver an executive one-pager: overall attrition rate, rates by Department and OverTime, income quartiles vs attrition, and <strong>3 actionable hypotheses</strong> with supporting numbers. Write <code>attrition_report.md</code>.  <strong>You will learn:</strong> end-to-end pipeline, EDA → insight → narrative, avoiding spurious correlations. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate Capstone. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h4>Capstone mental map</h4>
+<table><thead><tr><th>Stage</th><th>Question</th><th>Artifact</th></tr></thead><tbody>
+<tr><td>Frame</td><td>What is attrition rate?</td><td>headline number</td></tr>
+<tr><td>Slice</td><td>Where is it worst?</td><td>Dept / OverTime tables</td></tr>
+<tr><td>Associate</td><td>Income vs leaving?</td><td>quartile rates + chart</td></tr>
+<tr><td>Interpret</td><td>Causation? confounders?</td><td>caveats section</td></tr>
+<tr><td>Act</td><td>What would we try?</td><td>3 hypotheses</td></tr>
+</tbody></table>
+<hr/>
+<h4>1. Load and profile (local first, Colab fallback)</h4>
+<pre><code class="language-python">import os
+import pandas as pd
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+
+def load_hr():
+    local = &quot;HR-Employee-Attrition-synth.csv&quot;
+    if not os.path.exists(local):
+        import urllib.request
+        urllib.request.urlretrieve(
+            &quot;https://raw.githubusercontent.com/aaubs/ds-master/main/apps/&quot;
+            &quot;M1-attrition-streamlit/HR-Employee-Attrition-synth.csv&quot;,
+            local,
+        )
+    df = pd.read_csv(local)
+    if str(df.columns[0]).startswith(&quot;Unnamed&quot;):
+        df = df.drop(columns=df.columns[0])
+    return df
+
+df = load_hr()
+print(df.shape)          # (2000, 35)
+print(df[&quot;Attrition&quot;].value_counts())
+# No 1702, Yes 298
+print(&quot;overall attrition rate:&quot;, round((df[&quot;Attrition&quot;] == &quot;Yes&quot;).mean(), 4))
+# 0.149
+print(df[&quot;Department&quot;].value_counts())
+# Research &amp; Development 1098, Sales 799, Human Resources 103
+print(&quot;mean age:&quot;, df[&quot;Age&quot;].mean().round(2))  # 37.24</code></pre>
+<hr/>
+<h4>2. Headline: attrition by Department and OverTime</h4>
+<pre><code class="language-python">def rate(col):
+    return (df.groupby(col)[&quot;Attrition&quot;]
+              .apply(lambda s: (s == &quot;Yes&quot;).mean())
+              .sort_values(ascending=False)
+              .round(4))
+
+print(rate(&quot;Department&quot;))
+# Research &amp; Development    0.1621
+# Sales                     0.1377
+# Human Resources           0.0971
+
+print(rate(&quot;OverTime&quot;))
+# Yes    0.1869
+# No     0.1387</code></pre>
+<p><strong>OverTime gap:</strong> 18.7% vs 13.9% — <strong>+4.8 pp</strong> for staff working overtime.</p>
+<pre><code class="language-python">ax = rate(&quot;OverTime&quot;).plot(kind=&quot;bar&quot;, figsize=(5, 3), rot=0, ylim=(0, 0.25),
+                           title=&quot;Attrition rate by OverTime&quot;)
+ax.set_ylabel(&quot;Attrition rate&quot;)
+ax.yaxis.set_major_formatter(lambda y, _: f&quot;{y:.0%}&quot;)
+fig = ax.get_figure(); fig.tight_layout(); fig.savefig(&quot;attrition_overtime.png&quot;, dpi=120)</code></pre>
+<hr/>
+<h4>3. Income quartiles vs attrition</h4>
+<pre><code class="language-python">df[&quot;IncomeQ&quot;] = pd.qcut(df[&quot;MonthlyIncome&quot;], 4,
+                        labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
+edges = df[&quot;MonthlyIncome&quot;].quantile([0, .25, .5, .75, 1]).tolist()
+print(&quot;quartile edges:&quot;, [round(e, 2) for e in edges])
+# [1009.0, 5040.75, 6776.0, 9667.25, 28723.0]
+
+by_q = df.groupby(&quot;IncomeQ&quot;, observed=True)[&quot;Attrition&quot;].apply(
+    lambda s: (s == &quot;Yes&quot;).mean()).round(4)
+print(by_q)
+# Q1 0.1440
+# Q2 0.1238
+# Q3 0.1503
+# Q4 0.1780</code></pre>
+<p><strong>Counter-intuitive (synthetic) pattern:</strong> highest quartile has the <em>highest</em> attrition (17.8%) — in this synthetic file, not the classic IBM original. Report what you see; don’t force the textbook story.</p>
+<pre><code class="language-python">ax = by_q.plot(kind=&quot;bar&quot;, figsize=(5, 3), rot=0, ylim=(0, 0.25),
+               title=&quot;Attrition rate by income quartile&quot;)
+ax.set_ylabel(&quot;Attrition rate&quot;)
+ax.yaxis.set_major_formatter(lambda y, _: f&quot;{y:.0%}&quot;)
+for i, v in enumerate(by_q):
+    ax.text(i, v + 0.01, f&quot;{v:.1%}&quot;, ha=&quot;center&quot;, fontsize=9)
+fig = ax.get_figure(); fig.tight_layout()
+fig.savefig(&quot;attrition_income_quartiles.png&quot;, dpi=120)
+print(&quot;saved charts&quot;)</code></pre>
+<hr/>
+<h4>4. Cross-checks (confounders)</h4>
+<pre><code class="language-python"># Overtime × income — is the OT gap just a pay effect?
+print(pd.crosstab(df[&quot;OverTime&quot;], df[&quot;IncomeQ&quot;], normalize=&quot;index&quot;).round(3))
+
+# Job satisfaction vs attrition (weak in this synth?)
+print(rate(&quot;JobSatisfaction&quot;))
+# 4: 0.1576, 2: 0.1565, 1: 0.1383, 3: 0.1254  (non-monotonic — weak signal)
+
+# Mean income by leaver status
+print(df.groupby(&quot;Attrition&quot;)[&quot;MonthlyIncome&quot;].mean().round(2))
+# No 8033.23, Yes 8676.02  (leavers earn slightly more here)</code></pre>
+<blockquote><strong>Spurious-correlation guard:</strong> always ask “what else varies with this feature?” Department, job level, and overtime often proxy for each other. n = 103 in HR dept → wide uncertainty on that 9.7% rate.</blockquote>
+<hr/>
+<h4>5. Draft the executive one-pager</h4>
+<pre><code class="language-python">report = f&quot;&quot;&quot;# Attrition one-pager — HR synthetic (n=2000)
+
+## Headline
+- Overall attrition rate: **{(df[&#x27;Attrition&#x27;]==&#x27;Yes&#x27;).mean():.1%}** (298 leavers / 2000).
+- Mean age {df[&#x27;Age&#x27;].mean():.1f}; majority in R&amp;D ({(df[&#x27;Department&#x27;]==&#x27;Research &amp; Development&#x27;).mean():.0%}).
+
+## Where attrition concentrates
+| Cut | Higher rate | Lower rate | Gap |
+|---|---|---|---|
+| OverTime | Yes {(df.loc[df.OverTime==&#x27;Yes&#x27;,&#x27;Attrition&#x27;]==&#x27;Yes&#x27;).mean():.1%} | No {(df.loc[df.OverTime==&#x27;No&#x27;,&#x27;Attrition&#x27;]==&#x27;Yes&#x27;).mean():.1%} | +4.8 pp |
+| Department | R&amp;D 16.2% | HR 9.7% (n=103, noisy) | — |
+| Income quartile | Q4 17.8% | Q2 12.4% | +5.4 pp |
+
+## Three hypotheses (to test, not truths)
+1. **Overtime load raises exit risk.** Design: compare matched OT/non-OT pairs within JobLevel; pilot workload cap in R&amp;D.
+2. **High earners in this population leave for external offers** (Q4 17.8%). Design: exit-interview coding + comp-ratio analysis vs market.
+3. **R&amp;D career-path opacity drives exits** (dept rate 16.2%). Design: promotion velocity by tenure; mentoring experiment in two teams.
+
+## Caveats
+- Synthetic data; JobSatisfaction signal is non-monotonic — do not over-interpret.
+- Department rates with n≈100 have wide CIs; show counts beside every percentage.
+- Association ≠ causation; validate with interventions before policy change.
+&quot;&quot;&quot;
+open(&quot;attrition_report.md&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;).write(report)
+print(&quot;wrote attrition_report.md&quot;)
+print(report[:400])</code></pre>
+<hr/>
+<h3>Exercises (do these!)</h3>
+<h4>Exercise 1 — Attrition by OverTime</h4>
+<p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? <em>Expected: Yes 0.1869 · No 0.1387 · gap ≈ 0.0482 (4.8 pp).</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>. &lt;/details&gt;</p>
+<h4>Exercise 2 — Income quartiles vs attrition</h4>
+<p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. <em>Expected: Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780 · edges 1009, 5040.75, 6776, 9667.25, 28723.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas. &lt;/details&gt;</p>
+<h4>Exercise 3 — Draft 3 hypotheses with numbers</h4>
+<p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. <em>Expected: free-form — e.g. OT pilot, R&amp;D career path, comp-ratio for Q4 leavers — each with rates/n from Sections 2–4.</em></p>
+<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].” &lt;/details&gt;</p>
+<hr/>
+<h3>Solutions</h3>
+<pre><code class="language-python"># --- Solution 1 ---
+rates = df.groupby(&quot;OverTime&quot;)[&quot;Attrition&quot;].apply(lambda s: (s == &quot;Yes&quot;).mean())
+print(rates.round(4))
+gap = rates[&quot;Yes&quot;] - rates[&quot;No&quot;]
+print(f&quot;gap = {gap:.4f} ({gap*100:.1f} pp)&quot;)
+# Yes    0.1869
+# No     0.1387
+# gap = 0.0482 (4.8 pp)
+
+# --- Solution 2 ---
+df[&quot;IncomeQ&quot;] = pd.qcut(df[&quot;MonthlyIncome&quot;], 4, labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
+print(df.groupby(&quot;IncomeQ&quot;, observed=True)[&quot;Attrition&quot;]
+      .apply(lambda s: (s == &quot;Yes&quot;).mean()).round(4))
+print(df[&quot;MonthlyIncome&quot;].quantile([0, .25, .5, .75, 1]).tolist())
+# Q1 0.1440  Q2 0.1238  Q3 0.1503  Q4 0.1780
+# [1009.0, 5040.75, 6776.0, 9667.25, 28723.0]
+
+# --- Solution 3 ---
+# Template (fill with your own numbers from above):
+hypotheses = &quot;&quot;&quot;
+1. Reducing mandatory overtime in R&amp;D will cut attrition — OT yes 18.7% vs no 13.9%.
+2. Q4 earners need external-market comp review — Q4 attrition 17.8% vs Q2 12.4%.
+3. Promotion clarity in R&amp;D should be audited — dept rate 16.2% (n=1098).
+Validate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.
+&quot;&quot;&quot;
+print(hypotheses)
+# (Section 5 already writes attrition_report.md with this structure)</code></pre>
+<h4>What to learn next</h4>
+<ul>
+<li>Logistic regression / SHAP for driver ranking (Course 2).</li>
+<li>Survival analysis for time-to-exit.</li>
+<li>Fairness: would an OT-based policy disproportionately hit caregiver demographics?</li>
+<li>Cheat sheet: headline rate → slice → quartile/associate → confounders → hypotheses with validation plans.</li>
+</ul>
+<p><em>Files in this folder: <code>HR-Employee-Attrition-synth.csv</code> (primary), <code>emp_attrition.csv</code> (IBM alternate, n=1470) · outputs <code>attrition_overtime.png</code>, <code>attrition_income_quartiles.png</code>, <code>attrition_report.md</code>.</em></p>
+
+<footer>Course 1 — Foundations: Python, Math &amp; Data · Lesson for Lab 12 · Executable notebook: <code>lab-12-hr-attrition-capstone.ipynb</code></footer>
+</body>
+</html>
