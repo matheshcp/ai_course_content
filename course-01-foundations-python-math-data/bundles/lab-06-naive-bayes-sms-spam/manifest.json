@@ -1,12 +1,12 @@
 {
   "lab_id": "lab-06-naive-bayes-sms-spam",
   "notebook": "lab-06-naive-bayes-sms-spam.ipynb",
-  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-06-naive-bayes-sms-spam/notebook.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/lab-06-naive-bayes-sms-spam.ipynb",
   "api_launch": "https://api.vlabs.test/colab/lab-06-naive-bayes-sms-spam/launch-url",
-  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-06-naive-bayes-sms-spam/dataset.zip",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/bundles/lab-06-naive-bayes-sms-spam/dataset.zip",
   "images_zip": null,
   "files": [
     "sms.tsv"
   ],
-  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
 }

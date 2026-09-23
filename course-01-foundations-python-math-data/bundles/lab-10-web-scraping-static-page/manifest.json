@@ -1,12 +1,12 @@
 {
   "lab_id": "lab-10-web-scraping-static-page",
   "notebook": "lab-10-web-scraping-static-page.ipynb",
-  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-10-web-scraping-static-page/notebook.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-10-web-scraping-static-page/lab-10-web-scraping-static-page.ipynb",
   "api_launch": "https://api.vlabs.test/colab/lab-10-web-scraping-static-page/launch-url",
-  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-10-web-scraping-static-page/dataset.zip",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/bundles/lab-10-web-scraping-static-page/dataset.zip",
   "images_zip": null,
   "files": [
     "fixture.html"
   ],
-  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
 }

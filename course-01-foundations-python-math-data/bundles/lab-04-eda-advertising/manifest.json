@@ -1,12 +1,12 @@
 {
   "lab_id": "lab-04-eda-advertising",
   "notebook": "lab-04-eda-advertising.ipynb",
-  "colab_url": "https://colab.research.google.com/github/ORG/REPO/blob/main/lab-04-eda-advertising/notebook.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-04-eda-advertising/lab-04-eda-advertising.ipynb",
   "api_launch": "https://api.vlabs.test/colab/lab-04-eda-advertising/launch-url",
-  "dataset_zip": "https://raw.githubusercontent.com/ORG/REPO/main/lab-04-eda-advertising/dataset.zip",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/bundles/lab-04-eda-advertising/dataset.zip",
   "images_zip": null,
   "files": [
     "Advertising.csv"
   ],
-  "host_notes": "Admin: replace ORG/REPO with the vlabs-colab-cache mirror (same pattern as Lab model storage S3 colab-labs/<lab_id>/). Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
 }
