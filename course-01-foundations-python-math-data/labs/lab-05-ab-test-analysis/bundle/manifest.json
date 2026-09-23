@@ -2,7 +2,6 @@
   "lab_id": "lab-05-ab-test-analysis",
   "notebook": "lab-05-ab-test-analysis.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb",
-  "api_launch": "https://api.vlabs.test/colab/lab-05-ab-test-analysis/launch-url",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/bundle/dataset.zip",
   "images_zip": null,
   "files": [

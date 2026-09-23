@@ -2,7 +2,6 @@
   "lab_id": "lab-12-hr-attrition-capstone",
   "notebook": "lab-12-hr-attrition-capstone.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb",
-  "api_launch": "https://api.vlabs.test/colab/lab-12-hr-attrition-capstone/launch-url",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/bundle/dataset.zip",
   "images_zip": null,
   "files": [
