@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,8 +41,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
@@ -50,10 +54,11 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <ul><li>Compute overall attrition and slice by Department / OverTime</li><li>Bin income into quartiles and compare attrition rates</li><li>Spot confounders and non-monotonic signals</li><li>Write 3 actionable hypotheses into attrition_report.md</li></ul>
 
 <hr/>
-<h2>HR Attrition Mini Case Study</h2>
-<h3>Course Capstone Track: EDA → Insight → Executive One-Pager</h3>
-<blockquote><strong>Scenario:</strong> People analytics shares <code>HR-Employee-Attrition-synth.csv</code> (2000 rows, IBM-style HR schema, 35 columns). Deliver an executive one-pager: overall attrition rate, rates by Department and OverTime, income quartiles vs attrition, and <strong>3 actionable hypotheses</strong> with supporting numbers. Write <code>attrition_report.md</code>.  <strong>You will learn:</strong> end-to-end pipeline, EDA → insight → narrative, avoiding spurious correlations. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate Capstone. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>Capstone mental map</h4>
+<h2>Course Capstone Track: EDA → Insight → Executive One-Pager</h2>
+<blockquote><strong>Scenario:</strong> People analytics shares <code>HR-Employee-Attrition-synth.csv</code> (2000 rows, IBM-style HR schema, 35 columns). Deliver an executive one-pager: overall attrition rate, rates by Department and OverTime, income quartiles vs attrition, and <strong>3 actionable hypotheses</strong> with supporting numbers. Write <code>attrition_report.md</code>. <strong>You will learn:</strong> end-to-end pipeline, EDA → insight → narrative, avoiding spurious correlations. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate Capstone. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<p>This capstone is the whole course compressed into one deliverable: frame the question, slice the data, associate carefully, interpret honestly, and propose actions you could actually test. The output is not a notebook for its own sake — it is <code>attrition_report.md</code>, a one-pager a busy executive can read in two minutes and still see the numbers, the caveats, and the next experiments.</p>
+<h3>Capstone mental map</h3>
+<p>Work top-to-bottom: you cannot say “where attrition is worst” before you’ve defined the baseline rate, and you cannot propose interventions before you’ve checked whether your “driver” is just a proxy for something else. Each stage produces a small artifact that feeds the next.</p>
 <table><thead><tr><th>Stage</th><th>Question</th><th>Artifact</th></tr></thead><tbody>
 <tr><td>Frame</td><td>What is attrition rate?</td><td>headline number</td></tr>
 <tr><td>Slice</td><td>Where is it worst?</td><td>Dept / OverTime tables</td></tr>
@@ -61,8 +66,10 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>Interpret</td><td>Causation? confounders?</td><td>caveats section</td></tr>
 <tr><td>Act</td><td>What would we try?</td><td>3 hypotheses</td></tr>
 </tbody></table>
+<blockquote><strong>Pitfall:</strong> this file is <strong>synthetic</strong>. Numbers here (including the counter-intuitive income pattern below) describe a generated population, not a real labour market. Report what the file says, flag the synthetic provenance in your caveats, and never present these rates as industry benchmarks.</blockquote>
 <hr/>
-<h4>1. Load and profile (local first, Colab fallback)</h4>
+<h3>1. Load and profile (local first, Colab fallback)</h3>
+<p>Why profiling comes first: before any slice or chart, you need the denominator and the baseline. The overall attrition rate (<strong>0.149</strong>, i.e. 298 leavers of 2000) is the number every later percentage is compared against — a department rate of 16% means something different if the company baseline is 5% versus 15%. Department counts (R&amp;D 1098, Sales 799, HR 103) also warn you upfront which slices will be noisy.</p>
 <pre><code class="language-python">import os
 import pandas as pd
 import matplotlib
@@ -92,8 +99,10 @@ print(&quot;overall attrition rate:&quot;, round((df[&quot;Attrition&quot;] == &
 print(df[&quot;Department&quot;].value_counts())
 # Research &amp; Development 1098, Sales 799, Human Resources 103
 print(&quot;mean age:&quot;, df[&quot;Age&quot;].mean().round(2))  # 37.24</code></pre>
+<p><strong>What to notice:</strong> shape is <strong>(2000, 35)</strong>; leavers are <strong>298 Yes vs 1702 No</strong>, giving overall rate <strong>0.149</strong>; department sizes are heavily skewed (<strong>1098 / 799 / 103</strong>), so the HR-department rate will rest on only ~103 people; mean age <strong>37.24</strong> frames the population. The <code>Unnamed</code> column drop guards against a stray index column from the CSV export — always check <code>df.shape</code> matches your expectation after load.</p>
 <hr/>
-<h4>2. Headline: attrition by Department and OverTime</h4>
+<h3>2. Headline: attrition by Department and OverTime</h3>
+<p>Why these two slices lead the one-pager: Department and OverTime are the cuts an executive will ask for first (“where hurts?” and “is it the overtime?”). The <code>rate()</code> helper computes <code>(s == "Yes").mean()</code> per group and sorts descending, so the worst group is always the top row — readable at a glance and easy to paste into the report table.</p>
 <pre><code class="language-python">def rate(col):
     return (df.groupby(col)[&quot;Attrition&quot;]
               .apply(lambda s: (s == &quot;Yes&quot;).mean())
@@ -108,14 +117,17 @@ print(rate(&quot;Department&quot;))
 print(rate(&quot;OverTime&quot;))
 # Yes    0.1869
 # No     0.1387</code></pre>
+<p><strong>What to notice:</strong> R&amp;D leads departments at <strong>0.1621</strong> while HR is lowest at <strong>0.0971</strong> — but HR’s n=103 makes that 9.7% fragile (a handful of leavers moves it several points). The OverTime split is <strong>0.1869 vs 0.1387</strong>: staff on overtime leave at a clearly higher rate than those who aren’t.</p>
 <p><strong>OverTime gap:</strong> 18.7% vs 13.9% — <strong>+4.8 pp</strong> for staff working overtime.</p>
 <pre><code class="language-python">ax = rate(&quot;OverTime&quot;).plot(kind=&quot;bar&quot;, figsize=(5, 3), rot=0, ylim=(0, 0.25),
                            title=&quot;Attrition rate by OverTime&quot;)
 ax.set_ylabel(&quot;Attrition rate&quot;)
 ax.yaxis.set_major_formatter(lambda y, _: f&quot;{y:.0%}&quot;)
 fig = ax.get_figure(); fig.tight_layout(); fig.savefig(&quot;attrition_overtime.png&quot;, dpi=120)</code></pre>
+<p><strong>What to notice:</strong> the y-axis runs <strong>0 to 0.25</strong> with percent formatting, so the two bars compare from a true zero baseline; the saved file is <code>attrition_overtime.png</code>. Keep this chart next to its n-counts in the report — a rate without a denominator invites over-reading.</p>
 <hr/>
-<h4>3. Income quartiles vs attrition</h4>
+<h3>3. Income quartiles vs attrition</h3>
+<p>Why quartiles instead of a raw scatter: income is skewed (edges run 1009 to 28723), so binning into quartiles gives four roughly equal groups and four rates a reader can compare directly. This is the section most likely to produce a <em>counter-intuitive</em> result — which is exactly why it earns its own caveat rather than being quietly dropped.</p>
 <pre><code class="language-python">df[&quot;IncomeQ&quot;] = pd.qcut(df[&quot;MonthlyIncome&quot;], 4,
                         labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
 edges = df[&quot;MonthlyIncome&quot;].quantile([0, .25, .5, .75, 1]).tolist()
@@ -129,6 +141,7 @@ print(by_q)
 # Q2 0.1238
 # Q3 0.1503
 # Q4 0.1780</code></pre>
+<p><strong>What to notice:</strong> quartile edges are <strong>1009, 5040.75, 6776, 9667.25, 28723</strong> — note the long right tail (Q4 spans 9667→28723 while Q1 spans 1009→5040). Rates are <strong>Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780</strong>: not monotonic, and the <em>highest</em> quartile leaves most.</p>
 <p><strong>Counter-intuitive (synthetic) pattern:</strong> highest quartile has the <em>highest</em> attrition (17.8%) — in this synthetic file, not the classic IBM original. Report what you see; don’t force the textbook story.</p>
 <pre><code class="language-python">ax = by_q.plot(kind=&quot;bar&quot;, figsize=(5, 3), rot=0, ylim=(0, 0.25),
                title=&quot;Attrition rate by income quartile&quot;)
@@ -139,8 +152,10 @@ for i, v in enumerate(by_q):
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;attrition_income_quartiles.png&quot;, dpi=120)
 print(&quot;saved charts&quot;)</code></pre>
+<p><strong>What to notice:</strong> each bar is labelled with its own percentage (<code>14.4%</code>, <code>12.4%</code>, <code>15.0%</code>, <code>17.8%</code>), so the chart is readable without a tooltip; the figure saves as <code>attrition_income_quartiles.png</code>. The Q4-over-Q2 gap (<strong>0.0542</strong>, 5.4 pp) is the number to quote — and to caveat as synthetic.</p>
 <hr/>
-<h4>4. Cross-checks (confounders)</h4>
+<h3>4. Cross-checks (confounders)</h3>
+<p>Why cross-check before concluding: a single two-way rate can always be a proxy. Overtime might correlate with income; job satisfaction might correlate with department; leavers here actually earn <em>more</em> on average than stayers — all signals that any “X causes attrition” claim needs a confounder pass first. Run these three checks on every driver you plan to put in the one-pager.</p>
 <pre><code class="language-python"># Overtime × income — is the OT gap just a pay effect?
 print(pd.crosstab(df[&quot;OverTime&quot;], df[&quot;IncomeQ&quot;], normalize=&quot;index&quot;).round(3))
 
@@ -151,9 +166,12 @@ print(rate(&quot;JobSatisfaction&quot;))
 # Mean income by leaver status
 print(df.groupby(&quot;Attrition&quot;)[&quot;MonthlyIncome&quot;].mean().round(2))
 # No 8033.23, Yes 8676.02  (leavers earn slightly more here)</code></pre>
+<p><strong>What to notice:</strong> JobSatisfaction rates (<strong>4: 0.1576, 2: 0.1565, 1: 0.1383, 3: 0.1254</strong>) are non-monotonic — the “happier employees stay” story isn’t supported here; mean income shows leavers at <strong>8676.02</strong> vs stayers <strong>8033.23</strong>, consistent with the synthetic Q4 pattern rather than the classic one. The OverTime×Income crosstab tells you whether the OT gap survives within pay bands.</p>
 <blockquote><strong>Spurious-correlation guard:</strong> always ask “what else varies with this feature?” Department, job level, and overtime often proxy for each other. n = 103 in HR dept → wide uncertainty on that 9.7% rate.</blockquote>
+<blockquote><strong>Pitfall:</strong> association ≠ causation, especially on observational HR data. Before writing “overtime causes attrition,” check overlapping slices (JobLevel, Department, income band) and remember small cells (HR n=103) have wide, easily-overstated confidence.</blockquote>
 <hr/>
-<h4>5. Draft the executive one-pager</h4>
+<h3>5. Draft the executive one-pager</h3>
+<p>Why write the report <em>as code</em>: an f-string report regenerates from the dataframe, so the headline rate, gaps, and counts can’t drift out of sync with the analysis if the data reloads. The structure below is the executive frame — headline number first, then where it concentrates, then three testable hypotheses (not conclusions), then caveats. Executives read top-down; put the 14.9% where they can’t miss it.</p>
 <pre><code class="language-python">report = f&quot;&quot;&quot;# Attrition one-pager — HR synthetic (n=2000)
 
 ## Headline
@@ -180,25 +198,43 @@ print(df.groupby(&quot;Attrition&quot;)[&quot;MonthlyIncome&quot;].mean().round(
 open(&quot;attrition_report.md&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;).write(report)
 print(&quot;wrote attrition_report.md&quot;)
 print(report[:400])</code></pre>
+<p><strong>What to notice:</strong> the file writes to <code>attrition_report.md</code> and the preview confirms the headline (overall rate formatted from the dataframe, 298/2000) plus the concentration table; each hypothesis carries a rate (18.7% vs 13.9%, Q4 17.8%, R&amp;D 16.2%) <em>and</em> a validation design, and the caveats section names the synthetic provenance and the n≈100 warning explicitly.</p>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Attrition by OverTime</h4>
+<h3>What good looks like (rubric)</h3>
+<p>Before Exercises, calibrate against the checklist an reviewer would use on your <code>attrition_report.md</code>:</p>
+<ul>
+<li><strong>Headline present and correct:</strong> overall attrition printed to one decimal (14.9%) with its counts (298/2000), derived from the loaded frame — not copied by hand.</li>
+<li><strong>Slices with denominators:</strong> Department and OverTime rates each shown beside their n (especially HR n=103 flagged as noisy).</li>
+<li><strong>Income section tells the truth:</strong> Q1–Q4 rates match the file (0.1440 / 0.1238 / 0.1503 / 0.1780), the counter-intuitive Q4 result is reported rather than smoothed over, and “synthetic” appears in the caveat.</li>
+<li><strong>Confounder pass visible:</strong> at least the OverTime×Income crosstab and the non-monotonic JobSatisfaction rates are acknowledged before any causal-sounding claim.</li>
+<li><strong>Three hypotheses, each testable:</strong> every hypothesis cites at least one computed number and one validation design (matched pairs, pilot, exit-interview coding, etc.).</li>
+<li><strong>Caveats section non-empty:</strong> synthetic data, small-n slices, and association-vs-causation all stated.</li>
+<li><strong>Artifacts exist:</strong> <code>attrition_report.md</code> plus <code>attrition_overtime.png</code> and <code>attrition_income_quartiles.png</code>.</li>
+</ul>
+<p>A report missing any of these reads as a vibe, not an analysis — fix the gap rather than dressing the prose.</p>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Attrition by OverTime</h3>
 <p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? <em>Expected: Yes 0.1869 · No 0.1387 · gap ≈ 0.0482 (4.8 pp).</em></p>
 <p><strong>Follow-up:</strong> How many leavers is that in absolute terms? Check: 298.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>. &lt;/details&gt;</p>
-<h4>Exercise 2 — Income quartiles vs attrition</h4>
+<details><summary>Hint</summary>
+<p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>.</p>
+</details>
+<h3>Exercise 2 — Income quartiles vs attrition</h3>
 <p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. <em>Expected: Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780 · edges 1009, 5040.75, 6776, 9667.25, 28723.</em></p>
 <p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap? Check: 0.0542.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas. &lt;/details&gt;</p>
-<h4>Exercise 3 — Draft 3 hypotheses with numbers</h4>
+<details><summary>Hint</summary>
+<p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas.</p>
+</details>
+<h3>Exercise 3 — Draft 3 hypotheses with numbers</h3>
 <p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. <em>Expected: free-form — e.g. OT pilot, R&amp;D career path, comp-ratio for Q4 leavers — each with rates/n from Sections 2–4.</em></p>
 <p><strong>Follow-up:</strong> How many R and D leavers? Check: 178.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].” &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].”</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
+<p>Worked answers for the three exercises and follow-ups. Try each exercise before revealing these; the asserts double-check your own counts.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 rates = df.groupby(&quot;OverTime&quot;)[&quot;Attrition&quot;].apply(lambda s: (s == &quot;Yes&quot;).mean())
 print(rates.round(4))
@@ -225,7 +261,9 @@ hypotheses = &quot;&quot;&quot;
 Validate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.
 &quot;&quot;&quot;
 print(hypotheses)
-# (Section 5 already writes attrition_report.md with this structure)# --- Follow-up 1 ---
+# (Section 5 already writes attrition_report.md with this structure)
+
+# --- Follow-up 1 ---
 n_leavers = int((df[&quot;Attrition&quot;] == &quot;Yes&quot;).sum())
 print(n_leavers)  # 298
 assert n_leavers == 298
@@ -240,7 +278,8 @@ assert qgap == 0.0542
 n_rd = int(((df[&quot;Department&quot;] == &quot;Research &amp; Development&quot;) &amp; (df[&quot;Attrition&quot;] == &quot;Yes&quot;)).sum())
 print(n_rd)  # 178
 assert n_rd == 178</code></pre>
-<h4>What to learn next</h4>
+<p><strong>What to notice:</strong> the three asserts pin the lab’s anchors — <strong>298</strong> total leavers, <strong>0.0542</strong> Q4-minus-Q2 gap, and <strong>178</strong> R&amp;D leavers (so R&amp;D contributes 178 of the 298 exits, matching its 16.2% rate on n=1098). If your Q4-minus-Q2 gap differs, re-check the quartile edges and <code>observed=True</code> from Section 3.</p>
+<h3>What to learn next</h3>
 <ul>
 <li>Logistic regression / SHAP for driver ranking (Course 2).</li>
 <li>Survival analysis for time-to-exit.</li>

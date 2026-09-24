@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-10-web-scraping-static-page",
+  "title": "Web Scraping a Static Public Page",
   "notebook": "lab-10-web-scraping-static-page.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-10-web-scraping-static-page/lab-10-web-scraping-static-page.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-10-web-scraping-static-page/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "fixture.html"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Web Scraping",
+    "Python",
+    "Data"
+  ],
+  "description": "Scrape a static HTML table into clean CSV, offline-first with polite practices.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Data Acquisition Track: HTML Tables → CSV (Offline Fixture First)</h3>\n<blockquote><strong>Scenario:</strong> Extract a product table from HTML with <code>urllib</code> + <code>html.parser</code> (or BeautifulSoup if available), handle missing cells, and save <code>scraped.csv</code>. A local <code>fixture.html</code> ships with this lab so <strong>everything runs without network</strong>. An optional live target (<code>quotes.toscrape.com</code>) is included for when you do have egress.  <strong>You will learn:</strong> HTML structure, table parsing, polite scraping (User-Agent, delay), robots.txt awareness, anti-patterns warning. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (BeautifulSoup optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Parse table rows to dicts</h3>\n<p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. <em>Expected: 5 rows · names: Widget A, Widget B, Gadget C, Gadget D, Doohickey E.</em></p>\n<p><strong>Follow-up:</strong> How many units are in stock across all products? Check: 472.</p>\n<details><summary>Hint</summary>\n<p><code>header, body = parse_table(html)</code> then <code>rows_to_dicts(header, body)</code>; collect <code>r[\"Name\"]</code>.</p>\n</details>\n<h3>Exercise 2 — Handle missing cells</h3>\n<p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? <em>Expected: Gadget C · 1 missing · store <code>None</code> (not <code>0</code> — zero price is a real value).</em></p>\n<p><strong>Follow-up:</strong> What is the mean price over priced products? Check: about 12.685.</p>\n<details><summary>Hint</summary>\n<p><code>[r for r in records if r[\"Price\"] is None]</code>.</p>\n</details>\n<h3>Exercise 3 — Write CSV + row-count assert</h3>\n<p>Write <code>scraped.csv</code> and assert <code>lines == 1 + len(records)</code>. Print the assertion message. <em>Expected: 5 data rows → 6 lines; assert passes.</em></p>\n<p><strong>Follow-up:</strong> Prove the CSV header. Check: ID,Name,Price,Stock.</p>\n<details><summary>Hint</summary>\n<p><code>sum(1 for _ in open(path))</code> includes the header.</p>\n</details>\n<hr/>",
+  "duration": "00:45:00",
+  "lab_duration": "45 Minutes",
+  "session_timeout": 4500,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

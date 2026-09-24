@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,8 +41,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/lab-11-visualisation-studio.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/lab-11-visualisation-studio.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
@@ -50,18 +54,21 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <ul><li>Choose appropriate charts for distribution and composition questions</li><li>Redact PII (emails) before any plot leaves your machine</li><li>Produce four annotated publication-quality figures</li><li>Read tip% and ticket-status insights from the charts</li></ul>
 
 <hr/>
-<h2>Visualisation Studio</h2>
-<h3>Charts That Communicate Track: Tips + Tickets (4 Publication-Quality Plots)</h3>
-<blockquote><strong>Scenario:</strong> Two briefs, two datasets: (1) <code>tips.csv</code> — <em>who tips more?</em> (2) <code>tickets.csv</code> — <em>SLA status mix</em>; the tickets file contains <strong>emails (PII)</strong> so redact before any plot leaves your machine. Produce four charts with annotated insights.  <strong>You will learn:</strong> figure anatomy, chart choice, PII redaction, subplots, annotation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>Chart-choice mental map</h4>
+<h2>Charts That Communicate Track: Tips + Tickets (4 Publication-Quality Plots)</h2>
+<blockquote><strong>Scenario:</strong> Two briefs, two datasets: (1) <code>tips.csv</code> — <em>who tips more?</em> (2) <code>tickets.csv</code> — <em>SLA status mix</em>; the tickets file contains <strong>emails (PII)</strong> so redact before any plot leaves your machine. Produce four charts with annotated insights. <strong>You will learn:</strong> figure anatomy, chart choice, PII redaction, subplots, annotation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<p>A chart is an argument with a picture attached. Each of the four plots below answers one question from the two briefs, computes the supporting number <em>first</em>, then draws the figure and annotates that number onto it. Follow that order — number, then chart — and you avoid the classic failure mode of a beautiful plot that doesn’t say anything checkable.</p>
+<h3>Chart-choice mental map</h3>
+<p>Pick the chart from the question, not from habit. Distribution questions get histograms or boxes; part-of-whole with few categories gets stacked bars; relationship between two measures gets a scatter; ordered time gets a line. The “Do not use” column is where most bad slides come from.</p>
 <table><thead><tr><th>Question</th><th>Chart</th><th>Do not use</th></tr></thead><tbody>
 <tr><td>Distribution of a measure</td><td>histogram / box</td><td>pie for many bins</td></tr>
 <tr><td>Share of categories</td><td>stacked/bar (few cats)</td><td>3-D pie</td></tr>
 <tr><td>Relationship bill vs tip</td><td>scatter</td><td>bar</td></tr>
 <tr><td>Trend over time</td><td>line</td><td>scatter if ordered</td></tr>
 </tbody></table>
+<blockquote><strong>Pitfall:</strong> PII in charts — emails, names, ticket text — must be redacted <em>before</em> anything is plotted or exported. A PNG saved to disk, pasted into a deck, or uploaded to Colab can leak just as effectively as the raw CSV.</blockquote>
 <hr/>
-<h4>1. Load both datasets (local first, Colab fallback)</h4>
+<h3>1. Load both datasets (local first, Colab fallback)</h3>
+<p>Why both files load through one <code>ensure</code> helper: it prefers a local copy and only downloads when missing, so re-runs are fast and partially offline. Reading shapes and headline rates up front (<code>(244, 7)</code> and <code>(107, 9)</code>) gives you the denominators every later percentage will lean on — you can’t caption “mean tip 16.1%” credibly if you don’t know it’s over 244 bills.</p>
 <pre><code class="language-python">import os, re
 import pandas as pd
 import matplotlib
@@ -86,8 +93,10 @@ tips[&quot;tip_pct&quot;] = tips[&quot;tip&quot;] / tips[&quot;total_bill&quot;]
 print(tips[&quot;tip_pct&quot;].mean().round(4))  # 0.1608 overall
 print(tickets[&quot;status&quot;].value_counts())
 # open 42, in-progress 34, closed 31</code></pre>
+<p><strong>What to notice:</strong> tips is <strong>244 rows × 7 columns</strong>, tickets is <strong>107 rows × 9 columns</strong>; the derived <code>tip_pct</code> averages <strong>0.1608</strong> (≈16.1%) across all bills; ticket statuses split <strong>open 42 · in-progress 34 · closed 31</strong>, which sums to 107 — every status accounted for, no null bucket. <code>matplotlib.use("Agg")</code> renders figures to files without a GUI, which is what keeps these cells portable in Colab.</p>
 <hr/>
-<h4>2. Redact PII before plotting tickets</h4>
+<h3>2. Redact PII before plotting tickets</h3>
+<p>Why redaction is its own section: email addresses live in ordinary string columns and survive careless copies — into <code>value_counts</code>, axis labels, hover text, or an exported PNG. A regex sweep with an explicit zero-hits post-condition converts “I think I cleaned it” into a checked invariant, and doing it on a <code>copy()</code> leaves the raw frame intact for any authorised audit.</p>
 <pre><code class="language-python">EMAIL_RE = re.compile(r&quot;[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}&quot;)
 
 def redact_email(s):
@@ -106,9 +115,12 @@ for col in tickets_clean.columns:
 still = sum(len(EMAIL_RE.findall(str(v))) for v in tickets_clean.astype(str).values.ravel())
 print(&quot;hits after redaction:&quot;, still)  # 0
 assert still == 0</code></pre>
+<p><strong>What to notice:</strong> the sweep finds <strong>184+</strong> email-like hits in the raw frame and <strong>0</strong> after redaction, and the <code>assert</code> enforces that zero. Only string cells containing <code>@</code> are rewritten, so numeric columns (and their dtypes) pass through untouched — chart 3’s counts remain exactly the pre-redaction counts.</p>
 <blockquote>Redaction is <strong>pre-plot hygiene</strong>. Don’t put raw emails in chart titles, legends, or exported PNGs.</blockquote>
+<blockquote><strong>Pitfall:</strong> redact PII before the first <code>plot()</code> call, not after saving. Matplotlib embeds whatever strings you feed it into titles, tick labels, and legends; a “quick look” PNG is already an artefact that can leave your machine.</blockquote>
 <hr/>
-<h4>3. Chart 1 — Tip % distribution by day (histogram overlay)</h4>
+<h3>3. Chart 1 — Tip % distribution by day (histogram overlay)</h3>
+<p>Why a distribution first: before claiming any group <em>difference</em>, you need to see the spread. Overlaid histograms with <code>alpha=0.45</code> show whether Friday’s higher mean comes from a shifted peak or a few outlier tippers, and the per-day <code>n=</code> in each legend label keeps sample size visible — Sat/Sun carry far more bills than Fri.</p>
 <pre><code class="language-python">fig, ax = plt.subplots(figsize=(7, 4))
 for day, sub in tips.groupby(&quot;day&quot;):
     ax.hist(sub[&quot;tip_pct&quot;], bins=15, alpha=0.45, label=f&quot;{day} (n={len(sub)})&quot;)
@@ -121,9 +133,11 @@ ax.annotate(&quot;Overall mean ≈ 16.1%&quot;,
             fontsize=9)
 fig.tight_layout(); fig.savefig(&quot;chart1_tip_pct_by_day.png&quot;, dpi=120)
 print(&quot;saved chart1_tip_pct_by_day.png&quot;)</code></pre>
+<p><strong>What to notice:</strong> the annotation anchors the overall mean <strong>≈ 16.1%</strong> (0.1608) as a landmark against every day’s bars; most mass sits in a band around that mean rather than in long tails, which is why the mean comparisons in Exercise 1 are fair starting points.</p>
 <p>Mean tip % by day (for the caption): <strong>Fri 17.0% · Thur 16.1% · Sun 16.7% · Sat 15.3%</strong>.</p>
 <hr/>
-<h4>4. Chart 2 — Mean tip % by day + time (grouped bar)</h4>
+<h3>4. Chart 2 — Mean tip % by day + time (grouped bar)</h3>
+<p>Why group by sitting: “who tips more” often hides a <em>when</em> effect — the same day can behave differently at lunch and dinner. The pivot table computes the day×sitting cell means explicitly (printed first, so numbers are checkable), then the grouped bar renders them; fixed <code>reindex(["Thur", "Fri", "Sat", "Sun"])</code> keeps weekday order stable across saves.</p>
 <pre><code class="language-python">pivot = tips.pivot_table(index=&quot;day&quot;, columns=&quot;time&quot;,
                          values=&quot;tip_pct&quot;, aggfunc=&quot;mean&quot;).reindex([&quot;Thur&quot;, &quot;Fri&quot;, &quot;Sat&quot;, &quot;Sun&quot;])
 print(pivot.round(4))
@@ -136,9 +150,11 @@ ax.legend(title=&quot;Sitting&quot;)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart2_tip_pct_day_time.png&quot;, dpi=120)
 print(&quot;saved chart2_tip_pct_day_time.png&quot;)</code></pre>
+<p><strong>What to notice:</strong> <code>ylim=(0, 0.25)</code> starts the axis at zero — bars only compare honestly from a true baseline — and the printed pivot shows every day/sitting cell before it’s drawn. The overall sitting comparison (Lunch <strong>16.4%</strong> vs Dinner <strong>16.0%</strong>) is only ~0.4 pp: a small gap worth stating with its magnitude rather than as a headline.</p>
 <p>Insight to annotate: lunch tips slightly higher on average (Lunch 16.4% vs Dinner 16.0% overall).</p>
 <hr/>
-<h4>5. Chart 3 — Tickets: stacked status × priority (redacted data only)</h4>
+<h3>5. Chart 3 — Tickets: stacked status × priority (redacted data only)</h3>
+<p>Why stacked bars here: the brief is part-of-whole across a <em>small</em> set of categories (three priorities, three statuses) — exactly where stacked bars beat pies. Building the crosstab on <code>tickets_clean</code> (not <code>tickets</code>) is the point of the exercise: counts and colour encode status mix, and no email ever reaches the figure. Reordering columns to <code>open → in-progress → closed</code> makes the stack read as a pipeline.</p>
 <pre><code class="language-python">ct = pd.crosstab(tickets_clean[&quot;priority&quot;], tickets_clean[&quot;status&quot;])
 # order columns for readability
 for c in [&quot;open&quot;, &quot;in-progress&quot;, &quot;closed&quot;]:
@@ -156,9 +172,11 @@ ax.annotate(&quot;Open work concentrated in low/med priority&quot;,
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart3_tickets_status.png&quot;, dpi=120)
 print(&quot;saved chart3_tickets_status.png&quot;)</code></pre>
+<p><strong>What to notice:</strong> the title itself declares “(PII redacted)”, so anyone who sees the PNG knows the provenance; column totals still equal the Section 1 counts — <strong>open 42 · in-progress 34 · closed 31 (n = 107)</strong> — because redaction changed strings, not rows. The annotation names the pattern (“open work concentrated in low/med priority”) instead of leaving the reader to squint at segment heights.</p>
 <p>Expected status totals: open 42 · in-progress 34 · closed 31 (n = 107).</p>
 <hr/>
-<h4>6. Chart 4 — Total bill vs tip scatter (annotated insight)</h4>
+<h3>6. Chart 4 — Total bill vs tip scatter (annotated insight)</h3>
+<p>Why scatter for the relationship brief: bill and tip are two continuous measures, so each table is a point; colouring by <code>sex</code> with the mean tip % <em>inside the legend label</em> puts the summary stat next to the evidence. The arrow annotation on the max bill turns an outlier into a labelled observation instead of an unexplained dot in the corner.</p>
 <pre><code class="language-python">fig, ax = plt.subplots(figsize=(7, 4))
 colors = {&quot;Male&quot;: &quot;#4C72B0&quot;, &quot;Female&quot;: &quot;#C44E52&quot;}
 for sex, sub in tips.groupby(&quot;sex&quot;):
@@ -177,26 +195,32 @@ ax.annotate(f&quot;max bill ${tips.loc[i, &#x27;total_bill&#x27;]:.2f}&quot;,
             arrowprops=dict(arrowstyle=&quot;-&gt;&quot;, lw=0.8))
 fig.tight_layout(); fig.savefig(&quot;chart4_tip_vs_bill.png&quot;, dpi=120)
 print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
+<p><strong>What to notice:</strong> points rise together — larger bills get larger tips in dollars — but tip <em>percentage</em> still clusters in the 15–20% band even at the <strong>$50.81</strong> maximum, which is why percentage (not dollars) is the fair cross-group comparison. The legend already carries each group’s mean: Female ≈ <strong>16.7%</strong>, Male ≈ <strong>15.8%</strong>.</p>
 <p>Female mean tip % ≈ 16.7% · Male ≈ 15.8% (small gap, don’t over-claim).</p>
+<blockquote><strong>Pitfall:</strong> a ~0.9 pp gap between group means on 244 observational rows is a weak signal, not a finding. Report it with the numbers, avoid causal language, and remember day/time/party-size confounders weren’t controlled here — spurious correlation is one <code>groupby</code> away.</blockquote>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Tip % distribution by day</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Tip % distribution by day</h3>
 <p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? <em>Expected: highest Fri 0.1699 · lowest Sat 0.1532 (overall 0.1608).</em></p>
 <p><strong>Follow-up:</strong> How large is the Fri minus Sat tip gap in points? Check: about 0.0167 (1.67pp).</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>tips["tip_pct"] = tips["tip"]/tips["total_bill"]</code> then <code>groupby("day")["tip_pct"].mean()</code>. &lt;/details&gt;</p>
-<h4>Exercise 2 — Stacked status bar for tickets</h4>
+<details><summary>Hint</summary>
+<p><code>tips["tip_pct"] = tips["tip"]/tips["total_bill"]</code> then <code>groupby("day")["tip_pct"].mean()</code>.</p>
+</details>
+<h3>Exercise 2 — Stacked status bar for tickets</h3>
 <p>Build <code>pd.crosstab(priority, status)</code> on <strong>redacted</strong> tickets and plot stacked bars. Print the table. <em>Expected columns sum: open 42, in-progress 34, closed 31; priority rows low 41, medium 34, high 32.</em></p>
 <p><strong>Follow-up:</strong> What share of tickets are open? Check: about 0.3925.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind="bar", stacked=True)</code>. &lt;/details&gt;</p>
-<h4>Exercise 3 — Annotate insight on each chart</h4>
+<details><summary>Hint</summary>
+<p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind="bar", stacked=True)</code>.</p>
+</details>
+<h3>Exercise 3 — Annotate insight on each chart</h3>
 <p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. <em>Expected: any four insights citing computed stats — e.g. “Fri mean tip 17.0%”, “42 open tickets”, “overall tip 16.1%”, “max bill $50.81”.</em></p>
 <p><strong>Follow-up:</strong> What share are closed? Check: about 0.2897.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>ax.annotate("text", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>. &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p><code>ax.annotate("text", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
+<p>Worked answers for the three exercises and follow-ups. Attempt the exercises first; then compare your numbers against these, especially the 4-d.p. rates and the checked targets.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 tips[&quot;tip_pct&quot;] = tips[&quot;tip&quot;] / tips[&quot;total_bill&quot;]
 by_day = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().sort_values(ascending=False)
@@ -221,7 +245,9 @@ insights = [
     f&quot;Max bill ${tips[&#x27;total_bill&#x27;].max():.2f} still ~15–20% tip band&quot;,
 ]
 for s in insights:
-    print(&quot;-&quot;, s)# --- Follow-up 1 ---
+    print(&quot;-&quot;, s)
+
+# --- Follow-up 1 ---
 bd = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().round(4)
 gap = round(bd[&quot;Fri&quot;] - bd[&quot;Sat&quot;], 4)
 print(gap)  # ~0.0167
@@ -236,7 +262,8 @@ assert osh == 0.3925
 csh = round((tickets_clean[&quot;status&quot;] == &quot;closed&quot;).mean(), 4)
 print(csh)  # ~0.2897
 assert csh == 0.2897</code></pre>
-<h4>What to learn next</h4>
+<p><strong>What to notice:</strong> the Fri–Sat gap asserts to <strong>0.0167</strong> (1.67 pp), the open share to <strong>0.3925</strong> (42/107), and the closed share to <strong>0.2897</strong> (31/107) — all three computed on <code>tickets_clean</code>, so the PII guarantee carries into the exercises. If a share differs, check that you redacted <em>before</em> counting and that no rows were dropped.</p>
+<h3>What to learn next</h3>
 <ul>
 <li>seaborn <code>boxplot</code> / <code>violinplot</code> for group distributions.</li>
 <li>Consistent style: <code>plt.rcParams</code>, colourblind-safe palettes.</li>

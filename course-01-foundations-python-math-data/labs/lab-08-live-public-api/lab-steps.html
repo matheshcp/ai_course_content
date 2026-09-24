@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,23 +41,22 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-08-live-public-api/lab-08-live-public-api.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-08-live-public-api/lab-08-live-public-api.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
-<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>offline_fixture.json</code> — upload in Colab</li></ul>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>offline_fixture.json</code></li></ul>
 </div>
 
 <h2>Learning goals</h2>
 <ul><li>GET JSON from a public API with urllib and a User-Agent</li><li>Retry 429/5xx with exponential backoff</li><li>Cache responses and flatten nested JSON to rows</li><li>Save api_snapshot.csv; fall back to offline fixture</li></ul>
 
 <hr/>
-<h2>Working with a Live Public API</h2>
-<h3>Data Outside Files Track: HTTP, JSON, Caching, Backoff</h3>
-<blockquote><strong>Scenario:</strong> Fetch a free public JSON API (Open-Meteo forecast — no API key), handle timeouts and 429s with exponential backoff, cache the response to <code>api_cache.json</code>, flatten nested JSON into a DataFrame, and save <code>api_snapshot.csv</code>. An <strong>offline fixture</strong> is shipped so the lab runs with no network.  <strong>You will learn:</strong> <code>urllib.request</code>, JSON parsing, status codes, caching, schema flattening, polite retry. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>API mental map</h4>
+<h2>Data Outside Files Track: HTTP, JSON, Caching, Backoff</h2>
+<blockquote><strong>Scenario:</strong> Fetch a free public JSON API (Open-Meteo forecast — no API key), handle timeouts and 429s with exponential backoff, cache the response to <code>api_cache.json</code>, flatten nested JSON into a DataFrame, and save <code>api_snapshot.csv</code>. An <strong>offline fixture</strong> is shipped so the lab runs with no network. <strong>You will learn:</strong> <code>urllib.request</code>, JSON parsing, status codes, caching, schema flattening, polite retry. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>API mental map</h3>
 <table><thead><tr><th>Web concept</th><th>Python</th><th>Failure mode</th></tr></thead><tbody>
 <tr><td>GET URL</td><td><code>urllib.request.urlopen</code></td><td>timeout / DNS</td></tr>
 <tr><td>JSON body</td><td><code>json.loads</code></td><td>decode error</td></tr>
@@ -62,8 +65,10 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>Cache</td><td>write local JSON</td><td>stale data</td></tr>
 <tr><td>Nested → table</td><td>dict flatten</td><td>missing keys</td></tr>
 </tbody></table>
+<p>The third column is the one that matters in production: every failure listed there is one a first draft of the script will hit. Design for it before the first run.</p>
 <hr/>
-<h4>1. Fetch with retry / backoff (fixture fallback)</h4>
+<h3>1. Fetch with retry / backoff (fixture fallback)</h3>
+<p>Nothing here needs an API key or a third-party package — <code>urllib</code> ships with Python. Three habits separate a demo fetch from a polite one: identify yourself with a <code>User-Agent</code>, treat 429 and 5xx as <em>temporary</em> (sleep, then retry) while other 4xx codes mean <em>your</em> request is wrong (stop), and fall back to the shipped <code>offline_fixture.json</code> so the lab still completes with no network.</p>
 <pre><code class="language-python">import json, os, time, urllib.error, urllib.request
 
 API_URL = (
@@ -112,9 +117,18 @@ def fetch_json(url, cache_path=CACHE, fixture=FIXTURE,
 payload, source = fetch_json(API_URL, use_network=True)
 print(&quot;source:&quot;, source)  # network | fixture
 print(list(payload.keys()))</code></pre>
-<blockquote>Why backoff? Hammering a 429 endpoint gets your IP banned. <code>2**attempt</code> spreads retries out; always set a User-Agent.</blockquote>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>source:</code> reads <code>network</code> on a live run and <code>fixture</code> offline — both paths hand back the same key structure, so every later cell runs either way.</li>
+<li>Backoff waits <strong>1s, 2s, 4s, 8s</strong> (<code>2**attempt</code> over <code>max_retries=4</code>) instead of hammering the endpoint in a tight loop.</li>
+<li>A successful fetch rewrites <code>api_cache.json</code>; the header <code>User-Agent: ailab-lab08/1.0</code> identifies the client in the server’s logs.</li>
+</ul>
+<blockquote>Why backoff? Hammering a 429 endpoint gets your IP banned. <code>2**attempt</code> spreads retries out (1s, 2s, 4s, 8s); always set a User-Agent so operators can trace and contact you instead of blocking the whole IP.</blockquote>
+<blockquote><strong>Pitfall:</strong> Rate limits are per client/IP, not per script. Retry only 429 and 5xx — a 404 or 401 will fail again forever, which is why the loop <code>break</code>s on other 4xx. Add a little jitter to each sleep in real jobs, or every worker wakes in lockstep, fires together, and earns another 429.</blockquote>
+<blockquote><strong>Pitfall:</strong> Cache stampede — when <code>api_cache.json</code> goes stale, many readers can miss together and all fire the same GET (or all recompute), spiking the API into 429s. A one-user script can ignore this; a service should keep serving the stale cache while a single request refreshes it.</blockquote>
 <hr/>
-<h4>2. Inspect and flatten nested JSON</h4>
+<h3>2. Inspect and flatten nested JSON</h3>
+<p>The API answers with a nested object: a <code>daily</code> block holding one array per metric, all arrays index-aligned. Analysts want rows, not parallel arrays. Walk the <code>time</code> array and, at index <code>i</code>, pull the <em>i</em>-th element from every metric — a zip by position — so each forecast day becomes one flat dict ready for a DataFrame.</p>
 <pre><code class="language-python">print(&quot;timezone:&quot;, payload.get(&quot;timezone&quot;))
 daily = payload[&quot;daily&quot;]          # nested object
 times = daily[&quot;time&quot;]             # parallel arrays
@@ -133,8 +147,15 @@ for i, day in enumerate(times):
 print(records[0])
 # e.g. {&#x27;date&#x27;: &#x27;2026-09-22&#x27;, &#x27;tmax&#x27;: 15.4, &#x27;tmin&#x27;: 8.2, &#x27;precip_prob&#x27;: 20, &#x27;source&#x27;: &#x27;fixture&#x27;}</code></pre>
 <p>Mental model: API gave you <strong>column-oriented</strong> JSON; analysts want <strong>row-oriented</strong> records.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>daily.time</code> lists <strong>3 dates</strong> — the <code>forecast_days=3</code> query parameter at work, not a coincidence.</li>
+<li>Every metric array shares that length; index <code>i</code> means the same calendar day in every array (the parallel-array contract).</li>
+<li>The sample record carries keys <code>date, tmax, tmin, precip_prob, source</code>; live temperatures change run to run, so later asserts pin structure only.</li>
+</ul>
 <hr/>
-<h4>3. DataFrame (or list) + save CSV</h4>
+<h3>3. DataFrame (or list) + save CSV</h3>
+<p>pandas turns the list of dicts into a table in one line. When pandas is missing, the stdlib <code>csv.DictWriter</code> writes the same file keyed off <code>records[0].keys()</code>. Either path produces <code>api_snapshot.csv</code> for Excel or a ticket attachment.</p>
 <pre><code class="language-python">try:
     import pandas as pd
     df = pd.DataFrame(records)
@@ -148,8 +169,15 @@ except ImportError:
     print(&quot;wrote api_snapshot.csv (stdlib)&quot;)
 
 print(&quot;saved api_snapshot.csv rows:&quot;, len(records))  # 3</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><strong>3 data rows</strong> plus a header — Solution 3 counts exactly 4 lines including the header.</li>
+<li><code>index=False</code> keeps an unnamed index column out of the CSV; <code>date</code> already serves as the natural key.</li>
+<li>The stdlib branch writes the same columns for a small record set — good enough for snapshots.</li>
+</ul>
 <hr/>
-<h4>4. Cache behaviour</h4>
+<h3>4. Cache behaviour</h3>
+<p>Caching is what lets the notebook re-run without another HTTP round trip: <code>use_network=False</code> skips <code>urlopen</code> entirely and reads locally. It doubles as a rehearsal for the offline path — same function, same return shape, only the <code>source</code> label changes.</p>
 <pre><code class="language-python"># Second call with use_network=False reads the fixture (or your cache) — no HTTP.
 payload2, src2 = fetch_json(API_URL, use_network=False)
 print(&quot;second source:&quot;, src2)  # fixture
@@ -160,12 +188,19 @@ assert &quot;daily&quot; in payload2, &quot;fixture must expose a daily block&qu
 if os.path.exists(CACHE):
     with open(CACHE, encoding=&quot;utf-8&quot;) as f:
         print(&quot;cache bytes:&quot;, len(f.read()))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>second source: fixture</code> — no packet left the machine, and the <code>assert "daily" in payload2</code> still guards the structure the rest of the lab needs.</li>
+<li>Sorted fixture keys reveal the top-level shape without dumping the whole payload.</li>
+<li>When <code>api_cache.json</code> exists, its byte count is quick proof the earlier live fetch really landed on disk.</li>
+<li>Every assert in this lab checks <strong>structure</strong> — keys, row counts, file existence — never live weather values, which legitimately differ between runs.</li>
+</ul>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Retry with exponential backoff</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Retry with exponential backoff</h3>
 <p>Simulate three 429 responses then success: write a loop that sleeps <code>2**attempt</code> seconds (use <code>0.01</code> as a stand-in sleep in tests) and returns a payload after the 4th try. Print the sleep schedule. <em>Expected sleeps: 1, 2, 4 (then success on attempt 3 → return). With <code>max_retries=4</code>: sequence of waits 1,2,4,8 if all fail.</em></p>
 <p><strong>Follow-up:</strong> What total seconds did the demo backoff wait? Check: 3.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<details><summary>Hint</summary>
 <pre><code class="language-text">max_retries = 4
 for attempt in range(max_retries):
     try:
@@ -173,19 +208,21 @@ for attempt in range(max_retries):
         break
     except RateLimited:
         time.sleep(2 ** attempt)</code></pre>
-<p>&lt;/details&gt;</p>
-<h4>Exercise 2 — Flatten nested JSON to columns</h4>
+</details>
+<h3>Exercise 2 — Flatten nested JSON to columns</h3>
 <p>Given <code>payload["daily"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. <em>Expected: 3 rows (forecast_days=3); first row keys <code>date, tmax, tmin, precip_prob</code>.</em></p>
 <p><strong>Follow-up:</strong> Prove rows match the API day count. Check: 3 equals 3.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>. &lt;/details&gt;</p>
-<h4>Exercise 3 — Save <code>api_snapshot.csv</code></h4>
+<details><summary>Hint</summary>
+<p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>.</p>
+</details>
+<h3>Exercise 3 — Save <code>api_snapshot.csv</code></h3>
 <p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. <em>Expected: <code>api_snapshot.csv</code> with 1 header + 3 data rows.</em></p>
 <p><strong>Follow-up:</strong> Prove every row carries the required keys. Check: date, tmax, tmin, precip_prob all present.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>df.to_csv("api_snapshot.csv", index=False)</code> or <code>csv.DictWriter</code>. &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p><code>df.to_csv("api_snapshot.csv", index=False)</code> or <code>csv.DictWriter</code>.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
 <pre><code class="language-python"># --- Solution 1 ---
 import time
 def retry_demo(max_retries=4, sleep=time.sleep):
@@ -221,7 +258,9 @@ import os
 assert os.path.exists(&quot;api_snapshot.csv&quot;)
 with open(&quot;api_snapshot.csv&quot;, encoding=&quot;utf-8&quot;) as f:
     n_lines = sum(1 for _ in f)
-print(&quot;lines including header:&quot;, n_lines)  # 4# --- Follow-up 1 ---
+print(&quot;lines including header:&quot;, n_lines)  # 4
+
+# --- Follow-up 1 ---
 waited = sum(schedule)
 print(waited, &quot;-&gt; success at&quot;, data[&quot;attempt&quot;])  # 3 -&gt; success at 2
 assert waited == 3 and data[&quot;attempt&quot;] == 2
@@ -234,12 +273,12 @@ assert len(rows) == len(daily[&quot;time&quot;]) == 3
 need = {&quot;date&quot;, &quot;tmax&quot;, &quot;tmin&quot;, &quot;precip_prob&quot;}
 print(sorted(rows[0].keys()))
 assert all(need &lt;= set(r.keys()) for r in rows)</code></pre>
-<h4>What to learn next</h4>
+<h3>What to learn next</h3>
 <ul>
 <li><code>requests</code> library (<code>response.raise_for_status()</code>, sessions).</li>
 <li>OpenAPI/Swagger docs; API keys via environment variables — never commit secrets.</li>
 <li>Pagination + <code>asyncio</code> for many endpoints.</li>
-<li>Cheer sheet: GET → check status → backoff on 429/5xx → cache → flatten → CSV.</li>
+<li>Cheat sheet: GET → check status → backoff on 429/5xx → cache → flatten → CSV.</li>
 </ul>
 <p><em>Files in this folder: <code>offline_fixture.json</code> (always works offline) · outputs <code>api_cache.json</code>, <code>api_snapshot.csv</code>.</em></p>
 

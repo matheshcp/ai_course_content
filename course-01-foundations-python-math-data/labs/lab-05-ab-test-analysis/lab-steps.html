@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,8 +41,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
@@ -50,10 +54,10 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <ul><li>Compute conversion rates by experiment group</li><li>Run a two-proportion z-test and interpret p-value</li><li>Build a 95% CI for the conversion difference</li><li>Estimate MDE at 80% power and make a ship decision</li></ul>
 
 <hr/>
-<h2>A/B Test Analysis — Old vs New Page</h2>
-<h3>Experimentation Basics Track: Rates, Z-Test, Ship/No-Ship</h3>
-<blockquote><strong>Scenario:</strong> <code>ab_test.csv</code> logs <strong>294,478 sessions</strong> with <code>con_treat</code> (control/treatment), <code>page</code>, <code>converted</code> (0/1). Compute conversion rates, a two-proportion z-test, a 95% CI, and a minimum detectable effect — then <strong>conclude whether to ship</strong>.  <strong>You will learn:</strong> group-by rates, standard error, z-test (manual or scipy), power sketch, peeking pitfall. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + math/scipy. <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>Experiment mental map</h4>
+<h2>Experimentation Basics Track: Rates, Z-Test, Ship/No-Ship</h2>
+<blockquote><strong>Scenario:</strong> <code>ab_test.csv</code> logs <strong>294,478 sessions</strong> with <code>con_treat</code> (control/treatment), <code>page</code>, <code>converted</code> (0/1). Compute conversion rates, a two-proportion z-test, a 95% CI, and a minimum detectable effect — then <strong>conclude whether to ship</strong>. <strong>You will learn:</strong> group-by rates, standard error, z-test (manual or scipy), power sketch, peeking pitfall. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + math/scipy. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<p>The whole lab hangs on one decision: <em>does the new page convert better than the old one, and is the evidence strong enough to ship?</em> Everything else — rates, z, CI, MDE — is scaffolding for that sentence. You will work from raw session rows to a defensible <strong>do not ship / ship</strong> conclusion, and you will quantify not only the observed gap but also the smallest gap this sample could have detected reliably. Keep the decision question in view through every step: any number that does not feed the ship call is decoration.</p>
+<h3>Experiment mental map</h3>
 <table><thead><tr><th>Concept</th><th>Formula / code</th><th>Meaning</th></tr></thead><tbody>
 <tr><td>Conversion rate</td><td><code>conversions / n</code></td><td>p̂ per group</td></tr>
 <tr><td>Pooled SE</td><td><code>√(p(1-p)(1/n₁+1/n₀))</code></td><td>null variance for z</td></tr>
@@ -61,8 +65,11 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>95% CI (diff)</td><td><code>(p̂₁−p̂₀) ± 1.96·SE_unpooled</code></td><td>plausible range for lift</td></tr>
 <tr><td>MDE @ 80% power</td><td><code>(1.96+0.84)·SE₀</code></td><td>smallest gap you can reliably see</td></tr>
 </tbody></table>
+<p>Each row of the table is one rung on the analysis ladder. The conversion rate is the raw fact about each group — how many sessions converted, out of how many. The pooled standard error answers a different question: <em>if the two groups truly had the same conversion rate</em>, how much would the gap between samples jitter by chance alone? The z-statistic puts your observed gap on that chance scale, and the two-sided p-value turns z into “how often would noise alone look this extreme?” The confidence interval then translates the same evidence back into effect-size units: a range of plausible true lift values, which is the language a ship decision actually needs. Finally, MDE looks forward rather than backward — with these sample sizes, how big would a real effect have to be before you could reliably see it? The numbered sections walk this ladder in order: load and QA the data, compute rates, run the z-test, build the CI, read off the MDE, and write the decision.</p>
+<p>A note on formulas above: they are written in plain Unicode (p̂, √, ±, subscripts) so they render anywhere — no MathJax required. When you type the same expressions in code, <code>math.sqrt</code> replaces √, <code>1.96 * se</code> replaces 1.96·SE, and so on; the mapping is one-to-one.</p>
 <hr/>
-<h4>1. Load data (local first, Colab fallback)</h4>
+<h3>1. Load data (local first, Colab fallback)</h3>
+<p><strong>Why:</strong> A rate means nothing until you know <em>n</em> and that the group labels actually match the pages users saw. This step loads the 294k session log, shows the raw group sizes, and forces the classic experiment QA check: cross-tab <code>group × page</code> before any hypothesis test. Logging bugs and bot traffic hide in mismatched rows, and fixing them after you have seen p-values is how teams ship on contaminated data.</p>
 <pre><code class="language-python">import math, os
 import pandas as pd
 from scipy import stats
@@ -88,8 +95,17 @@ print(df[&quot;page&quot;].value_counts())
 # a few mismatched rows exist in this dataset; classic QA check)</code></pre>
 <blockquote>Always cross-tab <code>group × page</code>. Mismatches mean logging bugs or bot traffic — fix before testing.</blockquote>
 <pre><code class="language-python">print(pd.crosstab(df[&quot;con_treat&quot;], df[&quot;page&quot;]))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The table has <strong>294,478</strong> rows — session-level, one row per assignment plus conversion outcome.</li>
+<li>Group sizes are nearly balanced: control <strong>147,202</strong> vs treatment <strong>147,276</strong> sessions.</li>
+<li>Page labels are also nearly balanced (old/new ≈ <strong>147,239</strong> each), but they are <em>not</em> perfectly identical to the group counts — a few mismatched rows exist in this dataset.</li>
+<li>Those mismatch rows are the classic QA signal: an assigned group should see only its page; disagreement means logging inconsistency worth flagging before you trust the test.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Never skip the crosstab. If <code>con_treat</code> and <code>page</code> disagree, your “treatment effect” may be measuring a logging bug. Decide a policy (drop mismatches, or treat assignment as source of truth), apply it <em>before</em> computing rates, and say so in the write-up.</blockquote>
 <hr/>
-<h4>2. Conversion rates by group</h4>
+<h3>2. Conversion rates by group</h3>
+<p><strong>Why:</strong> The rates are the entire observed effect — every later statistic (z, CI, MDE) is a function of these two proportions and their sample sizes. Computing them first keeps the ship decision anchored in something a product manager can read directly: “control converted at 12.04%, treatment at 11.89%.” If the direction of the gap surprises you here, you already know the test will not support a celebratory ship note.</p>
 <pre><code class="language-python">rates = df.groupby(&quot;con_treat&quot;)[&quot;converted&quot;].agg([&quot;sum&quot;, &quot;count&quot;, &quot;mean&quot;])
 rates.columns = [&quot;conversions&quot;, &quot;n&quot;, &quot;rate&quot;]
 print(rates.round(6))</code></pre>
@@ -98,9 +114,17 @@ print(rates.round(6))</code></pre>
 <tr><td>control</td><td>17723</td><td>147202</td><td><strong>0.120399</strong></td></tr>
 <tr><td>treatment</td><td>17514</td><td>147276</td><td><strong>0.118920</strong></td></tr>
 </tbody></table>
-<p>Treatment is <strong>lower</strong>, not higher: raw diff ≈ <strong>−0.00148</strong> (−1.23% relative).</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Control rate <strong>0.120399</strong> (17,723 / 147,202) vs treatment rate <strong>0.118920</strong> (17,514 / 147,276).</li>
+<li>Treatment is <strong>lower</strong>, not higher: raw diff ≈ <strong>−0.00148</strong> (−1.23% relative).</li>
+<li>The absolute gap is tiny — about 1.5 fewer conversions per 1,000 sessions — so whether it is real or noise is exactly what the z-test must answer.</li>
+<li><code>sum</code> and <code>count</code> are kept alongside <code>mean</code> because the z-test needs integer conversion totals, not just proportions.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> A negative point estimate does not by itself mean the new page is worse — sampling noise can flip small gaps. Equally, do not call it “flat” until the CI in step 4 says zero is plausible. Report the direction, then let the test quantify your uncertainty.</blockquote>
 <hr/>
-<h4>3. Two-proportion z-test</h4>
+<h3>3. Two-proportion z-test</h3>
+<p><strong>Why:</strong> The rates differ, but by how much <em>relative to chance</em>? The two-proportion z-test formalizes that question: pool both samples under the null hypothesis (equal conversion), compute the standard error of the difference, and see how many of those standard errors your observed gap occupies. This is the first number a stats-literate reviewer will ask for, and it feeds the ship/no-ship call directly at α = 0.05.</p>
 <p>Manual (no scipy required):</p>
 <pre><code class="language-python">c0, n0 = 17723, 147202   # control
 c1, n1 = 17514, 147276   # treatment
@@ -116,42 +140,70 @@ print(f&quot;z={z:.4f}  p={p_value:.4f}&quot;)
 <p>Equivalent scipy:</p>
 <pre><code class="language-python">from statsmodels.stats.proportion import proportions_ztest
 # optional: counts = [c1, c0]; nobs = [n1, n0]; z, p = proportions_ztest(counts, nobs)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Pooled rate sits between the two group rates; under H₀ both groups share this single p.</li>
+<li><strong>z ≈ −1.2369</strong> — the observed gap is only about 1.2 null standard errors from zero, well inside ordinary noise.</li>
+<li><strong>p ≈ 0.2161</strong> — a gap at least this large would show up roughly 1 in 5 times from pure chance if the pages were identical.</li>
+<li>The sign of z is negative because treatment was computed first in the numerator; magnitude and p are what matter for the decision.</li>
+</ul>
 <p><strong>Decision at α = 0.05:</strong> p ≈ 0.216 &gt; 0.05 → <strong>fail to reject</strong> H₀. No significant difference.</p>
+<blockquote><strong>Pitfall:</strong> “Fail to reject” is not “the pages are identical” and it is not “the new page is fine.” It means <em>this sample did not produce enough evidence to distinguish the pages</em>. The CI next makes that ambiguity quantitative instead of binary.</blockquote>
 <hr/>
-<h4>4. 95% CI for the difference</h4>
+<h3>4. 95% CI for the difference</h3>
+<p><strong>Why:</strong> A p-value answers “is it distinguishable from zero?” but a ship decision needs “what magnitudes are still plausible?” The confidence interval puts the lift back into percentage-point units, so stakeholders can see the full range of true effects consistent with the data — including zero, and including modest harm or modest gain. If zero is inside the interval, the honest recommendation is not to ship on this evidence alone.</p>
 <pre><code class="language-python">se_unpooled = math.sqrt(p1*(1-p1)/n1 + p0*(1-p0)/n0)
 diff = p1 - p0
 ci = (diff - 1.96*se_unpooled, diff + 1.96*se_unpooled)
 print(f&quot;diff={diff:.6f}  95% CI=({ci[0]:.6f}, {ci[1]:.6f})&quot;)
 # diff=-0.001480  95% CI=(-0.003824, 0.000865)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Point estimate <strong>diff ≈ −0.001480</strong> (treatment minus control).</li>
+<li>95% CI <strong>(−0.003824, 0.000865)</strong> spans zero — plausible true effects run from a small loss to a small gain.</li>
+<li>The unpooled SE is used for the CI (each group keeps its own variance); the pooled SE was for the null hypothesis test — different tools, both correct for their job.</li>
+<li>In practical terms the interval allows up to roughly <strong>0.38 pp worse</strong> or <strong>0.09 pp better</strong>, none of which clears a business bar on its own.</li>
+</ul>
 <p>CI <strong>contains 0</strong> → ship decision: <strong>do not ship</strong> the new page on this evidence (and the point estimate is slightly worse).</p>
+<blockquote><strong>Pitfall:</strong> Do not read the CI as “there is a 95% probability the true lift is in this interval” in frequentist terms — say instead that 95% of intervals constructed this way would cover the true lift. For the memo, the operative fact is simpler: zero is inside, so the data do not support a ship.</blockquote>
 <hr/>
-<h4>5. Minimum detectable effect @ 80% power</h4>
+<h3>5. Minimum detectable effect @ 80% power</h3>
+<p><strong>Why:</strong> “Not significant” can mean “no effect” or “we never had the resolution to see a modest effect.” MDE separates those stories: with these sample sizes, how big would a real conversion lift have to be before this test would reliably flag it? That number sets expectations for the next experiment — if the business cares about 0.1 pp but you can only detect 0.34 pp, you need more traffic, a sharper metric, or a longer run <em>before</em> launch, not after.</p>
 <pre><code class="language-python"># alpha=0.05 two-sided, power=0.80 → z_a + z_b ≈ 1.96 + 0.84
 mde = (1.959964 + 0.841621) * se_pool
 print(f&quot;MDE absolute: {mde:.6f}  (~{mde/p0*100:.2f}% relative to control)&quot;)
 # MDE absolute: 0.003351  (~2.78% relative to control)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><strong>MDE ≈ 0.003351</strong> absolute — about <strong>0.34 percentage points</strong> of conversion.</li>
+<li>Relative to the control rate that is ≈ <strong>2.78%</strong> — the smallest lift this design catches with 80% power at α = 0.05.</li>
+<li>The observed |diff| ≈ 0.00148 is <em>below</em> the MDE, which is exactly why the test came back non-significant: the experiment was underpowered for an effect this small.</li>
+<li>Read the MDE before the p-value when planning the <em>next</em> test: choose n from the business-relevant effect, not from whatever traffic happens to arrive.</li>
+</ul>
 <p>With these sample sizes you can only reliably detect lifts ≳ 0.34 percentage points.</p>
-<blockquote><strong>Peeking pitfall:</strong> checking the z-test every hour and stopping when p &lt; 0.05 inflates false positives. Pre-register sample size / duration; use sequential methods if you must peek.</blockquote>
+<blockquote><strong>Pitfall:</strong> Checking the z-test every hour and stopping when p &lt; 0.05 inflates false positives — each peek is another chance to cross the threshold by noise, so your real α is far above 0.05. Pre-register sample size / duration from the MDE; use sequential methods (e.g. mSPRT, group-sequential boundaries) if you must peek. Peeking is the fastest way to “discover” effects that do not replicate.</blockquote>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Conversion by group</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Conversion by group</h3>
 <p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). <em>Expected: control 17723/147202 = 0.120399 · treatment 17514/147276 = 0.118920.</em></p>
 <p><strong>Follow-up:</strong> Express the lift relative to control. Check: about minus 1.23 percent.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>. &lt;/details&gt;</p>
-<h4>Exercise 2 — Z-test + p-value</h4>
+<details><summary>Hint</summary>
+<p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>.</p>
+</details>
+<h3>Exercise 2 — Z-test + p-value</h3>
 <p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? <em>Expected: z ≈ −1.2369, p ≈ 0.2161 → not significant.</em></p>
 <p><strong>Follow-up:</strong> Confirm the observed diff lies inside the 95 percent CI. Check: minus 0.003824 &lt; diff &lt; 0.000865.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>. &lt;/details&gt;</p>
-<h4>Exercise 3 — MDE at 80% power</h4>
+<details><summary>Hint</summary>
+<p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>.</p>
+</details>
+<h3>Exercise 3 — MDE at 80% power</h3>
 <p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. <em>Expected: ≈ 0.00335 absolute ≈ 2.78% of 0.1204.</em></p>
 <p><strong>Follow-up:</strong> Is the observed effect even detectable — compare its size to the MDE. Check: no, the test is underpowered for this effect.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>. &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
 <pre><code class="language-python"># --- Solution 1 ---
 rates = df.groupby(&quot;con_treat&quot;)[&quot;converted&quot;].agg([&quot;sum&quot;, &quot;count&quot;, &quot;mean&quot;])
 print(rates)
@@ -172,7 +224,9 @@ print(&quot;significant?&quot;, pv &lt; 0.05)  # False
 # --- Solution 3 ---
 mde = (1.959964 + 0.841621) * se
 print(f&quot;MDE={mde:.6f} ({mde/p0*100:.2f}% of control)&quot;)
-# MDE=0.003351 (2.78% of control)# --- Follow-up 1 ---
+# MDE=0.003351 (2.78% of control)
+
+# --- Follow-up 1 ---
 rel = round((p1 - p0) / p0, 4)
 print(rel)  # ~-0.0123
 assert rel == -0.0123
@@ -187,7 +241,7 @@ assert abs(lo + 0.003824) &lt; 1e-5 and abs(hi - 0.000865) &lt; 1e-5
 # --- Follow-up 3 ---
 print(abs(p1 - p0) &lt; mde)  # True -&gt; underpowered for this effect
 assert abs(p1 - p0) &lt; mde</code></pre>
-<h4>What to learn next</h4>
+<h3>What to learn next</h3>
 <ul>
 <li>Chi-square test of independence on the same 2×2 table (should agree with z).</li>
 <li>CUPED / variance reduction; sequential testing (mSPRT).</li>

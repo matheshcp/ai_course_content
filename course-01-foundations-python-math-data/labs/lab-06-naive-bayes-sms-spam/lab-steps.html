@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,8 +41,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/lab-06-naive-bayes-sms-spam.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/lab-06-naive-bayes-sms-spam.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
@@ -50,10 +54,10 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <ul><li>Tokenise SMS text and remove stopwords</li><li>Train multinomial Naive Bayes with Laplace smoothing from scratch</li><li>Evaluate on a seed=42 holdout with a confusion matrix</li><li>Rank spam-indicative tokens by log-likelihood ratio</li></ul>
 
 <hr/>
-<h2>SMS Spam Classifier (Naive Bayes, no sklearn)</h2>
-<h3>Probability Meets Text Track: Multinomial NB from Scratch</h3>
-<blockquote><strong>Scenario:</strong> <code>sms.tsv</code> has ~5572 labeled SMS messages (ham/spam). Build a <strong>multinomial Naive Bayes</strong> classifier with Laplace smoothing using only the Python standard library — then evaluate on a 20% holdout with <code>seed=42</code>.  <strong>You will learn:</strong> tokenisation, stopwords, word counts, log-priors, Bayes rule, train/test split, confusion matrix by hand. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ only. <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>Naive Bayes mental map</h4>
+<h2>Probability Meets Text Track: Multinomial NB from Scratch</h2>
+<blockquote><strong>Scenario:</strong> <code>sms.tsv</code> has ~5572 labeled SMS messages (ham/spam). Build a <strong>multinomial Naive Bayes</strong> classifier with Laplace smoothing using only the Python standard library — then evaluate on a 20% holdout with <code>seed=42</code>. <strong>You will learn:</strong> tokenisation, stopwords, word counts, log-priors, Bayes rule, train/test split, confusion matrix by hand. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ only. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<p>The decision this lab supports is operational: <em>can a transparent, hand-built probability model flag SMS spam well enough to trust its errors?</em> You will not call <code>sklearn</code> — every prior, count, and log-likelihood is written out so you can see exactly where the numbers come from and where the “naive” assumption enters. The end artifact is not just an accuracy score but a full confusion matrix on a fixed seed=42 holdout, plus a ranked list of the tokens that most separate spam from ham. Those three views (score, errors, evidence) are what you would bring to anyone asking whether the classifier is safe to deploy or where it still fails.</p>
+<h3>Naive Bayes mental map</h3>
 <table><thead><tr><th>Concept</th><th>Code shape</th></tr></thead><tbody>
 <tr><td>Prior P(label)</td><td><code>count(label) / N</code> in log space</td></tr>
 <tr><td>Likelihood P(word\</td><td>label)</td><td><code>(count[word] + α) / (total + α·V)</code></td></tr>
@@ -61,8 +65,11 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>Predict</td><td><code>argmax</code> over the two labels</td></tr>
 <tr><td>Holdout</td><td><code>random.seed(42)</code> + <code>shuffle</code> + 80/20 split</td></tr>
 </tbody></table>
+<p>The table is the whole algorithm in five rows. Start from Bayes' rule: to choose the best label you compare P(label) × ∏ P(wordᵢ | label) across labels — but multiplying many small probabilities underflows floats, so the lab works entirely in <strong>log space</strong>, where the product becomes a sum (<code>log prior + Σ log likelihood</code>). The likelihood row is the multinomial formula with <strong>Laplace smoothing</strong> (α): add α to every word count and α·V to the denominator so a word you never saw in training still gets a tiny, nonzero probability instead of a catastrophic zero. <code>argmax</code> over the two summed scores gives the prediction, and the holdout row guarantees the evaluation uses messages the model has never counted. Sections 1–6 build each row of this table in order, then the exercises probe where the model is confident and where “free” trips it up.</p>
+<p>Two design choices deserve emphasis up front. First, <strong>why no sklearn</strong>: the goal is to see every quantity — priors, smoothed likelihoods, the log-sum — that a library would hide behind one <code>fit()</code> call; once you can read those, <code>MultinomialNB</code> becomes a thin wrapper you can trust or debug. Second, <strong>why log space</strong>: spam messages contain dozens of tokens, each contributing a likelihood well below 1; their raw product underflows toward 0.0 in IEEE floats and loses all discrimination. Adding logs keeps every term finite and turns the comparison into simple addition, which is also how the implementation below is written.</p>
 <hr/>
-<h4>1. Load data (local first, Colab fallback)</h4>
+<h3>1. Load data (local first, Colab fallback)</h3>
+<p><strong>Why:</strong> Before building probabilities you need a clean (label, text) list and the base rates of ham vs spam — those base rates become your log-priors later. This step also validates the TSV: only rows whose first field is exactly <code>ham</code> or <code>spam</code> are kept, so a malformed line can never poison a count. Knowing 4825 vs 747 up front tells you the classes are imbalanced, which is why accuracy alone will not be the final word.</p>
 <pre><code class="language-python">import csv, math, os, random, re
 from collections import Counter
 
@@ -86,8 +93,16 @@ print(len(msgs), &quot;messages&quot;)
 print(Counter(l for l, _ in msgs))
 # 5572 messages  Counter({&#x27;ham&#x27;: 4825, &#x27;spam&#x27;: 747})
 print(msgs[0])</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><strong>5572</strong> messages loaded — matches the documented size of <code>sms.tsv</code>.</li>
+<li>Class balance is skewed: <strong>ham 4825</strong> vs <strong>spam 747</strong> (spam ≈ 13.4% of rows) — a majority-ham classifier would already look “okay” on accuracy, so later metrics must look at the confusion matrix, not accuracy alone.</li>
+<li>Each row is a <code>(label, text)</code> tuple; the first row printed shows the real format you will tokenize next.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> If your count is not 5572, check encoding and the <code>r[0] in ("ham", "spam")</code> filter — a stray header or quoted label row changes every downstream prior and the seed=42 split will not match the expected confusion counts.</blockquote>
 <hr/>
-<h4>2. Tokenise</h4>
+<h3>2. Tokenise</h3>
+<p><strong>Why:</strong> Naive Bayes never sees characters or syntax — only discrete tokens — so your tokenizer <em>is</em> your feature space. Lowercasing and the <code>[a-z0-9']+</code> pattern collapse <code>FREE</code>/<code>free</code> and keep contractions like <code>don't</code> intact; dropping single characters and a small stopword list removes ultra-common glue words that carry little label information and only dilute the likelihood ratios. Getting tokenisation right here is what makes the later log-lift ranking interpretable.</p>
 <pre><code class="language-python">STOP = set(
     &quot;a an the and or but if in on at to for of is are was were be been &quot;
     &quot;i you he she it we they my your our their this that with as so not &quot;
@@ -100,8 +115,17 @@ def tokens(text):
 
 print(tokens(&quot;FREE entry in 2 a weekly comp to win FA cup final tickets!&quot;))
 # [&#x27;free&#x27;, &#x27;entry&#x27;, &#x27;2&#x27;, &#x27;weekly&#x27;, &#x27;comp&#x27;, &#x27;win&#x27;, &#x27;fa&#x27;, &#x27;cup&#x27;, &#x27;final&#x27;, &#x27;tickets&#x27;]</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>FREE</code> became <code>free</code> — case folding merges spelling variants so their counts combine.</li>
+<li>Stopwords vanished: <code>in</code>, <code>a</code>, <code>to</code> are gone; informative content words (<code>free</code>, <code>win</code>, <code>tickets</code>) remain.</li>
+<li><code>2</code> survived because <code>len(w) &gt; 1</code> keeps multi-character numerals — price-like digits (<code>150p</code>, <code>1000</code>) matter for spam.</li>
+<li>The example keeps <code>fa</code> and <code>comp</code>, abbreviations that are short but still longer than one character.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Stopword lists are English-centric and blunt. Removing <code>no</code>/<code>not</code> can erase negation (“not spammy phrasing” flips meaning), and domain words that look like stopwords may actually carry signal. Treat the list as a tunable choice, freeze it before train/test, and remember every tokenization decision must be identical at train and scoring time — or your likelihoods will silently mismatch.</blockquote>
 <hr/>
-<h4>3. Train / test split (seed = 42)</h4>
+<h3>3. Train / test split (seed = 42)</h3>
+<p><strong>Why:</strong> The confusion matrix and accuracy you report must come from messages the model never counted, or you are just testing memorization. <code>random.seed(42)</code> before <code>shuffle</code> makes that holdout reproducible across machines and Colab restarts — every expected count later (0.9803 accuracy, 962/15/7/130 cells) depends on this exact split. Shuffling first also keeps ham/spam proportions roughly stable in both slices without a hand-rolled stratifier.</p>
 <pre><code class="language-python">random.seed(42)
 shuffled = msgs[:]
 random.shuffle(shuffled)
@@ -110,8 +134,18 @@ test, train = shuffled[:n_test], shuffled[n_test:]
 print(len(train), len(test))   # 4458 1114
 print(&quot;train labels:&quot;, Counter(l for l, _ in train))
 # train labels: Counter({&#x27;ham&#x27;: 3848, &#x27;spam&#x27;: 610})</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Split sizes are <strong>4458 train / 1114 test</strong> — <code>int(5572 * 0.2) = 1114</code>, with the remainder in train.</li>
+<li>Train labels: <strong>ham 3848, spam 610</strong> — class mix is preserved in spirit (spam still a minority), so priors remain realistic.</li>
+<li><code>seed(42)</code> + <code>shuffle</code> on a <strong>copy</strong> (<code>msgs[:]</code>) leaves the original list untouched for any later re-run.</li>
+<li>The slice order matters: <code>test</code> is the first 20% <em>after</em> shuffle; changing seed, shuffle order, or train/test order changes every holdout statistic below.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Setting the seed <em>after</em> the shuffle, or shuffling <code>msgs</code> in place and reloading differently, produces a different holdout and your confusion counts will not match the expected 962/15/7/130. Seed first, shuffle once, slice once — and never fit vocabulary or counts on <code>test</code>.</blockquote>
 <hr/>
-<h4>4. Fit multinomial NB with Laplace (α = 1)</h4>
+<h3>4. Fit multinomial NB with Laplace (α = 1)</h3>
+<p><strong>Why:</strong> This is the model itself: turn training labels into a log-prior per class and a smoothed P(word | label) for every token, then score new messages by Bayes' rule in log space. <strong>Laplace smoothing</strong> (α = 1) adds one pseudo-count to every (label, word) cell — without it, any token absent from a class's training counts gets likelihood 0, the whole log-sum becomes −∞, and a single unseen word could never be outweighed by strong evidence for the other class. Adding α·V to the denominator keeps each class's likelihoods summing sensibly over the vocabulary while giving rare and out-of-vocabulary (OOV) tokens a small, fair probability instead of a hard veto. <strong>Log-space accumulation</strong> matters for the same numerical reason: a 10-token message multiplies ~10 likelihoods each below 1; in raw probability that product can underflow to 0.0, but the sum of logs stays finite and preserves the ranking. That is why <code>prior_log</code>, <code>log_likelihood</code>, and <code>score += ...</code> never multiply raw probabilities anywhere below.</p>
+<p>Why not <code>sklearn.naive_bayes.MultinomialNB</code>? Because the learning goal is the <em>mechanics</em>: where priors come from, how α enters numerator and denominator, how OOV tokens are handled, and why argmax in log space equals argmax in probability space. A library call would compress all of that into one line — correct, but invisible. Once you can read the from-scratch version, the sklearn comparison in “What to learn next” becomes a verification step rather than a black box.</p>
 <pre><code class="language-python">ALPHA = 1.0
 label_counts = Counter(l for l, _ in train)
 N_train = len(train)
@@ -149,8 +183,18 @@ def classify(text):
 
 print(classify(&quot;Congratulations! You&#x27;ve won a free prize. Claim now!&quot;))  # spam
 print(classify(&quot;Hey, are we still on for lunch at noon?&quot;))               # ham</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Log-priors: <strong>ham ≈ −0.1471</strong>, <strong>spam ≈ −1.989</strong> — spam starts roughly 1.8 nats behind because it is the minority class (~610 / 4458 in train); spam messages must earn that deficit back with spammy tokens.</li>
+<li>Vocabulary size <strong>V ≈ 7826</strong> distinct tokens after stopword removal — every one of them receives +α in each class thanks to smoothing.</li>
+<li><code>totals[lab]</code> already includes <code>ALPHA * V</code>, so denominators match the numerator's pseudo-counts (the classic MultinomialNB bookkeeping).</li>
+<li>The prize/congrats message scores as <strong>spam</strong>; the lunch question scores as <strong>ham</strong> — priors plus token evidence are doing sensible work on one-line probes.</li>
+<li>OOV branch: words never seen in training still contribute <code>log(ALPHA / totals[lab])</code> — a small negative, slightly different per class because totals differ, never −∞.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> α is a bias knob, not a free lunch. α = 0 reproduces the zero-likelihood bug; huge α washes out real word differences toward uniform. α = 1 is the standard default, but if you tune α on the holdout you leak test information — pick it up front or via a train-only validation split. Also remember the “naive” step: tokens are treated as conditionally independent given the label, so repeated correlated words (<code>free free free</code>) are multiplied as if they were new evidence.</blockquote>
 <hr/>
-<h4>5. Evaluate on holdout</h4>
+<h3>5. Evaluate on holdout</h3>
+<p><strong>Why:</strong> Accuracy alone would hide the errors that matter — in spam filtering, shipping false positives (real SMS marked spam) is often worse than missing a spam. Scoring the fixed seed=42 holdout and building the 2×2 confusion matrix by hand shows exactly where the 22 mistakes fall: 15 ham→spam false alarms vs 7 spam→ham misses. Those cells, not the headline accuracy, drive threshold and cost discussions with stakeholders.</p>
 <pre><code class="language-python">preds = [classify(t) for _, t in test]
 gold  = [l for l, _ in test]
 acc = sum(p == g for p, g in zip(preds, gold)) / len(gold)
@@ -161,14 +205,24 @@ conf = Counter(zip(gold, preds))
 print(&quot;ham-&gt;ham&quot;, conf[(&quot;ham&quot;, &quot;ham&quot;)], &quot; ham-&gt;spam&quot;, conf[(&quot;ham&quot;, &quot;spam&quot;)])
 print(&quot;spam-&gt;ham&quot;, conf[(&quot;spam&quot;, &quot;ham&quot;)], &quot; spam-&gt;spam&quot;, conf[(&quot;spam&quot;, &quot;spam&quot;)])
 # ham-&gt;ham 962  ham-&gt;spam 15
-# spam-&gt;ham 7   spam-&gt;spam 130</code></pre>
+# spam-&gt;ham 7  spam-&gt;spam 130</code></pre>
 <p>Confusion matrix layout (rows = true, cols = predicted):</p>
 <table><thead><tr><th></th><th>pred ham</th><th>pred spam</th></tr></thead><tbody>
 <tr><td><strong>true ham</strong></td><td>962</td><td>15</td></tr>
 <tr><td><strong>true spam</strong></td><td>7</td><td>130</td></tr>
 </tbody></table>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Accuracy <strong>0.9803</strong> — <strong>1092 / 1114</strong> holdout messages correct on data never seen during training.</li>
+<li>True ham mostly stays ham (<strong>962</strong>), but <strong>15</strong> legitimate messages are misfiled as spam (false positives — the costly error class for SMS).</li>
+<li>True spam is caught <strong>130 / 137</strong>; only <strong>7</strong> spam messages slip through as ham (false negatives).</li>
+<li>Row + column totals reconstruct the holdout: 962+15 = 977 ham, 7+130 = 137 spam, total 1114 — a quick integrity check on the matrix.</li>
+<li>Spam recall here is 130/137 ≈ <strong>0.9489</strong> and ham precision is 962/977 ≈ <strong>0.9928</strong> (both appear again as follow-up checks).</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Do not quote 0.9803 without the matrix and the base rates. With ~87% ham in the holdout, a trivial “always predict ham” baseline would already score ~0.87 — the 0.98 is impressive because spam is actually detected, not because accuracy is high. Always report at least one spam-class metric alongside accuracy.</blockquote>
 <hr/>
-<h4>6. Top spam-indicative tokens (log lift)</h4>
+<h3>6. Top spam-indicative tokens (log lift)</h3>
+<p><strong>Why:</strong> A classifier you cannot interrogate is hard to defend to a stakeholder. Ranking tokens by log P(w|spam) − log P(w|ham) shows <em>which</em> words move the decision boundary and by how much — the probabilistic analogue of “show me the features.” The support filter (s + h ≥ 10) keeps one-off coincidences from dominating, so the list reflects words with enough evidence to trust, and the same quantity is exactly what Exercise 1 asks you to reproduce.</p>
 <pre><code class="language-python">spam_lift = []
 for w in vocab:
     ps = (word_counts[&quot;spam&quot;][w] + ALPHA) / totals[&quot;spam&quot;]
@@ -185,27 +239,38 @@ for row in top:
 # 150p 4.875
 # tone 4.724
 # ...</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Top lifts: <strong>claim ≈ 5.343</strong> (90 spam / 0 ham in train), <strong>prize ≈ 5.109</strong>, <strong>won ≈ 4.959</strong>, <strong>150p ≈ 4.875</strong>, <strong>tone ≈ 4.724</strong> — marketing and payment jargon, exactly the campaign vocabulary you would expect.</li>
+<li>A log-lift of ~5 means P(w|spam) is roughly e⁵ ≈ 150× P(w|ham) after smoothing — enormous single-token evidence toward spam.</li>
+<li>The <code>s + h &gt;= 10</code> filter discards tokens that look magical only because they appeared once or twice.</li>
+<li>Ham-favoring words would appear at the <em>bottom</em> of the sorted list (negative log-lift); the head of the list is pure spam signal.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> High lift ≠ causal importance, and lift ignores position, phrases, and sender context. A token like <code>free</code> can also appear in genuine ham (see Exercise 3) — single-token evidence is strong but not decisive, which is why the model still makes 15 false-positive calls on the holdout.</blockquote>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Top-10 spam-indicative tokens</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Top-10 spam-indicative tokens</h3>
 <p>Using training counts only, rank tokens by <code>log P(w|spam) − log P(w|ham)</code> (support ≥ 10). Print the top 10. <em>Expected (approx): claim, prize, won, 150p, tone, 18, www, guaranteed, 1000, 500.</em></p>
 <p><strong>Follow-up:</strong> What is spam recall on the holdout? Check: about 0.9489.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting. &lt;/details&gt;</p>
-<h4>Exercise 2 — Accuracy on 20% holdout (seed 42)</h4>
+<details><summary>Hint</summary>
+<p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting.</p>
+</details>
+<h3>Exercise 2 — Accuracy on 20% holdout (seed 42)</h3>
 <p>Report accuracy to 4 d.p. and the 4 confusion counts. <em>Expected: accuracy ≈ 0.9803 · TP_spam=130, FN_spam=7, FP_spam=15, TN=962.</em></p>
 <p><strong>Follow-up:</strong> What is ham precision? Check: about 0.9928.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters. &lt;/details&gt;</p>
-<h4>Exercise 3 — Why “free” alone misclassifies marketing ham</h4>
+<details><summary>Hint</summary>
+<p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters.</p>
+</details>
+<h3>Exercise 3 — Why “free” alone misclassifies marketing ham</h3>
 <p>How many holdout messages contain <code>"free"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. <em>Expected: 48 test messages contain “free”; 14 are ham (e.g. “When you get free, call me”). Naive Bayes multiplies independent token evidence — a rare spammy co-occurrence pattern can tip borderline ham over the decision boundary.</em></p>
 <p><strong>Follow-up:</strong> Compare P free given spam vs P free given ham in test — why is free so spammy? Check: about 0.2482 vs 0.0143.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<details><summary>Hint</summary>
 <pre><code class="language-python">free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
 print(len(free_test), sum(1 for _, g in free_test if g == &quot;ham&quot;))</code></pre>
-<p>Single tokens cannot capture context; that’s the “naive” independence assumption. &lt;/details&gt;</p>
+<p>Single tokens cannot capture context; that’s the “naive” independence assumption.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
 <pre><code class="language-python"># --- Solution 1 ---
 lift = []
 for w in vocab:
@@ -234,7 +299,9 @@ example = next(t for t, g in free_test if g == &quot;ham&quot;)
 print(n_free, n_ham)
 print(example[:80])
 # 48 14
-# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;# --- Follow-up 1 ---
+# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;
+
+# --- Follow-up 1 ---
 rec = sum(1 for g, p in zip(gold, preds) if g == &quot;spam&quot; and p == &quot;spam&quot;) / sum(1 for g in gold if g == &quot;spam&quot;)
 rec = round(rec, 4)
 print(rec)  # ~0.9489
@@ -253,7 +320,7 @@ p_fs = round(sum(1 for _, g in free_test if g == &quot;spam&quot;) / n_spam, 4)
 p_fh = round(n_ham and sum(1 for _, g in free_test if g == &quot;ham&quot;) / n_ham, 4)
 print(p_fs, p_fh)  # ~0.2482 0.0143
 assert p_fs == 0.2482 and p_fh == 0.0143</code></pre>
-<h4>What to learn next</h4>
+<h3>What to learn next</h3>
 <ul>
 <li>Add bigrams (<code>"free entry"</code>) — reduces “free” false positives.</li>
 <li>Compare to <code>sklearn.naive_bayes.MultinomialNB</code> (should land ≈ same accuracy).</li>

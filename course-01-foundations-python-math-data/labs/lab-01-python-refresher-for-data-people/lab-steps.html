@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,31 +41,33 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/lab-01-python-refresher-for-data-people.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/lab-01-python-refresher-for-data-people.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
-<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sales_spreadsheet.csv</code> — upload in Colab</li></ul>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sales_spreadsheet.csv</code></li></ul>
 </div>
 
 <h2>Learning goals</h2>
 <ul><li>Map Excel columns/rows/sheets to Python lists, dicts, and lists-of-dicts</li><li>Clean messy text and numbers with strip/title and None handling</li><li>Build reusable cleaning functions and comprehensions</li><li>Answer revenue-by-region from a 12-row messy sales sheet</li></ul>
 
 <hr/>
-<h2>Python Refresher for Data People</h2>
-<h3>Junior Analyst Track: Cleaning a Sales Spreadsheet</h3>
-<blockquote><strong>Scenario:</strong> You're a junior analyst. Someone sends you <code>sales_spreadsheet.csv</code> — 12 rows, messy product names, missing quantities, inconsistent regions. Your job: clean it with pure Python and answer: <em>what's our total revenue by region?</em>  <strong>You will learn:</strong> lists, dicts, loops, functions, comprehensions — all with sales-data examples. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas needed).</blockquote>
-<h4>Excel → Python mental map</h4>
+<h2>Junior Analyst Track: Cleaning a Sales Spreadsheet</h2>
+<blockquote><strong>Scenario:</strong> You're a junior analyst. Someone sends you <code>sales_spreadsheet.csv</code> — 12 rows, messy product names, missing quantities, inconsistent regions. Your job: clean it with pure Python and answer: <em>what's our total revenue by region?</em> <strong>You will learn:</strong> lists, dicts, loops, functions, comprehensions — all with sales-data examples. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas needed).</blockquote>
+<h3>Excel → Python mental map</h3>
+<p>Why it matters: almost every cleanup task you meet as an analyst already has an Excel shape. Translating that shape into list/dict/loop means you can reuse instincts from SUMIF, VLOOKUP, and blank-cell formulas instead of learning an entirely new mental model.</p>
 <table><thead><tr><th>Excel idea</th><th>Python idea</th><th>Example</th></tr></thead><tbody>
 <tr><td>A column (e.g. all Prices)</td><td>a <code>list</code></td><td><code>[899.99, 25.5, 75.0]</code></td></tr>
 <tr><td>One row (e.g. Order 101)</td><td>a <code>dict</code></td><td><code>{"OrderID": 101, "Product": "Laptop"}</code></td></tr>
 <tr><td>Whole sheet</td><td>a <code>list of dicts</code></td><td><code>[{"OrderID":101, ...}, {"OrderID":102, ...}]</code></td></tr>
+<tr><td><code>=IF(ISBLANK(A2),0,A2)</code></td><td>conditional expression with <code>None</code> check</td><td><code>qty if qty is not None else 0</code></td></tr>
+<tr><td><code>=SUMIF(Region,"West",Total)</code></td><td>loop + dict <code>.get</code> accumulator</td><td><code>totals[region] = totals.get(region, 0) + total</code></td></tr>
 </tbody></table>
-<p>Keep that map in mind — everything below follows it.</p>
-<h4>Setup: load the real dataset</h4>
-<p>Cell 0 already downloaded + unzipped <code>sales_spreadsheet.csv</code>. Load it below with the <code>csv</code> module — blanks become <code>None</code>, numbers become <code>int</code>/<code>float</code>. From here on, <code>sales</code> <strong>is</strong> the dataset file, and every exercise runs against it.</p>
+<p>Keep that map in mind — every numbered section below is one Excel habit restated in Python, and the exercises ask you to combine them on the real 12-row file.</p>
+<h3>Setup: load the real dataset</h3>
+<p>Why it matters for analysts: the load step is where dirty data either becomes safe types or silently poisons every later calculation. Cell 0 already downloaded + unzipped <code>sales_spreadsheet.csv</code>. Load it below with the <code>csv</code> module — blanks become <code>None</code>, numbers become <code>int</code>/<code>float</code>. From here on, <code>sales</code> <strong>is</strong> the dataset file, and every exercise runs against it, so any number you report should be reproducible from these 12 rows.</p>
 <pre><code class="language-python"># Load the real dataset file (Cell 0 fetched it via wget + unzip)
 import csv
 
@@ -87,12 +93,19 @@ with open(&quot;sales_spreadsheet.csv&quot;, newline=&quot;&quot;, encoding=&quo
 
 print(len(sales), &quot;rows from sales_spreadsheet.csv&quot;)  # 12
 print(sales[0])
-# {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;  Laptop &#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;}
-</code></pre>
+# {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;  Laptop &#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;}</code></pre>
 <p>Messy on purpose. Notice: extra spaces, ALL CAPS, empty string <code>""</code>, <code>None</code> for missing, <code>west</code> vs <code>West</code> vs <code>WEST</code>.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The loader prints <code>12 rows from sales_spreadsheet.csv</code> — if you ever see a different count, the file path or download step is wrong before any cleaning logic runs.</li>
+<li><code>sales[0]</code> shows <code>Product: '  Laptop '</code> with leading/trailing spaces intact, so raw text is never "already clean" even when it looks readable.</li>
+<li><code>Quantity</code> and <code>Price</code> use the <code>_int_or_none</code> / <code>_float_or_none</code> helpers: blank cells become <code>None</code>, not <code>0</code> or <code>""</code> — that distinction drives every later filter.</li>
+<li>Regions arrive as raw variants (<code>west</code> / <code>West</code> / <code>WEST</code>); normalisation is a deliberate later step, not something <code>csv.DictReader</code> does for you.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Never do arithmetic directly on a raw cell that might be missing. <code>None <em> 2</code> raises <code>TypeError</code>, while <code>0 </em> 2</code> silently returns <code>0</code> and pretends the row was real data. Always branch on <code>is None</code> (or coerce with an explicit default) before multiplying quantity by price.</blockquote>
 <hr/>
-<h3>1. Lists — your columns</h3>
-<p>A list is an ordered collection. Think: one Excel column.</p>
+<h2>1. Lists — your columns</h2>
+<p>Why it matters for analysts: a list is an ordered collection of values — think of one Excel column such as all Prices or all Product names. Row counts (<code>len</code>), column totals (<code>sum</code>), and min/max checks are the first sanity pass you run on any export, and in Python they map one-to-one onto list built-ins.</p>
 <pre><code class="language-python">prices = [899.99, 25.50, 75.00, 12.99]
 products = [&quot;Laptop&quot;, &quot;Mouse&quot;, &quot;Keyboard&quot;]
 
@@ -106,7 +119,15 @@ print(len(prices))    # 4 — row count
 print(sum(prices))    # 1013.48 — like =SUM()
 print(min(prices), max(prices))  # 12.99 899.99 — like =MIN(), =MAX()
 print(sorted(products))  # alphabetical copy</code></pre>
-<p>Mutating a list (cleaning in place):</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>prices[0]</code> is <code>899.99</code> and <code>prices[-1]</code> is <code>12.99</code> — Python counts from the left starting at 0, but <code>-1</code> is a reliable "last cell" shortcut (no need for <code>len(prices)-1</code> every time).</li>
+<li><code>products[0:2]</code> returns only <code>['Laptop', 'Mouse']</code>: the start index is included, the end index is excluded, so a slice of length 2 uses <code>0:2</code>, not <code>0:1</code>.</li>
+<li><code>len(prices)</code> is <code>4</code> and <code>sum(prices)</code> is <code>1013.48</code> — the same mental operations as counting rows and <code>=SUM()</code> over a column, with no header row to skip.</li>
+<li><code>min</code>/<code>max</code> print <code>12.99</code> and <code>899.99</code> in one call, and <code>sorted(products)</code> returns a new alphabetical list without mutating <code>products</code>.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Slice ends are exclusive, so <code>products[0:2]</code> gives two items, not three. Getting this wrong is the classic off-by-one: to grab Excel rows 2–4 (three rows) in a zero-based list you need indices <code>1:4</code>, not <code>1:3</code>.</blockquote>
+<p>Mutating a list (cleaning in place): cleaning often means walking a messy column once, trimming each value with <code>.strip()</code>, and rebuilding a tidy list. The loop below is the explicit version; Section 5 shows the same idea as a one-line comprehension.</p>
 <pre><code class="language-python">raw_products = [&quot;  Laptop &quot;, &quot;KEYBOARD&quot;, &quot;mouse&quot;, &quot;&quot;]
 cleaned = []
 for p in raw_products:
@@ -117,11 +138,18 @@ print(cleaned)  # [&#x27;Laptop&#x27;, &#x27;KEYBOARD&#x27;, &#x27;mouse&#x27;, 
 cleaned = [p.strip().title() for p in cleaned if p.strip() != &quot;&quot;]
 print(cleaned)  # [&#x27;Laptop&#x27;, &#x27;Keyboard&#x27;, &#x27;Mouse&#x27;]
 # .title() -&gt; &#x27;KEYBOARD&#x27; becomes &#x27;Keyboard&#x27;. Perfect for product names.</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>After <code>.strip()</code> alone, <code>cleaned</code> is <code>['Laptop', 'KEYBOARD', 'mouse', '']</code> — spaces are gone, but case is still inconsistent and the blank cell remains as <code>''</code>.</li>
+<li>The comprehension rebuilds the list as <code>['Laptop', 'Keyboard', 'Mouse']</code>: the <code>if p.strip() != ""</code> clause drops empty cells <em>before</em> <code>.title()</code> runs on survivors, so blanks never become a phantom <code>""</code> entry in your category counts.</li>
+<li>Original messy values are not repaired inside <code>raw_products</code>; cleaning builds a new list, which is safer when you still need to audit the raw file.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Filter on the <em>stripped</em> value, not the raw one. A cell like <code>"   "</code> looks non-empty in Python (<code>"   " != ""</code> is <code>True</code>) but is blank in Excel after trim — <code>if p.strip() != ""</code> handles that; <code>if p != ""</code> does not.</blockquote>
 <p><strong>Key methods to memorise:</strong> <code>.append(x)</code>, <code>.remove(x)</code>, <code>len()</code>, <code>sum()</code>, <code>sorted()</code>, <code>list.count(x)</code>.</p>
-<blockquote>Try it: what does <code>prices + [49.99]</code> do? (Answer: returns a new longer list, original unchanged.)</blockquote>
+<blockquote>Try it: what does <code>prices + [49.99]</code> do? (Answer: returns a new longer list, original unchanged — concatenation never edits in place, unlike <code>.append</code>.)</blockquote>
 <hr/>
-<h3>2. Dicts — your rows</h3>
-<p>A dict is labelled fields. Think: one spreadsheet row where headers are keys.</p>
+<h2>2. Dicts — your rows</h2>
+<p>Why it matters for analysts: a dict maps labelled fields to values — exactly like one spreadsheet row where the headers become keys. Grouping, VLOOKUP-style lookups, and "add a calculated column" are all dict operations, so if you can think in rows-with-header-names, you already think in dicts.</p>
 <pre><code class="language-python">order = {&quot;OrderID&quot;: 101, &quot;Product&quot;: &quot;  Laptop &quot;, &quot;Quantity&quot;: 2, &quot;Price&quot;: 899.99, &quot;Region&quot;: &quot;West&quot;}
 
 print(order[&quot;Product&quot;])          # &#x27;  Laptop &#x27; — direct access (errors if key missing)
@@ -135,7 +163,15 @@ print(order)
 print(list(order.keys()))    # headers
 print(list(order.values()))  # row values
 print(list(order.items()))   # pairs — you&#x27;ll loop over these a lot</code></pre>
-<p>A whole sheet = list of dicts (you already have <code>sales</code>):</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>order["Product"]</code> initially prints <code>'  Laptop '</code> — dict access does <strong>not</strong> clean anything; the spaces you loaded from the CSV are still there until you assign a cleaned value back.</li>
+<li><code>order.get("Discount", 0)</code> returns the default <code>0</code> because no such header exists in this row; the same lookup with <code>order["Discount"]</code> would raise <code>KeyError</code> and kill the notebook cell.</li>
+<li>After cleaning, <code>Total</code> is <code>1799.98</code> (<code>2 * 899.99</code>) — a calculated column is just a new key, the same way you'd fill a helper column beside the table in Excel.</li>
+<li><code>list(order.keys())</code> gives you the header list; <code>list(order.items())</code> gives <code>(key, value)</code> pairs, which is the shape you want when looping rows in Section 3.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Use <code>order["Key"]</code> only when the key must exist; use <code>order.get("Key", default)</code> for optional columns (Discount, Notes) that are blank or absent on some rows. Mixing them up is the dict equivalent of a broken VLOOKUP: one missing header stops the whole run.</blockquote>
+<p>A whole worksheet is just a list of those row dicts — and you already loaded one as <code>sales</code>. Indexing picks a row; a tiny loop stands in for <code>=VLOOKUP(OrderID, …)</code>:</p>
 <pre><code class="language-python">print(sales[0])              # first row (Order 101)
 print(sales[0][&quot;Region&quot;])    # &#x27;West&#x27;
 print(len(sales))            # 12 rows
@@ -147,9 +183,17 @@ for row in sales:
         order_108 = row
         break
 print(order_108)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>len(sales)</code> is <code>12</code> — the same row count printed at load time, confirming you're still on the full file, not a filtered slice.</li>
+<li><code>sales[0]["Region"]</code> is <code>'West'</code>: list index first (which row), dict key second (which column), matching Excel's "row number then header" habit in reverse order of cell references.</li>
+<li>The VLOOKUP-style loop stops with <code>break</code> once <code>OrderID == 108</code> is found; if no match existed, <code>order_108</code> would stay <code>None</code>, which is why the variable is initialised before the loop instead of being created only on a hit.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Don't search a list of dicts by writing <code>sales[108]</code> — that is "the 108th row," not "the row whose OrderID is 108." Order IDs are values inside each dict; positional indexing only works when you know the physical row number.</blockquote>
 <hr/>
-<h3>3. Loops — your cleaning engine</h3>
-<h4>3a. <code>for</code> loop (you'll use this 95% of the time)</h4>
+<h2>3. Loops — your cleaning engine</h2>
+<p>Why it matters for analysts: almost every spreadsheet task you'd build with a filled-down formula or a PivotTable is a loop over rows in Python — read the row, decide, accumulate. The three patterns below (sum with skips, enumerate with row numbers, count-by-group) cover the majority of day-one cleanup jobs on <code>sales_spreadsheet.csv</code>.</p>
+<h3>3a. <code>for</code> loop (you'll use this 95% of the time)</h3>
 <pre><code class="language-python"># Pattern 1: total revenue, skipping bad rows
 total = 0
 for row in sales:
@@ -171,7 +215,15 @@ for row in sales:
     region = str(row[&quot;Region&quot;]).strip().title()  # &#x27;west&#x27; -&gt; &#x27;West&#x27;, &#x27; WEST&#x27; -&gt; &#x27;West&#x27;
     region_counts[region] = region_counts.get(region, 0) + 1
 print(region_counts)  # {&#x27;West&#x27;: 4, &#x27;East&#x27;: 4, &#x27;North&#x27;: 2, &#x27;South&#x27;: 1}</code></pre>
-<h4>3b. <code>if / elif / else</code> inside loops</h4>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Pattern 1 only adds to <code>total</code> when <strong>both</strong> <code>qty</code> and <code>price</code> are not <code>None</code>, so missing cells are excluded the same way filtering blanks out of a SUM range excludes them — the printed total never includes a phantom <code>0 * price</code> row.</li>
+<li>Pattern 2 starts <code>enumerate</code> at <code>2</code> so printed row numbers line up with Excel (header is spreadsheet row 1); blank product cells surface as <code>Row N: missing product (Order …)</code> messages you can hand back to whoever owns the file.</li>
+<li>Pattern 3 normalises with <code>.strip().title()</code> <strong>before</strong> using the region as a key, which is why the counter shows tidy buckets <code>{'West': 4, 'East': 4, 'North': 2, 'South': 1}</code> instead of separate entries for <code>'west'</code>, <code>'West'</code>, and <code>' WEST'</code>.</li>
+<li>The <code>.get(region, 0) + 1</code> idiom is the PivotTable COUNTIF pattern: first time a region appears the default <code>0</code> is used, every later occurrence adds one.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>None</code> and <code>0</code> are not interchangeable inside a loop. Skipping with <code>continue</code> when a value is <code>None</code> (Pattern 1) keeps bad rows out of the sum; accidentally substituting <code>0</code> would still "work" but would let a row with a real price and missing quantity contribute <code>0</code> and quietly change your valid-row counts. Decide deliberately: skip, flag, or coerce — never mix the three across the same report.</blockquote>
+<h3>3b. <code>if / elif / else</code> inside loops</h3>
 <pre><code class="language-python">for row in sales:
     raw = str(row[&quot;Product&quot;]).strip()
     if raw == &quot;&quot;:
@@ -181,10 +233,16 @@ print(region_counts)  # {&#x27;West&#x27;: 4, &#x27;East&#x27;: 4, &#x27;North&#
     else:
         status = &quot;OK&quot;
     print(row[&quot;OrderID&quot;], status)</code></pre>
-<blockquote>Rule of thumb: <code>strip()</code> text first, <em>then</em> compare. <code>" west " == "west"</code> is <code>False</code> — a classic junior bug.</blockquote>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Each row prints exactly one label because <code>if / elif / else</code> checks in order: a blank product is reported as <code>NEEDS PRODUCT</code> even if its numbers are also missing — you never see two statuses for one OrderID.</li>
+<li>The empty-product test runs on <code>str(row["Product"]).strip()</code>, so both a truly empty cell and a spaces-only cell land in <code>NEEDS PRODUCT</code> rather than slipping through as a real product name.</li>
+<li><code>NEEDS NUMBERS</code> fires only when the product text survived but <code>Quantity is None</code> or <code>Price is None</code> — matching the loader's decision to keep missing numerics as <code>None</code> instead of <code>0</code>.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>strip()</code> text first, <em>then</em> compare — <code>" west " == "west"</code> is <code>False</code>, and so is <code>"WEST" == "West"</code>. A classic junior bug is flagging rows as dirty (or clean) based on untrimmed comparisons; normalise case and spaces before any <code>==</code> test on free-text columns.</blockquote>
 <hr/>
-<h3>4. Functions — reusable cleaning steps</h3>
-<p>If you copy-paste cleaning logic twice, make it a function.</p>
+<h2>4. Functions — reusable cleaning steps</h2>
+<p>Why it matters for analysts: if you copy-paste cleaning logic twice, make it a function. A named <code>clean_text</code> / <code>clean_row</code> / <code>revenue_by_region</code> pipeline is how you turn a one-off notebook fix into something a teammate can rerun next month on a new export without re-reading every loop.</p>
 <pre><code class="language-python">def clean_text(value):
     &quot;&quot;&quot;Strip spaces and title-case. Empty/None -&gt; &#x27;&#x27;.&quot;&quot;&quot;
     if value is None:
@@ -219,15 +277,23 @@ print(clean_sales[0])
 # {&#x27;OrderID&#x27;: 101, &#x27;Product&#x27;: &#x27;Laptop&#x27;, &#x27;Quantity&#x27;: 2, &#x27;Price&#x27;: 899.99, &#x27;Region&#x27;: &#x27;West&#x27;, &#x27;Total&#x27;: 1799.98}
 
 print(revenue_by_region(clean_sales))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>clean_sales[0]</code> mirrors the raw first row but with <code>'  Laptop '</code> rewritten to <code>'Laptop'</code> and a computed <code>Total</code> of <code>1799.98</code> — same OrderID 101, now safe to aggregate.</li>
+<li><code>clean_text(None)</code> returns <code>''</code> rather than crashing on <code>.strip()</code>, which is why blank products become a consistent empty string you can filter with <code>!= ""</code> later.</li>
+<li>Inside <code>clean_row</code>, missing <code>Quantity</code>/<code>Price</code> become <code>0</code>/<code>0.0</code>, so <code>Total</code> for incomplete rows is <code>0.0</code> instead of raising <code>TypeError</code> — and <code>revenue_by_region</code> sums those zeros harmlessly while Section 5's <code>Total &gt; 0</code> filter can still drop them from "valid order" counts.</li>
+<li><code>clean_row</code> builds and returns a <strong>new</strong> dict (<code>cleaned = {...}</code>); the original row in <code>sales</code> keeps its messy values, so you can always compare raw vs cleaned during QA.</li>
+</ul>
 <p>Why functions help analysts:</p>
 <ul>
-<li><code>clean_text</code> fixes <em>every</em> text column the same way.</li>
-<li><code>clean_row</code> is testable: feed one row, check output.</li>
-<li>Default pattern <code>x if x is not None else 0</code> safely fills blanks (like Excel <code>=IF(ISBLANK(A2),0,A2)</code>).</li>
+<li><code>clean_text</code> fixes <em>every</em> text column the same way — Product, Region, and any future free-text header get identical strip/title rules instead of ad-hoc edits per cell.</li>
+<li><code>clean_row</code> is testable: feed one row, check output; regression-test it when the export format shifts.</li>
+<li>Default pattern <code>x if x is not None else 0</code> safely fills blanks (like Excel <code>=IF(ISBLANK(A2),0,A2)</code>) <strong>after</strong> you've decided that blank means zero for this metric.</li>
 </ul>
+<blockquote><strong>Pitfall:</strong> Coercing <code>None → 0</code> in <code>clean_row</code> is right for revenue (a missing price contributes nothing) but wrong if you later ask "how many rows had missing price?" — those rows now look like real zeros. Keep a separate validity check (<code>row["Price"] is not None</code> on the raw data, or <code>Total &gt; 0</code> / a dedicated flag on cleaned data) whenever the question is about <em>data quality</em> rather than <em>totals</em>.</blockquote>
 <hr/>
-<h3>5. Comprehensions — one-line transforms</h3>
-<p>Comprehensions are compact loops for building lists/dicts. Analysts love them for column ops.</p>
+<h2>5. Comprehensions — one-line transforms</h2>
+<p>Why it matters for analysts: comprehensions are compact loops for building lists and dicts. After you've written the longhand version in Sections 1 and 3, the same filters and group-bys collapse into one readable line — which is how most analysts do column transforms once the logic is already proven.</p>
 <pre><code class="language-python"># List comprehension: [expression for item in iterable if condition]
 
 # All totals in one line
@@ -250,9 +316,18 @@ clean_sales = [clean_row(r) for r in sales]
 valid_sales = [r for r in clean_sales if r[&quot;Product&quot;] != &quot;&quot; and r[&quot;Total&quot;] &gt; 0]
 print(f&quot;{len(valid_sales)} valid orders out of {len(sales)}&quot;)
 print(revenue_by_region(valid_sales))</code></pre>
-<p>When <em>not</em> to use a comprehension: if the logic needs 3+ <code>if</code>s or side effects (printing, appending elsewhere) — use a plain loop for readability.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The first comprehension only emits a total when <code>Quantity is not None and Price is not None</code>, so <code>totals</code> has one entry per <em>complete</em> row — the same guard Pattern 1 used with <code>continue</code>, just expressed as an <code>if</code> clause.</li>
+<li><code>products_clean</code> uses <code>if str(r["Product"]).strip()</code> as its filter: blank and whitespace-only names never make the list, and every survivor is <code>.strip().title()</code>-ed in the same expression (transform + filter in one line).</li>
+<li><code>revenue_per_order[101]</code> prints <code>1799.98</code>, matching <code>clean_row</code>'s Total for Order 101 — two different styles (dict-comprehension with <code>or 0</code> vs function pipeline) agreeing on the same cell of output.</li>
+<li>The final two prints count valid orders and group revenue by region after <code>clean_row</code>; rows with an empty product or <code>Total &lt;= 0</code> are excluded before aggregation, so the region dict only reflects sellable lines.</li>
+</ul>
+<p>When <em>not</em> to use a comprehension: if the logic needs 3+ <code>if</code>s, side effects (printing, appending elsewhere), or you'd need a comment to explain the condition — use a plain loop for readability.</p>
+<blockquote><strong>Pitfall:</strong> The <code>(r["Quantity"] or 0)</code> trick treats <strong>any</strong> falsy value as missing: <code>None</code>, <code>0</code>, <code>''</code>, and even <code>0.0</code> all become <code>0</code>. That's fine for revenue on this messy sheet, but it also means a legitimate zero quantity is indistinguishable from a blank. When the analysis cares about "was this cell missing?", go back to explicit <code>is None</code> checks as in Section 3.</blockquote>
 <hr/>
-<h3>Putting it together</h3>
+<h2>Putting it together</h2>
+<p>Why it matters for analysts: real requests arrive as "clean this file and tell me revenue by region," not as isolated syntax drills. The <code>analyse</code> function chains everything you've built — clean, filter, aggregate, report — into one call that takes raw rows and returns a JSON-ready summary a manager can read.</p>
 <pre><code class="language-python">def analyse(sales_rows):
     cleaned = [clean_row(r) for r in sales_rows]
     valid = [r for r in cleaned if r[&quot;Product&quot;] and r[&quot;Total&quot;] &gt; 0]
@@ -267,28 +342,38 @@ print(revenue_by_region(valid_sales))</code></pre>
 import json
 print(json.dumps(analyse(sales), indent=2))
 # Expect ~ total 4451.83, West highest. Run it!</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>rows_in</code> is always <code>12</code> for the unfiltered file; <code>rows_valid</code> + <code>rows_dropped</code> must add back to <code>12</code>, which is the first arithmetic check to run on any pipeline that drops rows.</li>
+<li><code>total_revenue</code> should come out near <code>4451.83</code> (as the comment notes) — if your number differs, a clean/filter step is over- or under-including rows rather than a summation bug.</li>
+<li><code>by_region</code> is keyed by cleaned region names, and the expected shape has West highest; compare that ranking against a quick manual SUMIF in the spreadsheet when validating.</li>
+<li>The result is plain dicts/lists/floats, so <code>json.dumps(..., indent=2)</code> works without any special DataFrame-to-JSON conversion.</li>
+</ul>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — High-value orders (lists + loops)</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — High-value orders (lists + loops)</h3>
 <p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. <em>Expected: 2 orders (101 and 106). Hint: <code>if qty is not None and price is not None:</code> then compute.</em></p>
 <p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders? Check: about 0.7184 (two orders drive ~72%).</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Loop, compute <code>qty * price</code>, collect matches in a list, then print. &lt;/details&gt;</p>
-<h4>Exercise 2 — Category counter (dicts + functions)</h4>
+<details><summary>Hint</summary>
+<p>Loop, compute <code>qty * price</code>, collect matches in a list, then print.</p>
+</details>
+<h3>Exercise 2 — Category counter (dicts + functions)</h3>
 <p>Write a function <code>category(product)</code> that returns <code>"Computer"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>"Audio"</code> for Headset, else <code>"Other"</code> (and <code>"Unknown"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>
 <p><strong>Follow-up:</strong> What share of the 12 orders are Computers? Check: 10/12, about 0.8333.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<details><summary>Hint</summary>
 <pre><code class="language-python">def category(product):
     p = clean_text(product)
     ...</code></pre>
-<p>Use a dict + <code>.get(cat, 0) + 1</code> to count. &lt;/details&gt;</p>
-<h4>Exercise 3 — One-line clean (comprehensions)</h4>
+<p>Use a dict + <code>.get(cat, 0) + 1</code> to count.</p>
+</details>
+<h3>Exercise 3 — One-line clean (comprehensions)</h3>
 <p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == "East"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. <em>Expected: Orders 102 (127.5), 108 (150.0), and 110 (199.96) — note 110’s Region is <code>"east"</code>, which <code>clean_text</code> normalises to <code>"East"</code>. Hint: <code>[clean_row(r) for r in sales if ...]</code> — but filter on cleaned values, so either clean twice or clean first then filter.</em></p>
 <p><strong>Follow-up:</strong> Confirm east_big sums to East's regional total. Check: 477.46.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment. &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 big = []
@@ -324,7 +409,9 @@ cleaned = [clean_row(r) for r in sales]
 east_big = [r for r in cleaned if r[&quot;Region&quot;] == &quot;East&quot; and r[&quot;Total&quot;] &gt;= 100]
 east_map = {r[&quot;OrderID&quot;]: r[&quot;Total&quot;] for r in east_big}
 print(east_big)
-print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}# --- Follow-up 1 ---
+print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}
+
+# --- Follow-up 1 ---
 valid = [r for r in sales if str(r[&quot;Product&quot;]).strip()
          and r[&quot;Quantity&quot;] is not None and r[&quot;Price&quot;] is not None]
 valid_rev = sum(r[&quot;Quantity&quot;] * r[&quot;Price&quot;] for r in valid)
@@ -341,7 +428,7 @@ assert cshare == 0.8333
 etot = round(sum(east_map.values()), 2)
 print(etot)  # 477.46 == East regional total
 assert etot == 477.46</code></pre>
-<h4>What to learn next</h4>
+<h3>What to learn next</h3>
 <ul>
 <li><code>csv.DictReader</code> / <code>csv.DictWriter</code> to load/save the real file without pandas.</li>
 <li><code>pathlib</code>, <code>datetime</code> for file dates.</li>

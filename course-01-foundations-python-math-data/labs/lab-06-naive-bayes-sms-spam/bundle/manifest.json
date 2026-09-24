@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-06-naive-bayes-sms-spam",
+  "title": "SMS Spam Classifier (Naive Bayes, no sklearn)",
   "notebook": "lab-06-naive-bayes-sms-spam.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/lab-06-naive-bayes-sms-spam.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "sms.tsv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "NLP",
+    "Machine Learning",
+    "AI"
+  ],
+  "description": "Build a Naive Bayes SMS spam classifier from scratch with no sklearn.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Probability Meets Text Track: Multinomial NB from Scratch</h3>\n<blockquote><strong>Scenario:</strong> <code>sms.tsv</code> has ~5572 labeled SMS messages (ham/spam). Build a <strong>multinomial Naive Bayes</strong> classifier with Laplace smoothing using only the Python standard library — then evaluate on a 20% holdout with <code>seed=42</code>.  <strong>You will learn:</strong> tokenisation, stopwords, word counts, log-priors, Bayes rule, train/test split, confusion matrix by hand. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ only. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Top-10 spam-indicative tokens</h3>\n<p>Using training counts only, rank tokens by <code>log P(w|spam) − log P(w|ham)</code> (support ≥ 10). Print the top 10. <em>Expected (approx): claim, prize, won, 150p, tone, 18, www, guaranteed, 1000, 500.</em></p>\n<p><strong>Follow-up:</strong> What is spam recall on the holdout? Check: about 0.9489.</p>\n<details><summary>Hint</summary>\n<p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting.</p>\n</details>\n<h3>Exercise 2 — Accuracy on 20% holdout (seed 42)</h3>\n<p>Report accuracy to 4 d.p. and the 4 confusion counts. <em>Expected: accuracy ≈ 0.9803 · TP_spam=130, FN_spam=7, FP_spam=15, TN=962.</em></p>\n<p><strong>Follow-up:</strong> What is ham precision? Check: about 0.9928.</p>\n<details><summary>Hint</summary>\n<p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters.</p>\n</details>\n<h3>Exercise 3 — Why “free” alone misclassifies marketing ham</h3>\n<p>How many holdout messages contain <code>\"free\"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. <em>Expected: 48 test messages contain “free”; 14 are ham (e.g. “When you get free, call me”). Naive Bayes multiplies independent token evidence — a rare spammy co-occurrence pattern can tip borderline ham over the decision boundary.</em></p>\n<p><strong>Follow-up:</strong> Compare P free given spam vs P free given ham in test — why is free so spammy? Check: about 0.2482 vs 0.0143.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]\nprint(len(free_test), sum(1 for _, g in free_test if g == &quot;ham&quot;))</code></pre>\n<p>Single tokens cannot capture context; that’s the “naive” independence assumption.</p>\n</details>\n<hr/>",
+  "duration": "01:00:00",
+  "lab_duration": "1 Hour",
+  "session_timeout": 5400,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

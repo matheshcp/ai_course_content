@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-01-python-refresher-for-data-people",
+  "title": "Python Refresher for Data People",
   "notebook": "lab-01-python-refresher-for-data-people.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/lab-01-python-refresher-for-data-people.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "sales_spreadsheet.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Python",
+    "Data",
+    "AI"
+  ],
+  "description": "Refresh Python fundamentals for practical data and AI work.",
+  "level": "Beginner",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Junior Analyst Track: Cleaning a Sales Spreadsheet</h3>\n<blockquote><strong>Scenario:</strong> You're a junior analyst. Someone sends you <code>sales_spreadsheet.csv</code> — 12 rows, messy product names, missing quantities, inconsistent regions. Your job: clean it with pure Python and answer: <em>what's our total revenue by region?</em>  <strong>You will learn:</strong> lists, dicts, loops, functions, comprehensions — all with sales-data examples. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas needed).</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — High-value orders (lists + loops)</h3>\n<p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. <em>Expected: 2 orders (101 and 106). Hint: <code>if qty is not None and price is not None:</code> then compute.</em></p>\n<p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders? Check: about 0.7184 (two orders drive ~72%).</p>\n<details><summary>Hint</summary>\n<p>Loop, compute <code>qty * price</code>, collect matches in a list, then print.</p>\n</details>\n<h3>Exercise 2 — Category counter (dicts + functions)</h3>\n<p>Write a function <code>category(product)</code> that returns <code>\"Computer\"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>\"Audio\"</code> for Headset, else <code>\"Other\"</code> (and <code>\"Unknown\"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>\n<p><strong>Follow-up:</strong> What share of the 12 orders are Computers? Check: 10/12, about 0.8333.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">def category(product):\n    p = clean_text(product)\n    ...</code></pre>\n<p>Use a dict + <code>.get(cat, 0) + 1</code> to count.</p>\n</details>\n<h3>Exercise 3 — One-line clean (comprehensions)</h3>\n<p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == \"East\"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. <em>Expected: Orders 102 (127.5), 108 (150.0), and 110 (199.96) — note 110’s Region is <code>\"east\"</code>, which <code>clean_text</code> normalises to <code>\"East\"</code>. Hint: <code>[clean_row(r) for r in sales if ...]</code> — but filter on cleaned values, so either clean twice or clean first then filter.</em></p>\n<p><strong>Follow-up:</strong> Confirm east_big sums to East's regional total. Check: 477.46.</p>\n<details><summary>Hint</summary>\n<p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment.</p>\n</details>\n<hr/>",
+  "duration": "00:45:00",
+  "lab_duration": "45 Minutes",
+  "session_timeout": 4500,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

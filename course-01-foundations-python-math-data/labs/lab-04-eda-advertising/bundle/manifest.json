@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-04-eda-advertising",
+  "title": "EDA — TV, Radio, Newspaper vs Sales",
   "notebook": "lab-04-eda-advertising.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-04-eda-advertising/lab-04-eda-advertising.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-04-eda-advertising/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "Advertising.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Pandas",
+    "EDA",
+    "Data"
+  ],
+  "description": "Run a first real EDA: correlations, plots, quartile bins, and a findings memo.",
+  "level": "Beginner",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>First Real EDA Track: Correlation, Plots, Findings Memo</h3>\n<blockquote><strong>Scenario:</strong> Marketing asks <em>which channel drives Sales</em>. Load <code>Advertising.csv</code> (200 rows), compute correlations, plot scatters, bin TV into quartiles, and write a 5-bullet findings memo.  <strong>You will learn:</strong> pandas <code>read_csv</code> / <code>describe</code> / <code>corr</code>, matplotlib scatter, correlation vs causation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Full correlation matrix</h3>\n<p>Print <code>df[[\"TV\",\"Radio\",\"Newspaper\",\"Sales\"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? <em>Expected: Radio–Newspaper ≈ 0.3541 is the strongest feature–feature pair (TV pairs are ≈ 0.05).</em></p>\n<p><strong>Follow-up:</strong> What fraction of Sales variance does TV alone explain (R squared)? Check: about 0.6118.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">c = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]].corr()\nprint(c)\n# upper triangle only to avoid duplicates</code></pre>\n</details>\n<h3>Exercise 2 — Highest single-feature R vs Sales</h3>\n<p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? <em>Expected: TV, r ≈ 0.7822.</em></p>\n<p><strong>Follow-up:</strong> How large is the Q4 minus Q1 mean-sales lift? Check: 10.076.</p>\n<details><summary>Hint</summary>\n<p><code>df.corr()[\"Sales\"].drop(\"Sales\").abs().idxmax()</code> / <code>.max()</code>.</p>\n</details>\n<h3>Exercise 3 — TV quartiles → mean Sales</h3>\n<p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. <em>Expected: Q1 8.39 · Q2 12.686 · Q3 16.548 · Q4 18.466 (50 rows each).</em></p>\n<p><strong>Follow-up:</strong> How much variance do Radio and Newspaper share (r squared)? Check: about 0.1254.</p>\n<details><summary>Hint</summary>\n<p><code>pd.qcut(df[\"TV\"], 4, labels=[\"Q1\",\"Q2\",\"Q3\",\"Q4\"])</code> then <code>groupby(...).mean()</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:45:00",
+  "lab_duration": "45 Minutes",
+  "session_timeout": 4500,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

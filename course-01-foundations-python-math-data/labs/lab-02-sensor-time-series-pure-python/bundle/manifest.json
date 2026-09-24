@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-02-sensor-time-series-pure-python",
+  "title": "Sensor Time Series with Pure Python",
   "notebook": "lab-02-sensor-time-series-pure-python.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/lab-02-sensor-time-series-pure-python.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "daily-min-temperatures.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Python",
+    "Time Series",
+    "Data"
+  ],
+  "description": "Analyze sensor time series with pure Python: monthly means, extremes, streaks, anomalies.",
+  "level": "Beginner",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Data Wrangling Track: Daily Temperatures, No Pandas</h3>\n<blockquote><strong>Scenario:</strong> Ops hands you <code>daily-min-temperatures.csv</code> — 3650 rows of Melbourne daily minimum temperatures (Date, Temp, 1981–1990). Answer: <em>hottest day, coldest day, monthly averages, and the longest 3-day+ cold streak</em> — using only the Python standard library (<code>csv</code>, <code>datetime</code>, <code>statistics</code>).  <strong>You will learn:</strong> <code>csv.DictReader</code>, date parsing, list/dict aggregation, <code>statistics.mean</code>, simple anomaly detection (|z| &gt; 2). <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas). <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Monthly mean temps dict</h3>\n<p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. <em>Expected: 1981-01 ≈ 17.713; 1990-12 ≈ 14.368 (3 s.f. may differ slightly by rounding).</em></p>\n<p><strong>Follow-up:</strong> What is the full temperature range over the decade? Check: 26.3 C.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">by_month = defaultdict(list)\nfor d, t in temps:\n    by_month[(d.year, d.month)].append(t)\nmonthly_mean = {k: statistics.mean(v) for k, v in by_month.items()}\nprint(monthly_mean[(1981, 1)], monthly_mean[(1990, 12)])</code></pre>\n</details>\n<h3>Exercise 2 — Count days Temp &gt; 25</h3>\n<p>How many days had <code>Temp &gt; 25</code>? Print the count and each <code>(date, temp)</code> pair. <em>Expected: 2 days — 1982-01-20 (25.2) and 1982-02-15 (26.3).</em></p>\n<p><strong>Follow-up:</strong> What fraction of 1982 (non-leap, 365 days) did the cold streak cover? Check: about 0.1945.</p>\n<details><summary>Hint</summary>\n<p>List comprehension + <code>len()</code>: <code>hot = [(d,t) for d,t in temps if t &gt; 25]</code>.</p>\n</details>\n<h3>Exercise 3 — Longest run Temp &lt; 10</h3>\n<p>Find the longest <strong>consecutive-calendar-day</strong> run where <code>Temp &lt; 10</code>. Print length and start/end dates. <em>Expected: 71 days, 1982-05-31 → 1982-08-09.</em></p>\n<p><strong>Follow-up:</strong> What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Check: 170 days, about 0.0466.</p>\n<details><summary>Hint</summary>\n<p>Reuse the streak walker from Section 5; the gap check is <code>(d - prev_date).days == 1</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:45:00",
+  "lab_duration": "45 Minutes",
+  "session_timeout": 4500,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

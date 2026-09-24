@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-11-visualisation-studio",
+  "title": "Visualisation Studio",
   "notebook": "lab-11-visualisation-studio.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/lab-11-visualisation-studio.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/bundle/dataset.zip",
@@ -8,5 +9,19 @@
     "tickets.csv",
     "tips.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Visualization",
+    "Matplotlib",
+    "Data"
+  ],
+  "description": "Produce four publication-quality charts from tips and ticket data, PII-safe.",
+  "level": "Beginner",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Charts That Communicate Track: Tips + Tickets (4 Publication-Quality Plots)</h3>\n<blockquote><strong>Scenario:</strong> Two briefs, two datasets: (1) <code>tips.csv</code> — <em>who tips more?</em> (2) <code>tickets.csv</code> — <em>SLA status mix</em>; the tickets file contains <strong>emails (PII)</strong> so redact before any plot leaves your machine. Produce four charts with annotated insights.  <strong>You will learn:</strong> figure anatomy, chart choice, PII redaction, subplots, annotation. <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Tip % distribution by day</h3>\n<p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? <em>Expected: highest Fri 0.1699 · lowest Sat 0.1532 (overall 0.1608).</em></p>\n<p><strong>Follow-up:</strong> How large is the Fri minus Sat tip gap in points? Check: about 0.0167 (1.67pp).</p>\n<details><summary>Hint</summary>\n<p><code>tips[\"tip_pct\"] = tips[\"tip\"]/tips[\"total_bill\"]</code> then <code>groupby(\"day\")[\"tip_pct\"].mean()</code>.</p>\n</details>\n<h3>Exercise 2 — Stacked status bar for tickets</h3>\n<p>Build <code>pd.crosstab(priority, status)</code> on <strong>redacted</strong> tickets and plot stacked bars. Print the table. <em>Expected columns sum: open 42, in-progress 34, closed 31; priority rows low 41, medium 34, high 32.</em></p>\n<p><strong>Follow-up:</strong> What share of tickets are open? Check: about 0.3925.</p>\n<details><summary>Hint</summary>\n<p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind=\"bar\", stacked=True)</code>.</p>\n</details>\n<h3>Exercise 3 — Annotate insight on each chart</h3>\n<p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. <em>Expected: any four insights citing computed stats — e.g. “Fri mean tip 17.0%”, “42 open tickets”, “overall tip 16.1%”, “max bill $50.81”.</em></p>\n<p><strong>Follow-up:</strong> What share are closed? Check: about 0.2897.</p>\n<details><summary>Hint</summary>\n<p><code>ax.annotate(\"text\", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:45:00",
+  "lab_duration": "45 Minutes",
+  "session_timeout": 4500,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

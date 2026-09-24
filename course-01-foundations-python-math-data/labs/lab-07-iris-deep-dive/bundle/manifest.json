@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-07-iris-deep-dive",
+  "title": "Iris Deep-Dive — Stats + First Plot",
   "notebook": "lab-07-iris-deep-dive.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-07-iris-deep-dive/lab-07-iris-deep-dive.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-07-iris-deep-dive/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "iris.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Statistics",
+    "Pandas",
+    "Data"
+  ],
+  "description": "Go deep on Iris statistics: group stats, ANOVA, confidence intervals, pair plots.",
+  "level": "Beginner",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Statistics for Analysts Track: Group Stats, ANOVA, Confidence Intervals</h3>\n<blockquote><strong>Scenario:</strong> Classic <code>iris.csv</code> (150 rows, 4 numeric features + species). Compute per-species statistics, a one-way ANOVA on petal length, a 95% CI for virginica sepal width, and publish a pair-plot.  <strong>You will learn:</strong> <code>groupby.agg</code>, variance, F-stat intuition, Cohen’s d, confidence intervals, seaborn/matplotlib pair plots. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + scipy + matplotlib/seaborn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Mean petal_length by species</h3>\n<p>Print mean <code>petal_length</code> for each species (3 d.p.). <em>Expected: setosa 1.462 · versicolor 4.260 · virginica 5.552.</em></p>\n<p><strong>Follow-up:</strong> How far apart are virginica and setosa mean petal lengths? Check: 4.09.</p>\n<details><summary>Hint</summary>\n<p><code>df.groupby(\"species\")[\"petal_length\"].mean().round(3)</code></p>\n</details>\n<h3>Exercise 2 — Best separator setosa vs versicolor</h3>\n<p>For each of the 4 features, compute Cohen’s d between setosa and versicolor. Which feature has the largest |d|? <em>Expected: petal_length (|d| ≈ 7.90); petal_width second (≈ 6.82).</em></p>\n<p><strong>Follow-up:</strong> How wide is the virginica sepal-width CI? Check: 0.1834.</p>\n<details><summary>Hint</summary>\n<p>Pooled SD formula in Section 3; compare absolute values.</p>\n</details>\n<h3>Exercise 3 — 95% CI for virginica sepal_width</h3>\n<p>Using t with df = n−1, report mean and CI to 4 d.p. <em>Expected: mean 2.9740 · 95% CI (2.8823, 3.0657).</em></p>\n<p><strong>Follow-up:</strong> Re-run the ANOVA yourself — how extreme is F? Check: F about 1180.16, p below 1e-50.</p>\n<details><summary>Hint</summary>\n<p><code>mean ± t.ppf(0.975, n-1) * std(ddof=1) / sqrt(n)</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:40:00",
+  "lab_duration": "40 Minutes",
+  "session_timeout": 4200,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

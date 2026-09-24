@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-12-hr-attrition-capstone",
+  "title": "HR Attrition Mini Case Study",
   "notebook": "lab-12-hr-attrition-capstone.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/bundle/dataset.zip",
@@ -8,5 +9,19 @@
     "HR-Employee-Attrition-synth.csv",
     "emp_attrition.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Capstone",
+    "HR Analytics",
+    "AI"
+  ],
+  "description": "Capstone: turn HR attrition data into an executive one-pager with hypotheses.",
+  "level": "Intermediate Capstone",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Course Capstone Track: EDA → Insight → Executive One-Pager</h3>\n<blockquote><strong>Scenario:</strong> People analytics shares <code>HR-Employee-Attrition-synth.csv</code> (2000 rows, IBM-style HR schema, 35 columns). Deliver an executive one-pager: overall attrition rate, rates by Department and OverTime, income quartiles vs attrition, and <strong>3 actionable hypotheses</strong> with supporting numbers. Write <code>attrition_report.md</code>.  <strong>You will learn:</strong> end-to-end pipeline, EDA → insight → narrative, avoiding spurious correlations. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate Capstone. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Attrition by OverTime</h3>\n<p>Print attrition rate for <code>OverTime == \"Yes\"</code> and <code>\"No\"</code> (4 d.p.). What is the percentage-point gap? <em>Expected: Yes 0.1869 · No 0.1387 · gap ≈ 0.0482 (4.8 pp).</em></p>\n<p><strong>Follow-up:</strong> How many leavers is that in absolute terms? Check: 298.</p>\n<details><summary>Hint</summary>\n<p><code>df.groupby(\"OverTime\")[\"Attrition\"].apply(lambda s: (s==\"Yes\").mean())</code>.</p>\n</details>\n<h3>Exercise 2 — Income quartiles vs attrition</h3>\n<p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. <em>Expected: Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780 · edges 1009, 5040.75, 6776, 9667.25, 28723.</em></p>\n<p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap? Check: 0.0542.</p>\n<details><summary>Hint</summary>\n<p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas.</p>\n</details>\n<h3>Exercise 3 — Draft 3 hypotheses with numbers</h3>\n<p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. <em>Expected: free-form — e.g. OT pilot, R&amp;D career path, comp-ratio for Q4 leavers — each with rates/n from Sections 2–4.</em></p>\n<p><strong>Follow-up:</strong> How many R and D leavers? Check: 178.</p>\n<details><summary>Hint</summary>\n<p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].”</p>\n</details>\n<hr/>",
+  "duration": "01:15:00",
+  "lab_duration": "1 Hour 15 Minutes",
+  "session_timeout": 6300,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

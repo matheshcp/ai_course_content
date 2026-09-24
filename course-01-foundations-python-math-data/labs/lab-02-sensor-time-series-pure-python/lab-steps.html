@@ -10,6 +10,7 @@ h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line
 h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
 h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
 h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
 code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
 code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
 pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
@@ -23,6 +24,9 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -37,8 +41,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
 <ol>
-<li>Click <strong>Start Lab</strong> — or open directly: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/lab-02-sensor-time-series-pure-python.ipynb"><strong>Open in Colab</strong></a> (opens under your Google account, auto-saved to your Drive).</li>
-<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> (wget) and unzips it; all code below reads those unzipped files.</li>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/lab-02-sensor-time-series-pure-python.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
@@ -50,18 +54,21 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <ul><li>Load CSV time series with csv.DictReader and datetime.date</li><li>Aggregate monthly means with defaultdict(list)</li><li>Find hottest/coldest days and consecutive cold streaks</li><li>Flag anomalies with |z| &gt; 2</li></ul>
 
 <hr/>
-<h2>Sensor Time Series with Pure Python</h2>
-<h3>Data Wrangling Track: Daily Temperatures, No Pandas</h3>
-<blockquote><strong>Scenario:</strong> Ops hands you <code>daily-min-temperatures.csv</code> — 3650 rows of Melbourne daily minimum temperatures (Date, Temp, 1981–1990). Answer: <em>hottest day, coldest day, monthly averages, and the longest 3-day+ cold streak</em> — using only the Python standard library (<code>csv</code>, <code>datetime</code>, <code>statistics</code>).  <strong>You will learn:</strong> <code>csv.DictReader</code>, date parsing, list/dict aggregation, <code>statistics.mean</code>, simple anomaly detection (|z| &gt; 2). <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas). <strong>Env:</strong> 🟢 Colab only.</blockquote>
-<h4>Time-series mental map</h4>
+<h2>Data Wrangling Track: Daily Temperatures, No Pandas</h2>
+<blockquote><strong>Scenario:</strong> Ops hands you <code>daily-min-temperatures.csv</code> — 3650 rows of Melbourne daily minimum temperatures (Date, Temp, 1981–1990). Answer: <em>hottest day, coldest day, monthly averages, and the longest 3-day+ cold streak</em> — using only the Python standard library (<code>csv</code>, <code>datetime</code>, <code>statistics</code>). <strong>You will learn:</strong> <code>csv.DictReader</code>, date parsing, list/dict aggregation, <code>statistics.mean</code>, simple anomaly detection (|z| &gt; 2). <strong>Time:</strong> ~45 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> Python 3.8+ only (no pandas). <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Time-series mental map</h3>
+<p>Why it matters: sensor and ops data almost always arrives as a long date/value table. Once you can translate "column of temps," "group by month," and "running streak" into list/dict shapes, every section of this lab is a small, checkable transformation of the same 3650-row series — no pandas required.</p>
 <table><thead><tr><th>Spreadsheet idea</th><th>Python idea</th><th>Example</th></tr></thead><tbody>
 <tr><td>One column of temps</td><td><code>list[float]</code></td><td><code>[20.7, 21.8, …]</code></td></tr>
 <tr><td>Group by month</td><td><code>dict[(year, month) → list]</code></td><td><code>{(1981, 1): [13.9, …]}</code></td></tr>
 <tr><td>Row with date + value</td><td><code>tuple</code> or <code>dict</code></td><td><code>("1981-01-01", 20.7)</code></td></tr>
 <tr><td>Running streak counter</td><td>keep previous date + counter</td><td>cold-run length</td></tr>
+<tr><td>Excel filter (<code>Temp &gt; 25</code>)</td><td>list comprehension with <code>if</code></td><td><code>[(d, t) for d, t in temps if t &gt; 25]</code></td></tr>
+<tr><td><code>=INDEX(MATCH(MAX(range)))</code></td><td><code>max(seq, key=…)</code></td><td>hottest single row</td></tr>
 </tbody></table>
 <hr/>
-<h4>1. Load the data (local first, Colab fallback)</h4>
+<h2>1. Load the data (local first, Colab fallback)</h2>
+<p>Why it matters for analysts: parsing dates and floats at load time is the cheapest place to catch a broken export. This loader prefers a local <code>datasets/</code> copy, falls back to a raw GitHub URL on Colab, and converts every row into a <code>(datetime.date, float)</code> pair so later sections never touch strings again.</p>
 <pre><code class="language-python">import csv, os, statistics
 from datetime import datetime, date
 from collections import defaultdict
@@ -88,21 +95,46 @@ def load_temps():
 temps = load_temps()
 print(f&quot;{len(temps)} rows, first={temps[0]}, last={temps[-1]}&quot;)
 # Expect: 3650 rows, first=(&#x27;1981-01-01&#x27;, 20.7), last=(&#x27;1990-12-31&#x27;, 13.6)</code></pre>
-<blockquote>Why stdlib? Interviewers and constrained environments often ban pandas. <code>csv</code> + <code>datetime</code> is enough for a clean single-file series.</blockquote>
+<blockquote>Why stdlib? Interviewers and constrained environments often ban pandas. <code>csv</code> + <code>datetime</code> is enough for a clean single-file series — and forcing yourself through <code>strptime</code> teaches exactly which format string your dates need.</blockquote>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The file loads <code>3650</code> rows spanning <code>1981-01-01</code> to <code>1990-12-31</code> — ten full years of daily minima (365 × 10), so month counts in Section 3 should land on <code>120</code> and any missing-day gap would show up as a shorter streak in Section 5.</li>
+<li>First temp <code>20.7</code> and last temp <code>13.6</code> are real values from the CSV, already <code>float</code>, so no string comparison like <code>"9.5" &gt; "10.2"</code> can sneak into later maths.</li>
+<li>Each element is a 2-tuple <code>(date, temp)</code>; unpacking with <code>for d, t in temps</code> is the loop shape used everywhere below.</li>
+<li>The local-path check runs first, so re-running the notebook offline does not re-download once the file exists.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>datetime.strptime(r["Date"], "%Y-%m-%d")</code> is format-strict — a single <code>01/01/1981</code> row raises <code>ValueError</code> and stops the whole load. If you ever swap in a different sensor export, check one raw date string and adjust the format <em>before</em> debugging downstream maths. Also prefer <code>.date()</code> over leaving a full <code>datetime</code>: comparing a midnight timestamp to a plain date is a classic source of off-by-one day bugs.</blockquote>
 <pre><code class="language-python"># Quick sanity checks (like Excel filters)
 all_t = [t for _, t in temps]
 print(&quot;min/max:&quot;, min(all_t), max(all_t))          # 0.0 26.3
 print(&quot;mean:&quot;, round(statistics.mean(all_t), 3))   # 11.178
 print(&quot;stdev:&quot;, round(statistics.pstdev(all_t), 3))# 4.071</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>min/max</code> print <code>0.0</code> and <code>26.3</code> — a full <code>26.3 °C</code> span between the coldest and hottest <em>minimum</em> temperatures in the decade; Exercise 1's follow-up asks for exactly this range.</li>
+<li><code>mean</code> of <code>11.178</code> sits well below the midpoint of that range, reminding you that Melbourne overnight lows cluster cool rather than being uniform between 0 and 26.3.</li>
+<li><code>stdev</code> uses <code>statistics.pstdev</code> (population) and rounds to <code>4.071</code>; that single number feeds the z-scores in Section 6, so if it drifts, your anomaly count of <code>170</code> will drift too.</li>
+<li>Printing these three stats first is the temperature equivalent of checking row count, min, max, and average before building any chart.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>statistics.mean</code> / <code>pstdev</code> accept an iterable of numbers, not rows — always feed them <code>[t for _, t in temps]</code> (or a generator of temps). Passing <code>temps</code> itself would try to average <code>date</code> objects and <code>float</code>s together and raise <code>TypeError</code>.</blockquote>
 <hr/>
-<h4>2. Hottest / coldest day</h4>
+<h2>2. Hottest / coldest day</h2>
+<p>Why it matters for analysts: "which day was extreme?" questions show up in every ops report, and <code>max(..., key=)</code> finds the whole row in one pass instead of sorting the table or writing a manual comparison loop.</p>
 <pre><code class="language-python">hottest = max(temps, key=lambda x: x[1])
 coldest = min(temps, key=lambda x: x[1])
 print(&quot;Hottest:&quot;, hottest[0], hottest[1])  # 1982-02-15 26.3
 print(&quot;Coldest:&quot;, coldest[0], coldest[1])  # 1982-06-05 0.0</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Hottest day is <code>1982-02-15</code> at <code>26.3</code> and coldest is <code>1982-06-05</code> at <code>0.0</code> — note these are <em>minimum</em> temperatures, so <code>26.3</code> means the overnight low never dropped below 26.3 °C that day.</li>
+<li>Both results are full <code>(date, temp)</code> tuples: the <code>key=lambda x: x[1]</code> argument tells <code>max</code>/<code>min</code> to compare only the temperature element while returning the entire row, which is the Pythonic <code>=INDEX(MATCH(MAX(range)))</code>.</li>
+<li>February (summer in Melbourne) holding the hottest minimum and June (winter) holding <code>0.0</code> matches the seasonal pattern you'd expect — a quick domain sanity check on the parse.</li>
+</ul>
 <blockquote><code>max(seq, key=…)</code> is the Pythonic <code>=INDEX(MATCH(MAX(range)))</code>. Prefer it over manual loops when you only need one row.</blockquote>
+<blockquote><strong>Pitfall:</strong> <code>max(temps)</code> <strong>without</strong> <code>key=</code> compares tuples element-by-element, so it would return the <em>latest date</em> (dates sort first), not the hottest day. Always pass <code>key=lambda x: x[1]</code> (or <code>itemgetter(1)</code>) when the ranking column is not the first element of the tuple.</blockquote>
 <hr/>
-<h4>3. Monthly averages with a dict of lists</h4>
+<h2>3. Monthly averages with a dict of lists</h2>
+<p>Why it matters for analysts: monthly rollups are the bread-and-butter of sensor reporting — "average January 1981," "mean per calendar month across the decade" — and the pattern is always the same: bucket each row by a key, append its value, then average each bucket. In Excel that's a PivotTable; in pure Python it's a <code>defaultdict(list)</code>.</p>
 <pre><code class="language-python">by_month = defaultdict(list)          # key: (year, month) -&gt; temps
 for d, t in temps:
     by_month[(d.year, d.month)].append(t)
@@ -115,16 +147,34 @@ print(&quot;1981-01 mean:&quot;, monthly_mean[(1981, 1)])        # 17.713
 # Print first 6
 for (y, m), mean in list(monthly_mean.items())[:6]:
     print(f&quot;{y}-{m:02d}: {mean}&quot;)</code></pre>
-<p>Mental model: <code>defaultdict(list)</code> + <code>.append</code> = PivotTable “group rows by month, collect temps”.</p>
+<p>Mental model: <code>defaultdict(list)</code> + <code>.append</code> = PivotTable “group rows by month, collect temps”, then one dict comprehension applies <code>statistics.mean</code> to every bucket.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>120 months</code> = 10 years × 12 calendar months — if you saw 119 or 121, a date would have been misparsed into the wrong <code>(year, month)</code> bucket (e.g. month <code>0</code> or <code>13</code>).</li>
+<li><code>1981-01 mean</code> is <code>17.713</code>, a January (summer) average far above the overall mean of <code>11.178</code> from Section 1 — seasonality is visible immediately once rows are grouped.</li>
+<li>Keys are <code>(year, month)</code> tuples, not just month numbers: <code>(1981, 1)</code> and <code>(1990, 1)</code> stay separate, so you can report either a specific month-year or average all Januaries later.</li>
+<li>The <code>sorted(by_month.items())</code> wrapper makes iteration chronological, so the printed first six lines walk <code>1981-01</code> forward rather than relying on insertion order.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> A plain <code>dict</code> would need <code>by_month.setdefault(key, []).append(t)</code> (or an <code>if key not in …</code> dance) to avoid <code>KeyError</code> on the first row of each month — <code>defaultdict(list)</code> creates the empty list for you. The reverse pitfall appears when <em>reading</em>: <code>by_month[(1981, 2)]</code> on a plain dict (or a misspelled key like <code>(1981, 2.0)</code>) raises <code>KeyError</code> instead of returning an average, so build keys consistently from <code>d.year, d.month</code>.</blockquote>
 <hr/>
-<h4>4. Count days above 25 °C</h4>
+<h2>4. Count days above 25 °C</h2>
+<p>Why it matters for analysts: threshold counts ("how many days over X?") are the simplest anomaly filter and the same shape as an Excel filter column plus a COUNT. Writing it as a comprehension keeps both the matches and the count available for follow-up questions.</p>
 <pre><code class="language-python">hot_days = [(d, t) for d, t in temps if t &gt; 25]
 print(&quot;days &gt; 25°C:&quot;, len(hot_days))  # 2
 print(hot_days)
 # [(datetime.date(1982, 1, 20), 25.2), (datetime.date(1982, 2, 15), 26.3)] — run it!</code></pre>
-<p>Only two scorchers in a decade of <em>minimum</em> temps — makes sense: these are overnight lows.</p>
+<p>Only two scorchers in a decade of <em>minimum</em> temps — makes sense: these are overnight lows, so exceeding 25 °C even at night is genuinely rare.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Exactly <code>2</code> days break <code>Temp &gt; 25</code>: <code>1982-01-20</code> at <code>25.2</code> and <code>1982-02-15</code> at <code>26.3</code> — the second one is the same date as the decade's overall hottest day from Section 2, so the two analyses agree.</li>
+<li>The comparison uses a strict <code>&gt;</code>, not <code>&gt;=</code>: a day at exactly <code>25.0</code> would <strong>not</strong> count, which is worth stating explicitly if a stakeholder asks "25 or above?".</li>
+<li>Both matches are kept as full <code>(date, temp)</code> tuples, so you can print the list for audit rather than only reporting a bare integer.</li>
+<li>Over 3650 days, 2 hits is <code>2/3650 ≈ 0.0005</code> — a useful reminder that mean-min temps and heatwave days are very different questions on the same column.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Threshold direction matters on sorted-looking data: <code>t &gt; 25</code> excludes <code>25.0</code>, while <code>t &gt;= 25</code> includes it. Also, don't compare temperatures as strings — <code>"9.5" &gt; "10.2"</code> is <code>True</code> lexicographically; the loader's <code>float(r["Temp"])</code> is what makes this filter trustworthy.</blockquote>
 <hr/>
-<h4>5. Longest run of consecutive days below 10 °C</h4>
+<h2>5. Longest run of consecutive days below 10 °C</h2>
+<p>Why it matters for analysts: streak and run detection ("longest cold snap," "consecutive days breached") cannot be done with a single filter — you must walk the series in calendar order and remember context from the previous row. The <code>prev_cold</code> / <code>prev_date</code> variables below are the standard state you'll reuse for any consecutive-day metric.</p>
 <p>Streak logic: walk the series in order; if today is cold <strong>and</strong> yesterday was the previous calendar day, extend the run; else start a new run.</p>
 <pre><code class="language-python">best_len = cur_len = 0
 best_start = best_end = None
@@ -151,9 +201,18 @@ for d, t in temps:
 
 print(f&quot;Longest cold streak: {best_len} days ({best_start} → {best_end})&quot;)
 # Longest cold streak: 71 days (1982-05-31 → 1982-08-09)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The winner is <code>71 days</code> from <code>1982-05-31 → 1982-08-09</code> — spanning the southern-hemisphere winter (June–August), which is exactly when you'd expect a sub-10 °C run of that length.</li>
+<li><code>best_start</code> / <code>best_end</code> are only updated when <code>cur_len &gt; best_len</code>, so ties keep the <strong>first</strong> longest streak found; a strict <code>&gt;=</code> would instead slide the window to the last tie.</li>
+<li><code>prev_cold</code> starts as <code>False</code>, so the very first cold day always begins a fresh run of <code>1</code> even if it happens to be the file's first row — no phantom run length of <code>0</code> or double-count.</li>
+<li>On a warm day (<code>t &gt;= 10</code>) both <code>cur_len</code> and <code>prev_cold</code> reset, but <code>prev_date</code> still updates: the next iteration can correctly measure a gap even across a warm period.</li>
+</ul>
 <blockquote>Why <code>.days == 1</code> matters: without the date check, any two cold days (even weeks apart) would merge into one “streak”.</blockquote>
+<blockquote><strong>Pitfall:</strong> Two guards must both pass before extending a run: <code>prev_cold</code> (yesterday qualified) <strong>and</strong> <code>(d - prev_date).days == 1</code> (yesterday was the actual previous calendar day). Dropping either one fails differently — without <code>prev_cold</code>, a warm yesterday followed by a cold day with a 1-day gap would wrongly extend; without the <code>.days == 1</code> check, a missing date or a two-day hole would glue separate cold snaps together into a fake record streak.</blockquote>
 <hr/>
-<h4>6. Anomaly flagging: |z| &gt; 2</h4>
+<h2>6. Anomaly flagging: |z| &gt; 2</h2>
+<p>Why it matters for analysts: z-scores turn raw readings into "how unusual is this?" so one threshold works across sensors with different means and spreads. Flagging <code>|z| &gt; 2</code> is the pure-Python version of an conditional-format rule on a stats sheet — worth a second look in ops dashboards without hand-picking cut-offs per month.</p>
 <pre><code class="language-python">mu = statistics.mean(all_t)
 sd = statistics.pstdev(all_t)
 anomalies = [(d, t, round((t - mu) / sd, 2))
@@ -163,30 +222,40 @@ anomalies = [(d, t, round((t - mu) / sd, 2))
 print(f&quot;{len(anomalies)} days with |z| &gt; 2&quot;)  # 170
 print(&quot;sample:&quot;, anomalies[:5])</code></pre>
 <p>A z-score is just “how many standard deviations from the mean.” |z| &gt; 2 ≈ the tails of a normal-ish distribution — worth a second look in ops dashboards.</p>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>170</code> of <code>3650</code> days trip the rule — about <code>0.0466</code> of the decade, which Exercise 3's follow-up checks against the ~4.6% a normal distribution predicts beyond 2 SD, so the empirical tails line up closely with theory here.</li>
+<li>Each anomaly is stored as <code>(date, temp, rounded_z)</code>: keeping the z value beside the raw temp lets a reviewer see <em>how</em> extreme a point is, not just that it crossed the line.</li>
+<li>The list comprehension uses <code>mu</code> and <code>sd</code> computed <strong>once</strong> from the full series; recomputing them inside the loop per row would be slower and could subtly change results if you ever switched to a rolling window by mistake.</li>
+<li>Because <code>abs(...)</code> is applied, both unusually cold (<code>z &lt; -2</code>) and unusually warm (<code>z &gt; +2</code>) days appear — the <code>0.0 °C</code> June day and the <code>26.3 °C</code> February day are both candidates for the tail.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Section 6 uses <code>statistics.pstdev</code> (population SD), while the Exercise 3 solution recomputes with <code>statistics.stdev</code> (sample SD). With n = 3650 the two are nearly identical and both still report <code>170</code> flagged days here — but if you switch datasets or small samples, pick one SD definition and use it consistently, or your z-scores and thresholds will quietly disagree between cells.</blockquote>
 <hr/>
-<h3>Exercises (do these!)</h3>
-<h4>Exercise 1 — Monthly mean temps dict</h4>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Monthly mean temps dict</h3>
 <p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. <em>Expected: 1981-01 ≈ 17.713; 1990-12 ≈ 14.368 (3 s.f. may differ slightly by rounding).</em></p>
 <p><strong>Follow-up:</strong> What is the full temperature range over the decade? Check: 26.3 C.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
+<details><summary>Hint</summary>
 <pre><code class="language-python">by_month = defaultdict(list)
 for d, t in temps:
     by_month[(d.year, d.month)].append(t)
 monthly_mean = {k: statistics.mean(v) for k, v in by_month.items()}
 print(monthly_mean[(1981, 1)], monthly_mean[(1990, 12)])</code></pre>
-<p>&lt;/details&gt;</p>
-<h4>Exercise 2 — Count days Temp &gt; 25</h4>
+</details>
+<h3>Exercise 2 — Count days Temp &gt; 25</h3>
 <p>How many days had <code>Temp &gt; 25</code>? Print the count and each <code>(date, temp)</code> pair. <em>Expected: 2 days — 1982-01-20 (25.2) and 1982-02-15 (26.3).</em></p>
 <p><strong>Follow-up:</strong> What fraction of 1982 (non-leap, 365 days) did the cold streak cover? Check: about 0.1945.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>List comprehension + <code>len()</code>: <code>hot = [(d,t) for d,t in temps if t &gt; 25]</code>. &lt;/details&gt;</p>
-<h4>Exercise 3 — Longest run Temp &lt; 10</h4>
+<details><summary>Hint</summary>
+<p>List comprehension + <code>len()</code>: <code>hot = [(d,t) for d,t in temps if t &gt; 25]</code>.</p>
+</details>
+<h3>Exercise 3 — Longest run Temp &lt; 10</h3>
 <p>Find the longest <strong>consecutive-calendar-day</strong> run where <code>Temp &lt; 10</code>. Print length and start/end dates. <em>Expected: 71 days, 1982-05-31 → 1982-08-09.</em></p>
 <p><strong>Follow-up:</strong> What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Check: 170 days, about 0.0466.</p>
-<p>&lt;details&gt; &lt;summary&gt;Hint&lt;/summary&gt;</p>
-<p>Reuse the streak walker from Section 5; the gap check is <code>(d - prev_date).days == 1</code>. &lt;/details&gt;</p>
+<details><summary>Hint</summary>
+<p>Reuse the streak walker from Section 5; the gap check is <code>(d - prev_date).days == 1</code>.</p>
+</details>
 <hr/>
-<h3>Solutions</h3>
+<h2>Solutions</h2>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 from collections import defaultdict
@@ -225,7 +294,9 @@ for d, t in temps:
         prev_cold = False
     prev_date = d
 print(f&quot;{best_len} days: {best_start} → {best_end}&quot;)
-# 71 days: 1982-05-31 → 1982-08-09# --- Follow-up 1 ---
+# 71 days: 1982-05-31 → 1982-08-09
+
+# --- Follow-up 1 ---
 tr = round(max(t for _, t in temps) - min(t for _, t in temps), 1)
 print(tr)  # 26.3
 assert tr == 26.3
@@ -243,7 +314,7 @@ _out = [d for d, t in temps if abs((t - _mu) / _sd) &gt; 2]
 shr = round(len(_out) / len(temps), 4)
 print(len(_out), shr)  # 170 0.0466
 assert len(_out) == 170 and shr == 0.0466</code></pre>
-<h4>What to learn next</h4>
+<h3>What to learn next</h3>
 <ul>
 <li>Rolling means: implement a 7-day window with <code>collections.deque(maxlen=7)</code>.</li>
 <li>Plotting: hand this list to <code>matplotlib.pyplot.plot(dates, temps)</code>.</li>

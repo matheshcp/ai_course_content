@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-05-ab-test-analysis",
+  "title": "A/B Test Analysis — Old vs New Page",
   "notebook": "lab-05-ab-test-analysis.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "ab_test.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Statistics",
+    "A/B Testing",
+    "Data"
+  ],
+  "description": "Analyze an A/B test: conversion rates, z-test, confidence interval, ship decision.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Experimentation Basics Track: Rates, Z-Test, Ship/No-Ship</h3>\n<blockquote><strong>Scenario:</strong> <code>ab_test.csv</code> logs <strong>294,478 sessions</strong> with <code>con_treat</code> (control/treatment), <code>page</code>, <code>converted</code> (0/1). Compute conversion rates, a two-proportion z-test, a 95% CI, and a minimum detectable effect — then <strong>conclude whether to ship</strong>.  <strong>You will learn:</strong> group-by rates, standard error, z-test (manual or scipy), power sketch, peeking pitfall. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + math/scipy. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Conversion by group</h3>\n<p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). <em>Expected: control 17723/147202 = 0.120399 · treatment 17514/147276 = 0.118920.</em></p>\n<p><strong>Follow-up:</strong> Express the lift relative to control. Check: about minus 1.23 percent.</p>\n<details><summary>Hint</summary>\n<p><code>df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\",\"count\",\"mean\"])</code>.</p>\n</details>\n<h3>Exercise 2 — Z-test + p-value</h3>\n<p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? <em>Expected: z ≈ −1.2369, p ≈ 0.2161 → not significant.</em></p>\n<p><strong>Follow-up:</strong> Confirm the observed diff lies inside the 95 percent CI. Check: minus 0.003824 &lt; diff &lt; 0.000865.</p>\n<details><summary>Hint</summary>\n<p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>.</p>\n</details>\n<h3>Exercise 3 — MDE at 80% power</h3>\n<p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. <em>Expected: ≈ 0.00335 absolute ≈ 2.78% of 0.1204.</em></p>\n<p><strong>Follow-up:</strong> Is the observed effect even detectable — compare its size to the MDE. Check: no, the test is underpowered for this effect.</p>\n<details><summary>Hint</summary>\n<p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:50:00",
+  "lab_duration": "50 Minutes",
+  "session_timeout": 4800,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-08-live-public-api",
+  "title": "Working with a Live Public API",
   "notebook": "lab-08-live-public-api.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-08-live-public-api/lab-08-live-public-api.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-08-live-public-api/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "offline_fixture.json"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "APIs",
+    "JSON",
+    "Data"
+  ],
+  "description": "Work with a live public JSON API: retry, cache, flatten, snapshot — offline-first.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Data Outside Files Track: HTTP, JSON, Caching, Backoff</h3>\n<blockquote><strong>Scenario:</strong> Fetch a free public JSON API (Open-Meteo forecast — no API key), handle timeouts and 429s with exponential backoff, cache the response to <code>api_cache.json</code>, flatten nested JSON into a DataFrame, and save <code>api_snapshot.csv</code>. An <strong>offline fixture</strong> is shipped so the lab runs with no network.  <strong>You will learn:</strong> <code>urllib.request</code>, JSON parsing, status codes, caching, schema flattening, polite retry. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Retry with exponential backoff</h3>\n<p>Simulate three 429 responses then success: write a loop that sleeps <code>2**attempt</code> seconds (use <code>0.01</code> as a stand-in sleep in tests) and returns a payload after the 4th try. Print the sleep schedule. <em>Expected sleeps: 1, 2, 4 (then success on attempt 3 → return). With <code>max_retries=4</code>: sequence of waits 1,2,4,8 if all fail.</em></p>\n<p><strong>Follow-up:</strong> What total seconds did the demo backoff wait? Check: 3.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-text\">max_retries = 4\nfor attempt in range(max_retries):\n    try:\n        ...  # request\n        break\n    except RateLimited:\n        time.sleep(2 ** attempt)</code></pre>\n</details>\n<h3>Exercise 2 — Flatten nested JSON to columns</h3>\n<p>Given <code>payload[\"daily\"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. <em>Expected: 3 rows (forecast_days=3); first row keys <code>date, tmax, tmin, precip_prob</code>.</em></p>\n<p><strong>Follow-up:</strong> Prove rows match the API day count. Check: 3 equals 3.</p>\n<details><summary>Hint</summary>\n<p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>.</p>\n</details>\n<h3>Exercise 3 — Save <code>api_snapshot.csv</code></h3>\n<p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. <em>Expected: <code>api_snapshot.csv</code> with 1 header + 3 data rows.</em></p>\n<p><strong>Follow-up:</strong> Prove every row carries the required keys. Check: date, tmax, tmin, precip_prob all present.</p>\n<details><summary>Hint</summary>\n<p><code>df.to_csv(\"api_snapshot.csv\", index=False)</code> or <code>csv.DictWriter</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:40:00",
+  "lab_duration": "40 Minutes",
+  "session_timeout": 4200,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

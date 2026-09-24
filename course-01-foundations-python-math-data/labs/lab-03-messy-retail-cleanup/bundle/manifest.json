@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-03-messy-retail-cleanup",
+  "title": "Messy Retail Cleanup Pipeline",
   "notebook": "lab-03-messy-retail-cleanup.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-03-messy-retail-cleanup/lab-03-messy-retail-cleanup.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-03-messy-retail-cleanup/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "warehouse_messy_data.csv"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Python",
+    "Data Cleaning",
+    "Data"
+  ],
+  "description": "Clean a messy 1000-row retail export and report stock value by category.",
+  "level": "Beginner–Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>Data Quality Track: From Dirty Warehouse Export to Clean CSV</h3>\n<blockquote><strong>Scenario:</strong> Warehouse hands you <code>warehouse_messy_data.csv</code> — 1000 rows of product inventory with mixed-case names, <code>Quantity</code> as <code>\"two hundred\"</code> / <code>\"NaN\"</code>, missing prices, inconsistent <code>Status</code>. Clean it with a reproducible pipeline and report <strong>stock value by Category</strong>.  <strong>You will learn:</strong> string normalisation, numeric coercion with fallbacks, date parsing (<code>dd/mm/yyyy</code>), validation rules, writing a cleaned CSV. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Beginner–Intermediate. <strong>Needs:</strong> Python 3.8+ (pandas optional). <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Fix Quantity word-numbers</h3>\n<p>Convert every <code>Quantity</code> with <code>parse_qty</code>. Print how many rows were <code>\"two hundred\"</code>, how many <code>\"NaN\"</code>, and the sum of all parseable quantities. <em>Expected: 160 × \"two hundred\" → 200 each; 158 × NaN → None; 842 parseable rows; sum of parseable qty = 135,900 (run the sum yourself to confirm).</em></p>\n<p><strong>Follow-up:</strong> What fraction of rows have parseable quantities? Check: 0.842.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">from collections import Counter\nc = Counter(r[&quot;Quantity&quot;] for r in rows)\nwords = c[&quot;two hundred&quot;]; missing = c[&quot;NaN&quot;]\ntotal = sum(parse_qty(r[&quot;Quantity&quot;]) or 0 for r in rows)</code></pre>\n</details>\n<h3>Exercise 2 — Flag invalid Status</h3>\n<p>Using <code>ALLOWED_STATUS = {\"In Stock\", \"Out of Stock\"}</code>, count rows whose <code>Status</code> is <strong>not</strong> allowed. Which status value causes all of them? <em>Expected: 328 rows, all <code>\"Low Stock\"</code>.</em></p>\n<p><strong>Follow-up:</strong> What is the average stock value per usable row? Check: about 4462.84.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED_STATUS]\nprint(len(bad), Counter(r[&quot;Status&quot;] for r in bad))</code></pre>\n</details>\n<h3>Exercise 3 — Inventory value per Category</h3>\n<p>Compute <code>Stock Value = Quantity * Price</code> only when both parse; sum by <code>Category</code>. Print the four category totals and the grand total. <em>Expected (2 d.p.): Electronics 830214.00 · Clothing 716252.50 · Furniture 796211.50 · Toys 607261.00 · Grand total 2949939.00 (661 usable rows).</em></p>\n<p><strong>Follow-up:</strong> Which category holds the most value? Check: Electronics.</p>\n<details><summary>Hint</summary>\n<p>Skip rows where <code>parse_qty</code> or <code>parse_price</code> returns <code>None</code> — do <strong>not</strong> treat missing as 0 for value (that understates inventory).</p>\n</details>\n<hr/>",
+  "duration": "01:00:00",
+  "lab_duration": "1 Hour",
+  "session_timeout": 5400,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }

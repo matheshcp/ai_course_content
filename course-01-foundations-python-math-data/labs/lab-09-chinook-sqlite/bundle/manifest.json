@@ -1,5 +1,6 @@
 {
   "lab_id": "lab-09-chinook-sqlite",
+  "title": "Relational Queries — Chinook Music DB",
   "notebook": "lab-09-chinook-sqlite.ipynb",
   "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-09-chinook-sqlite/lab-09-chinook-sqlite.ipynb",
   "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-01-foundations-python-math-data/labs/lab-09-chinook-sqlite/bundle/dataset.zip",
@@ -7,5 +8,19 @@
   "files": [
     "chinook.sqlite"
   ],
-  "host_notes": "Hosted on matheshcp/ai_course_content (branch main), same pattern as Lab model storage S3 colab-labs/<lab_id>/ mirrored to vlabs-colab-cache. Course 1 has no image assets; images_zip is null."
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "SQL",
+    "Pandas",
+    "Data"
+  ],
+  "description": "Query the Chinook music database with SQL: joins, revenue, customers, trends.",
+  "level": "Beginner–Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<h3>SQL for Analysts Track: JOIN, GROUP BY, Results → pandas</h3>\n<blockquote><strong>Scenario:</strong> <code>chinook.sqlite</code> is a music-store schema (artists, albums, tracks, invoices, customers). Answer revenue and customer questions with SQL, then load results into pandas for a monthly trend.  <strong>You will learn:</strong> <code>sqlite3.connect</code>, SELECT / JOIN / GROUP BY, subqueries, <code>pandas.read_sql</code>. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Beginner–Intermediate. <strong>Needs:</strong> sqlite3 (stdlib) + pandas. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Top 5 tracks by revenue</h3>\n<p>Run the Section 2 query. List track name and revenue for all 5. <em>Expected: five tracks each with revenue 3.98 — The Woman King, The Fix, Walkabout, Hot Girl, Gay Witch Hunt (ties).</em></p>\n<p><strong>Follow-up:</strong> What is mean monthly revenue? Check: 38.81.</p>\n<details><summary>Hint</summary>\n<p>Join <code>InvoiceLine → Track → Album → Artist</code>, <code>SUM(Quantity*UnitPrice)</code>, <code>ORDER BY revenue DESC LIMIT 5</code>.</p>\n</details>\n<h3>Exercise 2 — Customers with no purchases</h3>\n<p>LEFT JOIN customers to invoices; count rows where invoice is NULL. <em>Expected: 0 (all 59 customers have ≥1 invoice). Print 0 and explain the anti-pattern.</em></p>\n<p><strong>Follow-up:</strong> What share of revenue is Rock? Check: 0.355.</p>\n<details><summary>Hint</summary>\n<p><code>WHERE i.InvoiceId IS NULL</code> after <code>LEFT JOIN Invoice</code>.</p>\n</details>\n<h3>Exercise 3 — Monthly revenue trend</h3>\n<p>Group invoices by <code>strftime('%Y-%m', InvoiceDate)</code>. How many months? What is total revenue? <em>Expected: 60 months · total ≈ 2328.60.</em></p>\n<p><strong>Follow-up:</strong> Compare mean vs median customer spend — which way is it skewed? Check: 39.47 above 37.62, right-skewed.</p>\n<details><summary>Hint</summary>\n<p><code>SELECT strftime('%Y-%m', InvoiceDate) AS ym, ROUND(SUM(Total),2) … GROUP BY ym ORDER BY ym</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:50:00",
+  "lab_duration": "50 Minutes",
+  "session_timeout": 4800,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
 }
