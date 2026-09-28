@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-03-logistic-regression-churn",
+  "title": "Logistic Regression — Telco Churn",
+  "notebook": "lab-03-logistic-regression-churn.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-03-logistic-regression-churn/lab-03-logistic-regression-churn.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-03-logistic-regression-churn/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "Telco-Customer-Churn.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Classification",
+    "sklearn",
+    "Intermediate"
+  ],
+  "description": "Binary classification with logistic regression on telco churn.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> You are a data scientist at a telecom company. The marketing team wants to identify customers likely to churn (leave) so they can proactively offer retention incentives. You have 7,043 customer records with 20 features and a binary <code>Churn</code> target. Your task is to build a logistic regression classifier, interpret its coefficients, and tune the decision threshold for business needs. <strong>You will learn:</strong> binary classification, categorical encoding, logistic regression coefficients as log-odds, confusion matrix, precision/recall, threshold tuning. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Churn Base Rate</h3>\n<p>What percentage of customers in the dataset churned? <em>Expected: 26.54% (1,869 out of 7,043).</em></p>\n<p><strong>Follow-up:</strong> Why is the base rate important for evaluating classifier performance? Check: base rate value.</p>\n<h3>Exercise 2 — Precision and Recall at Threshold 0.5</h3>\n<p>Compute precision and recall using the default 0.5 threshold. <em>Expected: Precision = 0.6531, Recall = 0.5588.</em></p>\n<p><strong>Follow-up:</strong> Which metric matters more for a retention campaign — precision or recall? Check: both values.</p>\n<h3>Exercise 3 — Threshold for Recall ≥ 0.80</h3>\n<p>Find the highest threshold that achieves recall of at least 0.80. <em>Expected: 0.25 (precision = 0.4983, recall = 0.8075).</em></p>\n<p><strong>Follow-up:</strong> What happens to precision at this threshold? Check: precision at the chosen threshold.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import precision_score, recall_score\n\ndf = pd.read_csv(r&quot;D:\\downloads-D\\vilabs-images\\ailab-vilabs\\course-02-classical-machine-learning\\datasets\\Telco-Customer-Churn.csv&quot;)\ndf[&quot;TotalCharges&quot;] = pd.to_numeric(df[&quot;TotalCharges&quot;], errors=&quot;coerce&quot;)\ndf[&quot;TotalCharges&quot;] = df[&quot;TotalCharges&quot;].fillna(0)\ndf = df.drop(columns=[&quot;customerID&quot;])\ndf[&quot;Churn&quot;] = df[&quot;Churn&quot;].map({&quot;Yes&quot;: 1, &quot;No&quot;: 0})\nX = df.drop(columns=[&quot;Churn&quot;])\ny = df[&quot;Churn&quot;]\ncat_cols = X.select_dtypes(include=&quot;object&quot;).columns.tolist()\nX = pd.get_dummies(X, columns=cat_cols, drop_first=True)\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)\nmodel = LogisticRegression(max_iter=1000, random_state=42)\nmodel.fit(X_train, y_train)\ny_proba = model.predict_proba(X_test)[:, 1]\n\n# Exercise 1\nprint(f&quot;Churn rate: {y.mean():.4f}&quot;)\nprint(f&quot;Churn count: {y.sum()} / {len(y)}&quot;)\n\n# Exercise 2\ny_pred = (y_proba &gt;= 0.5).astype(int)\nprint(f&quot;Precision: {precision_score(y_test, y_pred):.4f}&quot;)\nprint(f&quot;Recall:    {recall_score(y_test, y_pred):.4f}&quot;)\n\n# Exercise 3\nfor t in np.arange(0.1, 0.9, 0.05):\n    y_pred_t = (y_proba &gt;= t).astype(int)\n    r = recall_score(y_test, y_pred_t)\n    if r &gt;= 0.80:\n        print(f&quot;Threshold {t:.2f}: recall = {r:.4f}&quot;)</code></pre>\n</details>\n<hr/>",
+  "duration": "01:00:00",
+  "lab_duration": "1 Hour",
+  "session_timeout": 5400,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

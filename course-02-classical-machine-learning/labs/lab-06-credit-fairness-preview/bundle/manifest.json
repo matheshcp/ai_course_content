@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-06-credit-fairness-preview",
+  "title": "Credit Risk + Fairness Basics",
+  "notebook": "lab-06-credit-fairness-preview.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-06-credit-fairness-preview/lab-06-credit-fairness-preview.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-06-credit-fairness-preview/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "german_credit_prepared.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Fairness",
+    "Responsible ML",
+    "Intermediate"
+  ],
+  "description": "Fairness metrics: group TPR, disparate impact, and mitigation sketch.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> The bank's legal team reviews your credit model and asks a uncomfortable question: \"Does it treat male and female applicants fairly?\" Overall accuracy looks fine — 74.5%. But averages can hide a lot. You dig into performance <em>by group</em> and find the model approves female applicants at a lower rate than males, even though their default rates are similar. This lab shows why \"equal accuracy\" is not the same as \"fair\", and previews how to measure and mitigate the gap. <strong>You will learn:</strong> how to compute group-wise accuracy and true-positive rate (TPR), what the disparate impact ratio measures and why 0.8 is a common legal benchmark, and one concrete mitigation — per-group decision thresholds. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — TPR by sex</h3>\n<p>Train the balanced logistic regression from section 1 and compute TPR separately for female and male applicants on the test set. Which group has the higher TPR? <em>Expected: female TPR ≈ 0.8500 (n=61), male TPR ≈ 0.7750 (n=139) — female is higher.</em></p>\n<p><strong>Follow-up:</strong> What are the false-positive rates? Check: female FPR ≈ 0.3415, male FPR ≈ 0.2525 — women are also falsely flagged more often.</p>\n<details><summary>Hint</summary>\n<p><code>confusion_matrix(g[\"y\"], g[\"pred\"]).ravel()</code> returns <code>(tn, fp, fn, tp)</code>; TPR = tp / (tp + fn).</p>\n</details>\n<h3>Exercise 2 — Disparate impact ratio</h3>\n<p>Compute the DI ratio (female approval rate / male approval rate) on the test set. Does it pass the four-fifths rule (DI ≥ 0.8)? <em>Expected: DI ≈ 0.8236 — just below 0.8, so it FAILS the four-fifths rule.</em></p>\n<p><strong>Follow-up:</strong> What are the actual default rates by sex? Check: female ≈ 0.3279, male ≈ 0.2878 — the approval gap is much larger than the base-rate gap.</p>\n<details><summary>Hint</summary>\n<p>DI = <code>(f[\"pred\"] == 0).mean() / (m[\"pred\"] == 0).mean()</code> where <code>f</code> and <code>m</code> are the per-group test frames.</p>\n</details>\n<h3>Exercise 3 — One mitigation idea</h3>\n<p>Using the per-group threshold sweep from section 3, find a female threshold that brings DI close to 1.0 while keeping overall accuracy near its original value. Report the threshold, DI, and accuracy. <em>Expected: t_female = 0.6 gives DI ≈ 0.9609 and accuracy ≈ 0.7500 (DI near parity, accuracy unchanged).</em></p>\n<p><strong>Follow-up:</strong> What happens to female TPR at t_female = 0.6? Check: it drops from ≈0.85 to ≈0.75 — the mitigation trades TPR parity for approval parity.</p>\n<details><summary>Hint</summary>\n<p><code>np.where(sex_te == \"female\", proba &gt;= t_f, proba &gt;= 0.5)</code> applies different thresholds per group.</p>\n</details>\n<hr/>",
+  "duration": "00:50:00",
+  "lab_duration": "50 Minutes",
+  "session_timeout": 4800,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

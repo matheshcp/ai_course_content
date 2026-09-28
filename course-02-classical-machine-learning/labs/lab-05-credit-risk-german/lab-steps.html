@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 05 — Credit Risk — German Credit</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 05 — Credit Risk — German Credit</h1>
+<div class="meta">
+<p><strong>Track</strong> Classification Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~60 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-05-credit-risk-german.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-05-credit-risk-german/lab-05-credit-risk-german.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>german_credit_data.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Preprocess mixed categorical/numeric credit data</li><li>Handle class imbalance with class_weight</li><li>Evaluate with ROC-AUC</li><li>Rank features via permutation importance</li></ul>
+
+<hr/>
+<h2>Intermediate: The Loan Officer's Scorecard</h2>
+<blockquote><strong>Scenario:</strong> You are the data scientist at a regional bank. The loan team wants a model that flags which applicants are likely to default, so a human officer can review risky cases before approving. You have 5,000 past applications with 21 features — a mix of numbers (loan amount, age, duration) and categories (checking account status, credit history, job). Only about 1 in 3 applicants is risky, so a lazy model that says "no risk" for everyone still looks decent. Your job is to build a model the bank can actually trust. <strong>You will learn:</strong> how to preprocess mixed categorical/numeric data with a ColumnTransformer, why class imbalance demands <code>class_weight</code>, how ROC-AUC measures ranking quality, and how to pick a decision threshold that matches business costs. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental map</h3>
+<table><thead><tr><th>Concept</th><th>One-line idea</th><th>Where it shows up</th></tr></thead><tbody>
+<tr><td>ColumnTransformer</td><td>Apply different preprocessing to different columns</td><td>OneHotEncoder for categories, StandardScaler for numbers</td></tr>
+<tr><td>Class imbalance</td><td>Risky applicants are the minority (~33%)</td><td><code>class_weight="balanced"</code></td></tr>
+<tr><td>ROC-AUC</td><td>How well the model ranks risky above safe</td><td>0.5 = coin flip, 1.0 = perfect ranking</td></tr>
+<tr><td>Decision threshold</td><td>The score cutoff for "approve" vs "review"</td><td>Default 0.5 is rarely optimal</td></tr>
+<tr><td>Permutation importance</td><td>Which features actually drive the model</td><td>Shuffle one column, watch AUC drop</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Preprocessing mixed data: one transformer to rule them all</h2>
+<p>The dataset mixes 13 categorical columns (strings like <code>less_0</code>, <code>skilled</code>) with 7 numeric ones. sklearn models need numbers, so categories must be encoded. The clean way is a <strong>ColumnTransformer</strong>: one-hot encode the categories, standard-scale the numbers, and pass everything to the model as a single matrix.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+print(f&quot;{len(cat_cols)} categorical, {len(num_cols)} numeric features&quot;)
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+print(f&quot;train: {len(X_tr)} rows, test: {len(X_te)} rows&quot;)
+print(f&quot;risk rate — train: {y_tr.mean():.4f}, test: {y_te.mean():.4f}&quot;)
+
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, random_state=42))
+clf.fit(X_tr, y_tr)
+print(&quot;model trained OK&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li><code>stratify=y</code> keeps the ~33% risk rate identical in train and test — essential with imbalanced data.</li>
+<li><code>handle_unknown="ignore"</code> lets the model survive a category at test time that never appeared in training.</li>
+<li>The pipeline bundles preprocessing + model, so <code>clf.predict(X_te)</code> applies the same transformations automatically.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Never fit the encoder or scaler on the full dataset before splitting — statistics from the test set would leak into training. Fitting inside a pipeline (as here) avoids this.</blockquote>
+<hr/>
+<h2>2. Class imbalance: don't let the majority win</h2>
+<p>With 66.6% "No Risk", a model that always predicts "No Risk" scores 66.6% accuracy and is useless. Two honest fixes: use a metric that sees through the class ratio (ROC-AUC, next section), and tell the model to care more about the minority class with <code>class_weight="balanced"</code>.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+
+for weighted in [False, True]:
+    cw = &quot;balanced&quot; if weighted else None
+    clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=cw, random_state=42))
+    clf.fit(X_tr, y_tr)
+    proba = clf.predict_proba(X_te)[:, 1]
+    auc = roc_auc_score(y_te, proba)
+    y_pred = clf.predict(X_te)
+    tn, fp, fn, tp = confusion_matrix(y_te, y_pred).ravel()
+    tpr = tp / (tp + fn)
+    acc = (tp + tn) / len(y_te)
+    print(f&quot;class_weight={str(cw):8s}  AUC={auc:.4f}  TPR={tpr:.4f}  accuracy={acc:.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li><code>class_weight="balanced"</code> boosts the true-positive rate (catches more risky applicants) at the cost of more false alarms.</li>
+<li>ROC-AUC barely moves — it measures <em>ranking</em>, which the weighting doesn't change much. Accuracy moves more.</li>
+<li>The trade-off is the whole game: catching more risk means reviewing more safe applicants.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Accuracy is the wrong target here. An 80%-accurate model that misses half the defaulters is worse for the bank than a 75%-accurate model that catches most of them.</blockquote>
+<hr/>
+<h2>3. ROC-AUC and choosing a threshold</h2>
+<p>ROC-AUC asks: "if I pick one risky and one safe applicant at random, how often does the model score the risky one higher?" It is threshold-free — it evaluates the ranking, not any single cutoff. The cutoff (threshold) is a separate business decision: lower it to catch more risk, higher it to reduce false alarms.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+proba = clf.predict_proba(X_te)[:, 1]
+print(f&quot;ROC-AUC: {roc_auc_score(y_te, proba):.4f}&quot;)
+
+print(&quot;\nthreshold sweep (balanced model):&quot;)
+for t in [0.3, 0.4, 0.5, 0.6, 0.7]:
+    yp = (proba &gt;= t).astype(int)
+    tn, fp, fn, tp = confusion_matrix(y_te, yp).ravel()
+    print(f&quot;  t={t}: TPR={tp/(tp+fn):.4f}  FPR={fp/(fp+tn):.4f}  precision={tp/(tp+fp):.4f}&quot;)
+
+fpr, tpr, thr = roc_curve(y_te, proba)
+best_t = thr[np.argmax(tpr - fpr)]
+print(f&quot;\nYouden&#x27;s J best threshold: {best_t:.4f} (TPR={tpr[np.argmax(tpr-fpr)]:.4f}, FPR={fpr[np.argmax(tpr-fpr)]:.4f})&quot;)
+
+plt.figure(figsize=(6, 5))
+plt.plot(fpr, tpr, label=f&quot;ROC curve (AUC = {roc_auc_score(y_te, proba):.3f})&quot;)
+plt.plot([0, 1], [0, 1], &quot;k--&quot;, label=&quot;coin flip&quot;)
+plt.xlabel(&quot;False positive rate&quot;)
+plt.ylabel(&quot;True positive rate&quot;)
+plt.title(&quot;ROC curve — credit risk model&quot;)
+plt.legend()
+plt.grid(alpha=0.3)
+plt.savefig(&quot;roc_curve.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
+plt.show()</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>AUC ≈ 0.87 means the model ranks a random risky applicant above a random safe one about 87% of the time.</li>
+<li>Lowering the threshold from 0.7 → 0.3 raises TPR (0.60 → 0.91) but also FPR (0.09 → 0.42).</li>
+<li>Youden's J (TPR − FPR) picks the threshold that best balances the two — here ≈ 0.37, well below the default 0.5.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> The "best" threshold depends on business costs. If missing a default costs 5× a false alarm, pick a lower threshold than Youden's J suggests. There is no universally correct cutoff.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Risk rate by checking status</h3>
+<p>Group the full dataset by <code>CheckingStatus</code> and compute the risk rate (fraction with <code>Risk == "Risk"</code>) for each group. Which group is riskiest, and which is safest? <em>Expected: no_checking ≈ 0.5665 (n=1993) is riskiest; less_0 ≈ 0.0930 (n=1398) is safest; 0_to_200 ≈ 0.2178; greater_200 ≈ 0.4164.</em></p>
+<p><strong>Follow-up:</strong> What is the overall risk rate across all 5,000 applicants? Check: ≈ 0.334.</p>
+<details><summary>Hint</summary>
+<p><code>df.groupby("CheckingStatus")["Risk"].apply(lambda s: (s == "Risk").mean())</code> gives the per-group rate.</p>
+</details>
+<h3>Exercise 2 — ROC-AUC of the pipeline</h3>
+<p>Train the balanced logistic regression from section 3 and compute ROC-AUC on the held-out test set. Then retrain without <code>class_weight</code> and compare. <em>Expected: balanced AUC ≈ 0.8664; unbalanced AUC ≈ 0.8666 (nearly identical — AUC is a ranking metric).</em></p>
+<p><strong>Follow-up:</strong> At the default 0.5 threshold, what is the balanced model's TPR? Check: ≈ 0.7545.</p>
+<details><summary>Hint</summary>
+<p><code>roc_auc_score(y_te, proba)</code> where <code>proba = clf.predict_proba(X_te)[:, 1]</code>.</p>
+</details>
+<h3>Exercise 3 — Top 5 features by permutation importance</h3>
+<p>Permutation importance measures how much the model's AUC drops when one feature is randomly shuffled — a model-agnostic way to rank what matters. Compute it on the test set and list the top 5 features. <em>Expected: EmploymentDuration (≈0.047), OwnsProperty (≈0.039), CheckingStatus (≈0.024), LoanDuration (≈0.016), ExistingCreditsCount (≈0.013).</em></p>
+<p><strong>Follow-up:</strong> Why is permutation importance computed on the <em>test</em> set, not the training set? Check: on training data the model may have memorized noise, so shuffling a useless feature shows no drop.</p>
+<details><summary>Hint</summary>
+<p><code>permutation_importance(clf, X_te, y_te, n_repeats=10, random_state=42, scoring="roc_auc")</code> returns importances aligned with <code>X.columns</code>.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+risk = df.groupby(&quot;CheckingStatus&quot;)[&quot;Risk&quot;].agg(total=&quot;count&quot;, risky=lambda s: (s == &quot;Risk&quot;).sum())
+risk[&quot;risk_rate&quot;] = risk[&quot;risky&quot;] / risk[&quot;total&quot;]
+print(risk.sort_values(&quot;risk_rate&quot;, ascending=False).round(4))
+print(&quot;overall risk rate:&quot;, round((df[&quot;Risk&quot;] == &quot;Risk&quot;).mean(), 4))
+
+# --- Solution 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import roc_auc_score, confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+for weighted in [False, True]:
+    cw = &quot;balanced&quot; if weighted else None
+    clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=cw, random_state=42))
+    clf.fit(X_tr, y_tr)
+    proba = clf.predict_proba(X_te)[:, 1]
+    print(f&quot;class_weight={str(cw):8s}  AUC={roc_auc_score(y_te, proba):.4f}&quot;)
+
+# --- Solution 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.inspection import permutation_importance
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+pi = permutation_importance(clf, X_te, y_te, n_repeats=10, random_state=42, scoring=&quot;roc_auc&quot;)
+imp = pd.Series(pi.importances_mean, index=X.columns).sort_values(ascending=False)
+print(imp.head(5).round(4))
+
+# --- Follow-up 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+overall = (df[&quot;Risk&quot;] == &quot;Risk&quot;).mean()
+assert abs(overall - 0.334) &lt; 0.005, overall
+print(&quot;overall risk rate:&quot;, round(overall, 4))
+
+# --- Follow-up 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+tn, fp, fn, tp = confusion_matrix(y_te, y_pred).ravel()
+tpr = tp / (tp + fn)
+assert abs(tpr - 0.7545) &lt; 0.01, tpr
+print(&quot;balanced TPR @0.5:&quot;, round(tpr, 4))
+
+# --- Follow-up 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.inspection import permutation_importance
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = df.drop(columns=[&quot;CustomerID&quot;])
+y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
+X = df.drop(columns=[&quot;Risk&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+pi = permutation_importance(clf, X_te, y_te, n_repeats=10, random_state=42, scoring=&quot;roc_auc&quot;)
+imp = pd.Series(pi.importances_mean, index=X.columns).sort_values(ascending=False)
+top5 = imp.head(5)
+assert &quot;EmploymentDuration&quot; in top5.index and &quot;OwnsProperty&quot; in top5.index
+print(&quot;top 5:&quot;, list(top5.index))</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Gradient boosting (XGBoost/LightGBM) — the usual upgrade over logistic regression for tabular credit data.</li>
+<li>Calibration: making predicted probabilities match real-world frequencies.</li>
+<li>Fairness auditing — what happens when the model treats demographic groups differently (Lab 06).</li>
+</ul>
+<p><em>Files in this folder: german_credit_data.csv (5000 rows: CustomerID, CheckingStatus, LoanDuration, CreditHistory, LoanPurpose, LoanAmount, ExistingSavings, EmploymentDuration, InstallmentPercent, Sex, OthersOnLoan, CurrentResidenceDuration, OwnsProperty, Age, InstallmentPlans, Housing, ExistingCreditsCount, Job, Dependents, Telephone, ForeignWorker, Risk).</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 05 · Executable notebook: <code>lab-05-credit-risk-german.ipynb</code></footer>
+</body>
+</html>

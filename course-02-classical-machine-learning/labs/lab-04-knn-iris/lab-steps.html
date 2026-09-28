@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 04 — K-Nearest Neighbors on Iris</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 04 — K-Nearest Neighbors on Iris</h1>
+<div class="meta">
+<p><strong>Track</strong> Classification Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~40 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-04-knn-iris.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-04-knn-iris/lab-04-knn-iris.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>iris.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Understand distance-based classification</li><li>Scale features before KNN</li><li>Select k via cross-validation</li><li>Classify a hand-entered flower</li></ul>
+
+<hr/>
+<h2>Beginner: The Flower Shop That Learns by "Nearest Neighbors"</h2>
+<blockquote><strong>Scenario:</strong> You run a flower shop's online ordering desk. Customers upload a photo, and your app must guess the iris species from four measurements (sepal length/width, petal length/width) so it can route the order to the right grower. You have 150 labeled flowers. Instead of writing rules, you let the app "look at the most similar flowers it has seen" — this is the k-Nearest Neighbors (KNN) idea. <strong>You will learn:</strong> how distance metrics define "similarity", why feature scaling can make or break a distance-based model, how to pick k with cross-validation, and how to read a decision boundary. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental map</h3>
+<table><thead><tr><th>Concept</th><th>One-line idea</th><th>Where it shows up</th></tr></thead><tbody>
+<tr><td>Distance metric</td><td>How we measure "how far apart" two flowers are</td><td>Euclidean vs Manhattan</td></tr>
+<tr><td>Feature scaling</td><td>Putting all measurements on the same scale</td><td>StandardScaler</td></tr>
+<tr><td>k (neighbors)</td><td>How many nearby flowers vote on the species</td><td>k=1 is noisy, huge k is blurry</td></tr>
+<tr><td>Cross-validation</td><td>Honest estimate of accuracy on unseen flowers</td><td>5-fold CV curve</td></tr>
+<tr><td>Decision boundary</td><td>The map of "which region is which species"</td><td>2D contour plot</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. How KNN thinks: "tell me who your neighbors are"</h2>
+<p>KNN has no training step in the usual sense. To classify a new flower, it measures the distance from that flower to every flower in the training set, finds the <strong>k closest</strong> ones, and lets them vote. The majority species wins. The only real choice (beyond k) is <strong>how you measure distance</strong>.</p>
+<p>The two most common metrics:</p>
+<ul>
+<li><strong>Euclidean</strong> — straight-line distance: <code>sqrt(sum((a - b)^2))</code>. Think "as the crow flies".</li>
+<li><strong>Manhattan</strong> — sum of absolute differences: <code>sum(|a - b|)</code>. Think "city blocks" in a grid-like city.</li>
+</ul>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+for metric in [&quot;euclidean&quot;, &quot;manhattan&quot;]:
+    pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5, metric=metric))
+    scores = cross_val_score(pipe, X, y, cv=5)
+    print(f&quot;{metric:10s} 5-fold CV accuracy: {scores.mean():.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Both metrics give very high accuracy (mid-0.90s) — iris is a friendly dataset.</li>
+<li>The two metrics rarely tie exactly; small differences come from how each weights large per-feature gaps.</li>
+<li>Scaling is baked into the pipeline so both metrics see comparable features.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> KNN is a <em>lazy</em> learner — it stores all 150 rows and does all the work at prediction time. With 150 rows that's instant; with 10 million rows it would crawl.</blockquote>
+<hr/>
+<h2>2. Why scaling matters (and when it doesn't)</h2>
+<p>Distance is measured in the units of your features. If one feature ranges 0–100 and another 0–1, the big-range feature dominates every distance calculation — the small-range feature might as well not exist.</p>
+<p>A quick way to see this: compute each feature's <strong>share of the total squared distance</strong> (variance) across the dataset.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+# Share of total squared distance contributed by each feature (unscaled)
+sq = ((X - X.mean()) ** 2).mean()
+shares = sq / sq.sum()
+print(&quot;Unscaled squared-distance contribution:&quot;)
+print(shares.round(4))
+
+# Now blow up one feature x100 and watch KNN suffer
+X_bad = X.copy()
+X_bad[&quot;sepal_length&quot;] = X_bad[&quot;sepal_length&quot;] * 100
+acc_bad = cross_val_score(KNeighborsClassifier(n_neighbors=5), X_bad, y, cv=5).mean()
+print(f&quot;\nUnscaled, sepal_length x100, k=5 CV accuracy: {acc_bad:.4f}&quot;)
+
+# And the fix: scale it
+acc_scaled = cross_val_score(
+    make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5)), X, y, cv=5
+).mean()
+print(f&quot;Scaled, k=5 CV accuracy: {acc_scaled:.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Unscaled, <code>petal_length</code> contributes ~68% of the squared distance — it drowns out the others.</li>
+<li>On iris the damage is mild because all four features are already in centimeters (similar units). The x100 experiment shows what happens when units diverge: accuracy collapses.</li>
+<li><code>StandardScaler</code> (subtract mean, divide by std) gives every feature an equal vote.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Scaling is not a free lunch — it assumes every feature <em>deserves</em> equal weight. If one feature is genuinely far more predictive, scaling can slightly dilute it. Always compare scaled vs unscaled with cross-validation, not with a single train/test split.</blockquote>
+<hr/>
+<h2>3. Choosing k with cross-validation</h2>
+<p>k is the one knob you must tune. k=1 memorizes the training set (one noisy neighbor decides everything). Huge k smooths into a blur where the majority class wins everywhere. The honest way to choose is a <strong>cross-validation curve</strong>: try many k values, estimate accuracy for each, pick the best.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+ks = list(range(1, 16))
+scaled_acc, unscaled_acc = [], []
+for k in ks:
+    s_scaled = cross_val_score(
+        make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5
+    ).mean()
+    s_raw = cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean()
+    scaled_acc.append(s_scaled)
+    unscaled_acc.append(s_raw)
+    print(f&quot;k={k:2d}  scaled={s_scaled:.4f}  unscaled={s_raw:.4f}&quot;)
+
+best_k = ks[int(np.argmax(scaled_acc))]
+print(f&quot;\nBest scaled k = {best_k} (CV accuracy {max(scaled_acc):.4f})&quot;)
+
+plt.figure(figsize=(8, 4))
+plt.plot(ks, scaled_acc, &quot;o-&quot;, label=&quot;scaled&quot;)
+plt.plot(ks, unscaled_acc, &quot;s--&quot;, label=&quot;unscaled&quot;)
+plt.xlabel(&quot;k (neighbors)&quot;)
+plt.ylabel(&quot;5-fold CV accuracy&quot;)
+plt.title(&quot;KNN accuracy vs k&quot;)
+plt.legend()
+plt.grid(alpha=0.3)
+plt.savefig(&quot;knn_k_curve.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
+plt.show()</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Accuracy is flat-to-noisy for small k, peaks in the middle (k≈5–8), then slowly declines as k grows.</li>
+<li>On iris, unscaled edges out scaled — a reminder that scaling is a tool, not a religion.</li>
+<li>The curve is the deliverable: it turns "what should k be?" from a guess into a measurement.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Never pick k on the full dataset and then report that same number as your accuracy — that's training on the test set. The CV score is the honest estimate.</blockquote>
+<hr/>
+<h2>4. Reading a decision boundary</h2>
+<p>A decision boundary is the map of "which region of feature-space belongs to which species". We can draw it by laying a fine grid over two features, asking the trained model to label every grid point, and coloring the regions. We use the two petal features because they separate the species best.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+import matplotlib.pyplot as plt
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+le = LabelEncoder()
+y_enc = le.fit_transform(y)
+pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
+pipe.fit(X, y_enc)
+
+# Build a grid over the two petal features
+x_min, x_max = X[&quot;petal_length&quot;].min() - 0.5, X[&quot;petal_length&quot;].max() + 0.5
+y_min, y_max = X[&quot;petal_width&quot;].min() - 0.5, X[&quot;petal_width&quot;].max() + 0.5
+xx, yy = np.meshgrid(np.linspace(x_min, x_max, 200), np.linspace(y_min, y_max, 200))
+grid = pd.DataFrame({&quot;petal_length&quot;: xx.ravel(), &quot;petal_width&quot;: yy.ravel()})
+Z = pipe.predict(grid).reshape(xx.shape)
+
+plt.figure(figsize=(8, 5))
+plt.contourf(xx, yy, Z, alpha=0.3, cmap=&quot;viridis&quot;)
+for species, marker in zip([&quot;setosa&quot;, &quot;versicolor&quot;, &quot;virginica&quot;], [&quot;o&quot;, &quot;s&quot;, &quot;^&quot;]):
+    sub = df[df[&quot;species&quot;] == species]
+    plt.scatter(sub[&quot;petal_length&quot;], sub[&quot;petal_width&quot;], label=species, marker=marker, edgecolor=&quot;k&quot;)
+plt.xlabel(&quot;petal_length&quot;)
+plt.ylabel(&quot;petal_width&quot;)
+plt.title(&quot;KNN (k=5) decision regions — petal features&quot;)
+plt.legend()
+plt.savefig(&quot;knn_decision_boundary.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
+plt.show()</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Setosa is a clean island — it is linearly separable from the other two.</li>
+<li>Versicolor and virginica share a fuzzy border; that is where the occasional misclassification lives.</li>
+<li>The boundary is not a straight line — KNN carves piecewise regions around clusters of points.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> A 2D boundary plot is a <em>visualization</em> of a model that may use more features. Here we deliberately trained on only the two plotted features so the picture matches the model.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — The k-curve</h3>
+<p>Using the code from section 3, record the scaled CV accuracy for every k from 1 to 15. Which k gives the best scaled accuracy, and what is that accuracy? Also note the best unscaled accuracy. <em>Expected: best scaled k = 6 or 8 at CV accuracy ≈ 0.9667; best unscaled ≈ 0.9800 (k = 6, 7, 10, 11, or 12).</em></p>
+<p><strong>Follow-up:</strong> Why does accuracy dip at k=1 and again for large k? Check: k=1 scaled ≈ 0.9467, k=15 scaled ≈ 0.9400.</p>
+<details><summary>Hint</summary>
+<p><code>np.argmax(scaled_acc)</code> gives the index of the best k; add 1 because k starts at 1.</p>
+</details>
+<h3>Exercise 2 — The scale trap</h3>
+<p>Compute each feature's share of total squared distance (section 2). Which feature dominates? Then multiply <code>sepal_length</code> by 100 and re-run 5-fold CV with k=5 unscaled. How much accuracy do you lose? <em>Expected: petal_length dominates with ≈ 0.68 of squared distance; the x100 experiment drops CV accuracy to ≈ 0.7333 (from ≈ 0.96).</em></p>
+<p><strong>Follow-up:</strong> What does <code>StandardScaler</code> do to each feature's mean and std? Check: after scaling, every feature has mean ≈ 0 and std ≈ 1.</p>
+<details><summary>Hint</summary>
+<p><code>StandardScaler().fit(X).transform(X)</code> returns a numpy array; wrap it in a DataFrame to inspect <code>.mean()</code> and <code>.std()</code>.</p>
+</details>
+<h3>Exercise 3 — Classify a hand-entered flower</h3>
+<p>Train a scaled KNN (k=5) on all four features. Predict the species of a flower with sepal_length=6.0, sepal_width=2.9, petal_length=4.5, petal_width=1.5. What is the predicted species and the class probabilities? <em>Expected: predicted species = versicolor, probabilities ≈ [0.0, 1.0, 0.0] (setosa, versicolor, virginica).</em></p>
+<p><strong>Follow-up:</strong> Move petal_length to 5.5 and keep everything else. What changes? Check: the prediction flips to virginica.</p>
+<details><summary>Hint</summary>
+<p>Build a DataFrame with the same column names as X, then call <code>pipe.predict_proba(flower)</code>. The columns of <code>pipe.classes_</code> give the probability order.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+ks = list(range(1, 16))
+scaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]
+unscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]
+best_k = ks[int(np.argmax(scaled_acc))]
+print(f&quot;best scaled k={best_k}, acc={max(scaled_acc):.4f}&quot;)
+print(f&quot;best unscaled acc={max(unscaled_acc):.4f}&quot;)
+
+# --- Solution 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+sq = ((X - X.mean()) ** 2).mean()
+print(&quot;distance shares:&quot;)
+print((sq / sq.sum()).round(4))
+
+X_bad = X.copy()
+X_bad[&quot;sepal_length&quot;] = X_bad[&quot;sepal_length&quot;] * 100
+acc_bad = cross_val_score(KNeighborsClassifier(n_neighbors=5), X_bad, y, cv=5).mean()
+print(f&quot;x100 unscaled k=5 CV acc: {acc_bad:.4f}&quot;)
+
+# --- Solution 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+
+pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
+pipe.fit(X, y)
+flower = pd.DataFrame({&quot;sepal_length&quot;: [6.0], &quot;sepal_width&quot;: [2.9], &quot;petal_length&quot;: [4.5], &quot;petal_width&quot;: [1.5]})
+print(&quot;prediction:&quot;, pipe.predict(flower)[0])
+print(&quot;probabilities:&quot;, pipe.predict_proba(flower).round(3))
+print(&quot;classes:&quot;, pipe.classes_)
+
+# --- Follow-up 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import cross_val_score
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+acc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()
+acc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()
+assert abs(acc1 - 0.9467) &lt; 0.01, acc1
+assert abs(acc15 - 0.9400) &lt; 0.01, acc15
+print(f&quot;k=1: {acc1:.4f}, k=15: {acc15:.4f} — both worse than the middle&quot;)
+
+# --- Follow-up 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.preprocessing import StandardScaler
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+Xs = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
+assert np.allclose(Xs.mean(), 0, atol=1e-9)
+assert np.allclose(Xs.std(ddof=0), 1, atol=1e-9)
+print(&quot;scaled means ~ 0, scaled stds ~ 1: OK&quot;)
+
+# --- Follow-up 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-01-foundations-python-math-data\datasets\iris.csv&quot;)
+X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
+y = df[&quot;species&quot;]
+pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
+pipe.fit(X, y)
+flower2 = pd.DataFrame({&quot;sepal_length&quot;: [6.0], &quot;sepal_width&quot;: [2.9], &quot;petal_length&quot;: [5.5], &quot;petal_width&quot;: [1.5]})
+pred2 = pipe.predict(flower2)[0]
+assert pred2 == &quot;virginica&quot;, pred2
+print(&quot;petal_length=5.5 -&gt;&quot;, pred2)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>KNN regression (predict a number, not a label, by averaging neighbors).</li>
+<li>The curse of dimensionality: distances get meaningless in very high-dimensional spaces.</li>
+<li>Decision trees — a model that carves the same kind of regions with axis-aligned rules.</li>
+</ul>
+<p><em>Files in this folder: iris.csv (150 rows: sepal_length, sepal_width, petal_length, petal_width, species).</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 04 · Executable notebook: <code>lab-04-knn-iris.ipynb</code></footer>
+</body>
+</html>

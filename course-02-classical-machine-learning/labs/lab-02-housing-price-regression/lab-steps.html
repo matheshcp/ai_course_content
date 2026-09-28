@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 02 — Housing Price Regression — Full Workflow</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 02 — Housing Price Regression — Full Workflow</h1>
+<div class="meta">
+<p><strong>Track</strong> Regression Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~75 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-02-housing-price-regression.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-02-housing-price-regression/lab-02-housing-price-regression.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>housing.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Preprocess mixed numeric/categorical features</li><li>Compare LinearRegression vs RandomForest</li><li>Use cross-validation for honest evaluation</li><li>Read feature importance for model insight</li></ul>
+
+<hr/>
+<h2>Real Estate: Predicting California Housing Prices</h2>
+<blockquote><strong>Scenario:</strong> You are a data science consultant for a real estate investment firm. The firm wants to predict median house values in California districts using features like location, income, and housing density. You have 20,640 census block-group records. Your task is to build and compare regression models, handle missing data, encode categorical variables, and identify the most important features. <strong>You will learn:</strong> train/test split, median imputation, one-hot encoding, LinearRegression vs RandomForest, cross-validation, feature importance. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Concept</th><th>What it means</th><th>Where it shows up</th></tr></thead><tbody>
+<tr><td>Train/test split</td><td>Hold out 20% of data for unbiased evaluation</td><td><code>train_test_split(test_size=0.2)</code></td></tr>
+<tr><td>Median imputation</td><td>Fill missing values with the column median</td><td><code>SimpleImputer(strategy="median")</code></td></tr>
+<tr><td>One-hot encoding</td><td>Convert categories to binary columns</td><td><code>pd.get_dummies()</code></td></tr>
+<tr><td>LinearRegression</td><td>Linear model — fast, interpretable</td><td><code>LinearRegression()</code></td></tr>
+<tr><td>RandomForest</td><td>Ensemble of decision trees — captures non-linearity</td><td><code>RandomForestRegressor()</code></td></tr>
+<tr><td>Cross-validation</td><td>K-fold evaluation for robust estimates</td><td><code>cross_val_score()</code></td></tr>
+<tr><td>Feature importance</td><td>Which features drive predictions</td><td><code>rf.feature_importances_</code></td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Load and Explore the Data</h2>
+<p>The California housing dataset contains 20,640 census block groups. The target is <code>median_house_value</code> (in hundreds of thousands of dollars). Features include location (longitude/latitude), housing age, room counts, population, households, median income, and ocean proximity category.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+print(df.shape)
+print(df.head())
+print(df.dtypes)
+print(df.isnull().sum())
+print(df[&quot;ocean_proximity&quot;].value_counts())</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>20,640 rows, 10 columns (9 features + 1 target).</li>
+<li><code>total_bedrooms</code> has missing values — we must impute them.</li>
+<li><code>ocean_proximity</code> is categorical with 5 distinct values — needs encoding.</li>
+<li><code>median_house_value</code> ranges up to 500,001 (capped).</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Never fit an imputer on the full dataset before splitting — that leaks test information into training. Fit on train only.</blockquote>
+<hr/>
+<h2>2. Preprocess: Impute and Encode</h2>
+<p>We split first, then fit a median imputer on the training data only. For the categorical <code>ocean_proximity</code> column, we use one-hot encoding so both linear and tree models can consume it.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_test_num = pd.DataFrame(
+    imputer.transform(X_test.select_dtypes(include=[np.number])),
+    columns=X_test.select_dtypes(include=[np.number]).columns,
+    index=X_test.index,
+)
+
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)
+
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+X_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)
+
+print(f&quot;Train shape: {X_train_proc.shape}&quot;)
+print(f&quot;Test shape:  {X_test_proc.shape}&quot;)
+print(f&quot;Missing in train: {X_train_proc.isnull().sum().sum()}&quot;)
+print(f&quot;Missing in test:  {X_test_proc.isnull().sum().sum()}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>After imputation, zero missing values remain.</li>
+<li>One-hot encoding adds 4 binary columns (5 categories − 1 dropped reference).</li>
+<li>The processed feature matrix has 13 columns (9 numeric + 4 one-hot).</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>pd.get_dummies</code> on train and test separately can produce different columns. Use <code>reindex</code> to align test columns with train.</blockquote>
+<hr/>
+<h2>3. Baseline: Mean Predictor</h2>
+<p>Before building a real model, establish a baseline. The simplest possible model always predicts the training mean. Any real model should beat this.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import mean_absolute_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+baseline_pred = np.full_like(y_test, y_train.mean())
+baseline_mae = mean_absolute_error(y_test, baseline_pred)
+print(f&quot;Baseline (mean) MAE: ${baseline_mae:,.2f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The baseline MAE tells you how far off a naive guess would be.</li>
+<li>This is the number your models must beat to be useful.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Always compute the baseline on the training mean, not the test mean — using test data for the baseline is leakage.</blockquote>
+<hr/>
+<h2>4. Linear Regression vs Random Forest</h2>
+<p>We fit both a LinearRegression and a RandomForestRegressor on the same preprocessed data and compare their test MAE.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_test_num = pd.DataFrame(
+    imputer.transform(X_test.select_dtypes(include=[np.number])),
+    columns=X_test.select_dtypes(include=[np.number]).columns,
+    index=X_test.index,
+)
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+X_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)
+
+lr = LinearRegression()
+lr.fit(X_train_proc, y_train)
+lr_pred = lr.predict(X_test_proc)
+lr_mae = mean_absolute_error(y_test, lr_pred)
+print(f&quot;Linear Regression MAE: ${lr_mae:,.2f}&quot;)
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+rf.fit(X_train_proc, y_train)
+rf_pred = rf.predict(X_test_proc)
+rf_mae = mean_absolute_error(y_test, rf_pred)
+print(f&quot;Random Forest MAE:     ${rf_mae:,.2f}&quot;)
+print(f&quot;Improvement:           ${lr_mae - rf_mae:,.2f} ({(1 - rf_mae/lr_mae)*100:.1f}%)&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Random Forest typically outperforms Linear Regression on this dataset because it captures non-linear relationships and feature interactions.</li>
+<li>The improvement in MAE shows how much those non-linear patterns matter.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Random Forests can overfit if trees are too deep. Use <code>max_depth</code> or <code>min_samples_leaf</code> to control complexity.</blockquote>
+<hr/>
+<h2>5. Cross-Validation Comparison</h2>
+<p>A single train/test split can be noisy. We use 5-fold cross-validation to get a more robust estimate of model performance.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+
+lr_cv = cross_val_score(
+    LinearRegression(), X_train_proc, y_train,
+    cv=5, scoring=&quot;neg_mean_absolute_error&quot;
+)
+rf_cv = cross_val_score(
+    RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1),
+    X_train_proc, y_train, cv=5, scoring=&quot;neg_mean_absolute_error&quot;
+)
+
+print(f&quot;LR  CV MAE: ${-lr_cv.mean():,.2f} (+/- ${lr_cv.std():,.2f})&quot;)
+print(f&quot;RF  CV MAE: ${-rf_cv.mean():,.2f} (+/- ${rf_cv.std():,.2f})&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Cross-validation gives a mean and standard deviation across 5 folds.</li>
+<li>If RF's CV MAE is lower than LR's, the improvement is robust, not a fluke of one split.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Use <code>neg_mean_absolute_error</code> (sklearn convention: higher is better, so MAE is negated). Remember to negate the result.</blockquote>
+<hr/>
+<h2>6. Feature Importance</h2>
+<p>Random Forest provides feature importances that show which features drive predictions. We plot them to identify the top predictors.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestRegressor
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+rf.fit(X_train_proc, y_train)
+
+importances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)
+importances = importances.sort_values(ascending=True)
+
+fig, ax = plt.subplots(figsize=(8, 6))
+importances.plot(kind=&quot;barh&quot;, ax=ax, color=&quot;steelblue&quot;)
+ax.set_xlabel(&quot;Feature Importance&quot;)
+ax.set_title(&quot;Random Forest — Feature Importance (Housing)&quot;)
+plt.tight_layout()
+plt.show()
+
+print(&quot;Top 3 features:&quot;)
+print(importances.sort_values(ascending=False).head(3))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li><code>median_income</code> is almost always the dominant predictor.</li>
+<li><code>ocean_proximity</code> one-hot columns and location features (longitude/latitude) also contribute.</li>
+<li>Feature importance helps you explain the model to stakeholders.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Feature importance from Random Forest can be biased toward high-cardinality features. Use permutation importance for a more reliable ranking.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Baseline Mean-Predictor MAE</h3>
+<p>Compute the MAE of a model that always predicts the training-set mean house value. <em>Expected: $92,893.94</em></p>
+<p><strong>Follow-up:</strong> Why is this baseline important? Check: baseline MAE value.</p>
+<h3>Exercise 2 — Random Forest vs Linear Regression MAE</h3>
+<p>Compare the test MAE of both models. Which is better and by how much? <em>Expected: RF MAE = $31,889.38; LR MAE = $50,752.61</em></p>
+<p><strong>Follow-up:</strong> Why does Random Forest outperform Linear Regression here? Check: improvement percentage.</p>
+<h3>Exercise 3 — Top 3 Features</h3>
+<p>Identify the three most important features from the Random Forest. <em>Expected: median_income (0.4839), ocean_proximity_INLAND (0.1465), longitude (0.1073).</em></p>
+<p><strong>Follow-up:</strong> What does <code>median_income</code> dominating tell you about the housing market? Check: top feature name and importance value.</p>
+<details><summary>Hint</summary>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_test_num = pd.DataFrame(
+    imputer.transform(X_test.select_dtypes(include=[np.number])),
+    columns=X_test.select_dtypes(include=[np.number]).columns,
+    index=X_test.index,
+)
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+X_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+rf.fit(X_train_proc, y_train)
+
+# Exercise 1
+baseline_pred = np.full_like(y_test, y_train.mean())
+print(mean_absolute_error(y_test, baseline_pred))
+
+# Exercise 2
+from sklearn.linear_model import LinearRegression
+lr = LinearRegression()
+lr.fit(X_train_proc, y_train)
+print(f&quot;LR MAE: {mean_absolute_error(y_test, lr.predict(X_test_proc)):.2f}&quot;)
+print(f&quot;RF MAE: {mean_absolute_error(y_test, rf.predict(X_test_proc)):.2f}&quot;)
+
+# Exercise 3
+importances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)
+print(importances.sort_values(ascending=False).head(3))</code></pre>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+X = df.drop(columns=[&quot;median_house_value&quot;])
+y = df[&quot;median_house_value&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+imputer = SimpleImputer(strategy=&quot;median&quot;)
+X_train_num = pd.DataFrame(
+    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
+    columns=X_train.select_dtypes(include=[np.number]).columns,
+    index=X_train.index,
+)
+X_test_num = pd.DataFrame(
+    imputer.transform(X_test.select_dtypes(include=[np.number])),
+    columns=X_test.select_dtypes(include=[np.number]).columns,
+    index=X_test.index,
+)
+X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)
+X_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)
+X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
+X_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)
+
+lr = LinearRegression()
+lr.fit(X_train_proc, y_train)
+lr_mae = mean_absolute_error(y_test, lr.predict(X_test_proc))
+
+rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
+rf.fit(X_train_proc, y_train)
+rf_mae = mean_absolute_error(y_test, rf.predict(X_test_proc))
+
+# --- Solution 1 ---
+baseline_pred = np.full_like(y_test, y_train.mean())
+baseline_mae = mean_absolute_error(y_test, baseline_pred)
+print(f&quot;Baseline MAE: ${baseline_mae:,.2f}&quot;)
+
+# --- Solution 2 ---
+print(f&quot;LR MAE: ${lr_mae:,.2f}&quot;)
+print(f&quot;RF MAE: ${rf_mae:,.2f}&quot;)
+print(f&quot;RF is ${(lr_mae - rf_mae):,.2f} better ({(1 - rf_mae/lr_mae)*100:.1f}% improvement)&quot;)
+
+# --- Solution 3 ---
+importances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)
+top3 = importances.sort_values(ascending=False).head(3)
+print(&quot;Top 3 features:&quot;)
+print(top3)
+
+# --- Follow-up 1 ---
+print(f&quot;Baseline MAE = ${baseline_mae:,.2f} — any useful model must beat this.&quot;)
+
+# --- Follow-up 2 ---
+assert rf_mae &lt; lr_mae, &quot;Random Forest should beat Linear Regression&quot;
+print(f&quot;RF beats LR by ${(lr_mae - rf_mae):,.2f}&quot;)
+
+# --- Follow-up 3 ---
+assert top3.index[0] == &quot;median_income&quot;, &quot;median_income should be the top feature&quot;
+print(f&quot;Top feature: {top3.index[0]} (importance = {top3.iloc[0]:.4f})&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Gradient boosting (XGBoost, LightGBM) for even better regression performance</li>
+<li>Hyperparameter tuning with GridSearchCV or RandomizedSearchCV</li>
+<li>Feature engineering: creating interaction terms and polynomial features</li>
+</ul>
+<p><em>Files in this folder: housing.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 02 · Executable notebook: <code>lab-02-housing-price-regression.ipynb</code></footer>
+</body>
+</html>

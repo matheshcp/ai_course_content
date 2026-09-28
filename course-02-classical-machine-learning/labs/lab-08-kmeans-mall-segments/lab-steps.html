@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 08 — Customer Segments — Mall K-Means</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 08 — Customer Segments — Mall K-Means</h1>
+<div class="meta">
+<p><strong>Track</strong> Unsupervised Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~50 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-08-kmeans-mall-segments.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-08-kmeans-mall-segments/lab-08-kmeans-mall-segments.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Mall_Customers.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Apply K-Means clustering to customer data</li><li>Use elbow method and silhouette score</li><li>Standardise features before clustering</li><li>Interpret centroids as marketing personas</li></ul>
+
+<hr/>
+<h2>Customer Analytics: Mall Customer Segmentation with K-Means</h2>
+<blockquote><strong>Scenario:</strong> A shopping mall's marketing team has collected data on 200 customers — age, annual income, and spending score — but no predefined segments. They want to discover natural groupings so they can tailor promotions: a "high-income big-spender" campaign makes no sense for a "budget-conscious retiree" segment. You will use K-Means clustering to find these segments and give each a marketing persona. <strong>You will learn:</strong> unsupervised learning vs supervised, why feature scaling matters, the elbow method for choosing k, silhouette score for cluster quality, and how to interpret cluster centroids as business personas. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Concept</th><th>Where it appears</th><th>Why it matters</th></tr></thead><tbody>
+<tr><td>Unsupervised learning</td><td>Section 1</td><td>No labels — the algorithm finds structure on its own</td></tr>
+<tr><td>StandardScaler</td><td>Section 1</td><td>Income (15–137) would dominate age (18–70) without scaling</td></tr>
+<tr><td>Elbow method</td><td>Section 2</td><td>Pick k where adding more clusters stops helping</td></tr>
+<tr><td>Silhouette score</td><td>Section 2</td><td>Measures how well-separated clusters are (-1 to 1)</td></tr>
+<tr><td>Centroid interpretation</td><td>Section 3</td><td>Turns numbers into marketing personas</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Unsupervised Learning and Feature Scaling</h2>
+<p>In <strong>supervised</strong> learning (like the MNIST lab), every row comes with a label and the algorithm learns to predict it. In <strong>unsupervised</strong> learning there are no labels — the algorithm's job is to find hidden structure in the features themselves. <strong>K-Means</strong> is the most common unsupervised algorithm: it partitions points into <code>k</code> clusters by minimizing the squared distance from each point to its cluster center (centroid).</p>
+<p>A critical preprocessing step: K-Means uses Euclidean distance, so features with larger scales dominate. Annual income ranges 15–137 while age ranges 18–70 — without scaling, income would pull clusters along its axis almost exclusively. <strong>StandardScaler</strong> transforms each feature to mean 0, standard deviation 1, putting all features on equal footing.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+
+mall = pd.read_csv(&quot;Mall_Customers.csv&quot;)
+print(mall.head())
+print(f&quot;\nShape: {mall.shape}&quot;)
+print(mall.describe().round(2))
+
+# Select the three numeric features
+features = [&quot;Age&quot;, &quot;Annual Income (k$)&quot;, &quot;Spending Score (1-100)&quot;]
+X = mall[features].to_numpy()
+
+# Scale: zero mean, unit variance per feature
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+print(&quot;\nBefore scaling — feature means:&quot;, X.mean(axis=0).round(2))
+print(&quot;Before scaling — feature stds: &quot;, X.std(axis=0).round(2))
+print(&quot;After scaling  — feature means:&quot;, X_scaled.mean(axis=0).round(2))
+print(&quot;After scaling  — feature stds: &quot;, X_scaled.std(axis=0).round(2))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>The dataset has 200 rows and 5 columns; <code>CustomerID</code> and <code>Genre</code> are not used for clustering (ID is an identifier, Genre is categorical).</li>
+<li>After scaling, every feature has mean ≈ 0 and std ≈ 1 — no single feature can dominate the distance calculation.</li>
+<li><code>Spending Score (1-100)</code> is already a 1–100 rating, but scaling still matters because its variance differs from the others.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Fitting the scaler on the full dataset and then clustering leaks information. In a real pipeline you would fit on training data only — but with 200 rows and no prediction task, fitting on all data is acceptable here.</blockquote>
+<hr/>
+<h2>2. Choosing k: Elbow Method and Silhouette Score</h2>
+<p>How many clusters should we use? Two complementary diagnostics:</p>
+<ul>
+<li><strong>Elbow method:</strong> Run K-Means for k = 1, 2, 3, … and plot the <strong>inertia</strong> (sum of squared distances to each centroid). Inertia always decreases as k grows, but the rate of decrease slows — the "elbow" where the curve bends is a good k.</li>
+<li><strong>Silhouette score:</strong> For each point, measure how similar it is to its own cluster vs the nearest other cluster. Ranges from -1 (wrong cluster) to +1 (well-separated). Higher is better.</li>
+</ul>
+<pre><code class="language-python">from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+inertias, silhouettes = [], []
+K_RANGE = range(1, 11)
+
+for k in K_RANGE:
+    km = KMeans(n_clusters=k, random_state=42, n_init=10)
+    km.fit(X_scaled)
+    inertias.append(km.inertia_)
+    if k &gt; 1:
+        silhouettes.append(silhouette_score(X_scaled, km.labels_))
+    else:
+        silhouettes.append(float(&quot;nan&quot;))
+
+print(&quot; k   Inertia   Silhouette&quot;)
+for k, ine, sil in zip(K_RANGE, inertias, silhouettes):
+    print(f&quot;{k:2d}  {ine:8.2f}  {sil:10.4f}&quot;)
+
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.plot(list(K_RANGE), inertias, &quot;bo-&quot;)
+plt.title(&quot;Elbow Method&quot;)
+plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Inertia&quot;)
+plt.subplot(1, 2, 2)
+plt.plot(list(K_RANGE)[1:], silhouettes[1:], &quot;ro-&quot;)
+plt.title(&quot;Silhouette Score&quot;)
+plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Silhouette&quot;)
+plt.tight_layout()
+plt.savefig(&quot;elbow_silhouette.png&quot;, dpi=100)
+plt.show()
+print(&quot;Saved elbow_silhouette.png&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Inertia drops sharply from k=1 (600.0) to k=5 (168.3), then the drops get smaller — the elbow is around k=5.</li>
+<li>Silhouette peaks at k=6 (≈ 0.428), slightly above k=5 (≈ 0.417) — both are reasonable choices.</li>
+<li>Silhouette values around 0.4 indicate moderately separated structure — real-world customer data is rarely cleanly separable.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Always set <code>n_init=10</code> (or higher) in sklearn's K-Means. The algorithm is sensitive to random centroid initialization; multiple runs and taking the best result makes your clusters reproducible.</blockquote>
+<hr/>
+<h2>3. Interpreting Centroids as Marketing Personas</h2>
+<p>Once we pick k, the real business value comes from <strong>interpreting</strong> the clusters. We transform the centroids back to the original scale (inverse transform) so we can read them as real ages, incomes, and spending scores. With k=5 we get the classic five mall segments:</p>
+<pre><code class="language-python">K = 5
+km = KMeans(n_clusters=K, random_state=42, n_init=10)
+labels = km.fit_predict(X_scaled)
+
+# Inverse-transform centroids to original units for interpretation
+centroids = scaler.inverse_transform(km.cluster_centers_)
+centroid_df = pd.DataFrame(centroids, columns=features)
+centroid_df[&quot;Cluster&quot;] = range(K)
+print(centroid_df.round(1))
+
+# Profile each cluster with real data
+for c in range(K):
+    sub = mall[labels == c]
+    print(f&quot;\nCluster {c} (n={len(sub)}):&quot;)
+    print(f&quot;  Avg age:    {sub[&#x27;Age&#x27;].mean():.1f}&quot;)
+    print(f&quot;  Avg income: {sub[&#x27;Annual Income (k$)&#x27;].mean():.1f}k&quot;)
+    print(f&quot;  Avg spend:  {sub[&#x27;Spending Score (1-100)&#x27;].mean():.1f}&quot;)
+
+# Visualize: income vs spending, colored by cluster
+plt.figure(figsize=(7, 5))
+for c in range(K):
+    sub = mall[labels == c]
+    plt.scatter(sub[&quot;Annual Income (k$)&quot;], sub[&quot;Spending Score (1-100)&quot;],
+                label=f&quot;Cluster {c}&quot;, s=30)
+plt.xlabel(&quot;Annual Income (k$)&quot;)
+plt.ylabel(&quot;Spending Score (1-100)&quot;)
+plt.title(&quot;Mall Customer Segments (k=5)&quot;)
+plt.legend()
+plt.savefig(&quot;mall_segments.png&quot;, dpi=100)
+plt.show()
+print(&quot;Saved mall_segments.png&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Cluster 2 (n=40): income ≈ 86k, spend ≈ 82 — <strong>"Premium Customers"</strong>: high earners who spend freely. Target with luxury goods and VIP offers.</li>
+<li>Cluster 3 (n=39): income ≈ 86k, spend ≈ 19 — <strong>"Frugal High-Earners"</strong>: big paychecks but tight wallets. Target with investment products and value messaging.</li>
+<li>Cluster 1 (n=54): age ≈ 25, spend ≈ 62 — <strong>"Young Enthusiasts"</strong>: early-career, moderate income, high spend. Target with trendy products and social media campaigns.</li>
+<li>Cluster 0 (n=20): income ≈ 27k, spend ≈ 18 — <strong>"Budget Shoppers"</strong>: low income, low spend. Target with discounts and essentials.</li>
+<li>Cluster 4 (n=47): age ≈ 56, spend ≈ 49 — <strong>"Mainstream Seniors"</strong>: older, middle income, moderate spend. Target with convenience and loyalty programs.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Reading cluster profiles from the scaled centroids directly. A scaled income of 1.5 means nothing to a marketing team — always inverse-transform to original units before interpreting.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Elbow Method</h3>
+<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. <em>Expected: elbow at k=5; inertia at k=5 ≈ 168.25.</em></p>
+<p><strong>Follow-up:</strong> What is the inertia at k=1? Check: 600.00 (equals 200 rows × 3 features, since each feature has variance 1 after scaling).</p>
+<h3>Exercise 2 — Best k by Silhouette</h3>
+<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? <em>Expected: k=6 with silhouette ≈ 0.4284.</em></p>
+<p><strong>Follow-up:</strong> What is the silhouette score at k=5? Check: ≈ 0.4166.</p>
+<h3>Exercise 3 — Name the Segments</h3>
+<p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., "Young Enthusiasts: age ~25, high spend"). Report the cluster sizes. <em>Expected: sizes 20, 54, 40, 39, 47 for clusters 0–4.</em></p>
+<p><strong>Follow-up:</strong> Which cluster has the highest average income? Check: clusters 2 and 3 both ≈ 86.1k.</p>
+<details><summary>Hint</summary>
+<p>For Exercise 3, use <code>scaler.inverse_transform(km.cluster_centers_)</code> to get centroids in original units, then loop over clusters and print <code>mall[labels == c].mean()</code>.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+mall = pd.read_csv(&quot;Mall_Customers.csv&quot;)
+features = [&quot;Age&quot;, &quot;Annual Income (k$)&quot;, &quot;Spending Score (1-100)&quot;]
+X_scaled = StandardScaler().fit_transform(mall[features].to_numpy())
+
+inertias = []
+for k in range(1, 11):
+    km = KMeans(n_clusters=k, random_state=42, n_init=10).fit(X_scaled)
+    inertias.append(km.inertia_)
+
+plt.figure(figsize=(7, 4))
+plt.plot(range(1, 11), inertias, &quot;bo-&quot;)
+plt.title(&quot;Elbow Method&quot;)
+plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Inertia&quot;)
+plt.savefig(&quot;elbow.png&quot;, dpi=100); plt.show()
+print(f&quot;Inertia at k=5: {inertias[4]:.2f}&quot;)
+
+# --- Solution 2 ---
+from sklearn.metrics import silhouette_score
+
+silhouettes = {}
+for k in range(2, 11):
+    km = KMeans(n_clusters=k, random_state=42, n_init=10).fit(X_scaled)
+    silhouettes[k] = silhouette_score(X_scaled, km.labels_)
+
+best_k = max(silhouettes, key=silhouettes.get)
+print(f&quot;Best k: {best_k} with silhouette {silhouettes[best_k]:.4f}&quot;)
+for k, s in silhouettes.items():
+    print(f&quot;  k={k}: {s:.4f}&quot;)
+
+# --- Solution 3 ---
+K = 5
+scaler = StandardScaler().fit(mall[features].to_numpy())
+X_scaled = scaler.transform(mall[features].to_numpy())
+km = KMeans(n_clusters=K, random_state=42, n_init=10)
+labels = km.fit_predict(X_scaled)
+
+centroids = scaler.inverse_transform(km.cluster_centers_)
+for c in range(K):
+    sub = mall[labels == c]
+    print(f&quot;Cluster {c} (n={len(sub)}): &quot;
+          f&quot;age={sub[&#x27;Age&#x27;].mean():.1f}, &quot;
+          f&quot;income={sub[&#x27;Annual Income (k$)&#x27;].mean():.1f}k, &quot;
+          f&quot;spend={sub[&#x27;Spending Score (1-100)&#x27;].mean():.1f}&quot;)
+
+# --- Follow-up 1 ---
+assert abs(inertias[0] - 600.0) &lt; 0.01
+print(f&quot;PASS: inertia at k=1 = {inertias[0]:.2f}&quot;)
+
+# --- Follow-up 2 ---
+assert abs(silhouettes[5] - 0.4166) &lt; 0.001
+print(f&quot;PASS: silhouette at k=5 = {silhouettes[5]:.4f}&quot;)
+
+# --- Follow-up 3 ---
+sizes = [int((labels == c).sum()) for c in range(K)]
+assert sizes == [20, 54, 40, 39, 47]
+print(f&quot;PASS: cluster sizes = {sizes}&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Try DBSCAN, which finds clusters of arbitrary shape and doesn't require choosing k.</li>
+<li>Apply PCA before clustering to visualize high-dimensional segments in 2D.</li>
+<li>Use Gaussian Mixture Models for soft clustering (each customer gets a probability of belonging to each segment).</li>
+<li>Explore hierarchical clustering and dendrograms for a visual approach to choosing k.</li>
+<li>Move to Course 3 (Deep Learning) and see how neural networks learn features automatically instead of relying on hand-picked ones.</li>
+</ul>
+<p><em>Files in this folder: Mall_Customers.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 08 · Executable notebook: <code>lab-08-kmeans-mall-segments.ipynb</code></footer>
+</body>
+</html>

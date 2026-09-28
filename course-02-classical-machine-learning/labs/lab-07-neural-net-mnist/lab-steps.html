@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 07 — Neural Net from Scratch — MNIST</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 07 — Neural Net from Scratch — MNIST</h1>
+<div class="meta">
+<p><strong>Track</strong> Deep Learning Track</p>
+<p><strong>Level</strong> Intermediate–Advanced · <strong>Time</strong> ~75 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-07-neural-net-mnist.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-07-neural-net-mnist/lab-07-neural-net-mnist.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>mnist_train.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Build a feed-forward MLP with numpy only</li><li>Implement forward pass, ReLU, softmax, cross-entropy</li><li>Train with one epoch loop and plot accuracy curve</li><li>Compare learning rates and inspect confusion</li></ul>
+
+<hr/>
+<h2>Computer Vision: Handwritten Digit Recognition with a Neural Network from Scratch</h2>
+<blockquote><strong>Scenario:</strong> You are building the core engine for a postal service that must automatically read handwritten ZIP codes on envelopes. Before reaching for a deep-learning framework, your team wants to understand exactly what happens inside a neural network — the forward pass, the loss, and the gradient updates — by building one from scratch with numpy only. <strong>You will learn:</strong> perceptron → MLP intuition, forward pass with matrix multiplication, ReLU and softmax activations, cross-entropy loss, one full backpropagation training epoch, learning-rate effects, and reading a confusion matrix. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate–Advanced. <strong>Needs:</strong> pandas + numpy + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Concept</th><th>Where it appears</th><th>Why it matters</th></tr></thead><tbody>
+<tr><td>Perceptron → MLP</td><td>Section 1</td><td>One neuron can't separate digits; layers can</td></tr>
+<tr><td>Forward pass</td><td>Section 1</td><td>Matrix multiply + activation = prediction</td></tr>
+<tr><td>ReLU / softmax</td><td>Section 1</td><td>Non-linearity + probability distribution</td></tr>
+<tr><td>Cross-entropy loss</td><td>Section 2</td><td>How wrong are we, numerically?</td></tr>
+<tr><td>Backpropagation</td><td>Section 2</td><td>Chain rule assigns blame to each weight</td></tr>
+<tr><td>Learning rate</td><td>Exercise 2</td><td>Too big diverges, too small crawls</td></tr>
+<tr><td>Confusion matrix</td><td>Exercise 3</td><td>Which digits get mixed up?</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. From Perceptron to MLP: The Forward Pass</h2>
+<p>A <strong>perceptron</strong> is a single neuron: it computes <code>output = activation(w · x + b)</code>. A single perceptron can only draw one straight line through data — it fails on anything non-linearly separable (like distinguishing handwritten 3s from 8s). The fix is a <strong>multi-layer perceptron (MLP)</strong>: stack neurons into layers so the network can carve the input space into complex regions.</p>
+<p>Our architecture for MNIST:</p>
+<pre><code>Input (784) → Dense(64, ReLU) → Dense(10, softmax)</code></pre>
+<ul>
+<li><strong>784 inputs</strong> = one per pixel in a 28×28 grayscale image.</li>
+<li><strong>64 hidden neurons</strong> with <strong>ReLU</strong> (<code>max(0, z)</code>) — the non-linearity that makes deep networks work.</li>
+<li><strong>10 outputs</strong> with <strong>softmax</strong> — converts raw scores into a probability distribution over digits 0–9.</li>
+</ul>
+<p>The forward pass is just matrix multiplication plus activation, applied layer by layer:</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Load the first 1000 rows — enough to train in seconds on CPU
+df = pd.read_csv(&quot;mnist_train.csv&quot;, nrows=1000)
+X = df.iloc[:, 1:].to_numpy(dtype=float) / 255.0   # pixels → [0, 1]
+y = df[&quot;label&quot;].to_numpy()                          # digit labels 0–9
+
+# One-hot encode labels: digit 3 → [0,0,0,1,0,0,0,0,0,0]
+Y = np.eye(10)[y]
+
+# Initialize weights (small random values) and biases (zeros)
+rng = np.random.default_rng(42)
+W1 = rng.normal(0, 0.1, size=(784, 64))
+b1 = np.zeros(64)
+W2 = rng.normal(0, 0.1, size=(64, 10))
+b2 = np.zeros(10)
+
+def relu(z):
+    return np.maximum(z, 0)
+
+def softmax(z):
+    z = z - z.max(axis=1, keepdims=True)   # numerical stability
+    e = np.exp(z)
+    return e / e.sum(axis=1, keepdims=True)
+
+# Forward pass
+z1 = X @ W1 + b1        # (1000, 64)  — hidden pre-activation
+a1 = relu(z1)           # (1000, 64)  — hidden activation
+z2 = a1 @ W2 + b2       # (1000, 10)  — output pre-activation
+probs = softmax(z2)     # (1000, 10)  — class probabilities
+
+predicted = probs.argmax(axis=1)
+accuracy = (predicted == y).mean()
+print(f&quot;Untrained accuracy: {accuracy:.4f}  (random guessing ≈ 0.10)&quot;)
+print(f&quot;Probability row sums to 1: {np.allclose(probs.sum(axis=1), 1.0)}&quot;)
+print(f&quot;Sample prediction for row 0: digit {predicted[0]}, true label {y[0]}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Untrained accuracy is ~0.06–0.10, close to random guessing (1/10) — the network knows nothing yet.</li>
+<li>Each row of <code>probs</code> sums to exactly 1.0 — softmax guarantees a valid probability distribution.</li>
+<li><code>X @ W1</code> is a single matrix multiply: (1000×784) @ (784×64) → (1000×64). The whole batch is processed at once.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Forgetting to scale pixels to [0, 1]. Raw pixel values (0–255) make the initial activations huge, softmax saturates, and gradients vanish — the network will barely learn.</blockquote>
+<hr/>
+<h2>2. Training: Cross-Entropy Loss and Backpropagation</h2>
+<p><strong>Cross-entropy loss</strong> measures how far the predicted probability distribution is from the true one. For a single example with true class <code>c</code>: <code>loss = -log(p_c)</code>. Averaged over the batch:</p>
+<pre><code>loss = -mean( log( probs[range(N), y] ) )</code></pre>
+<p><strong>Backpropagation</strong> applies the chain rule to compute how much each weight contributed to the error, then gradient descent nudges each weight opposite to its gradient:</p>
+<pre><code>W ← W - lr * dW</code></pre>
+<p>One complete training epoch = forward pass → loss → backward pass → weight update:</p>
+<pre><code class="language-python">def train_epoch(X, Y, W1, b1, W2, b2, lr):
+    N = len(X)
+    # --- Forward ---
+    z1 = X @ W1 + b1
+    a1 = relu(z1)
+    z2 = a1 @ W2 + b2
+    probs = softmax(z2)
+
+    # --- Loss ---
+    loss = -np.log(probs[np.arange(N), Y.argmax(axis=1)] + 1e-12).mean()
+
+    # --- Backward ---
+    dz2 = (probs - Y) / N                    # gradient of loss w.r.t. z2
+    dW2 = a1.T @ dz2                         # (64, 10)
+    db2 = dz2.sum(axis=0)                    # (10,)
+
+    da1 = dz2 @ W2.T                         # (1000, 64)
+    dz1 = da1 * (z1 &gt; 0)                     # ReLU derivative
+    dW1 = X.T @ dz1                          # (784, 64)
+    db1 = dz1.sum(axis=0)                    # (64,)
+
+    # --- Update ---
+    W2 -= lr * dW2
+    b2 -= lr * db2
+    W1 -= lr * dW1
+    b1 -= lr * db1
+    return loss, probs
+
+# Train for 200 epochs, recording accuracy each epoch
+losses, accuracies = [], []
+for epoch in range(200):
+    loss, probs = train_epoch(X, Y, W1, b1, W2, b2, lr=0.1)
+    losses.append(loss)
+    accuracies.append((probs.argmax(axis=1) == y).mean())
+
+print(f&quot;Epoch   0: loss={losses[0]:.4f}  acc={accuracies[0]:.4f}&quot;)
+print(f&quot;Epoch  49: loss={losses[49]:.4f}  acc={accuracies[49]:.4f}&quot;)
+print(f&quot;Epoch 199: loss={losses[199]:.4f}  acc={accuracies[199]:.4f}&quot;)
+
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.plot(losses)
+plt.title(&quot;Cross-Entropy Loss&quot;)
+plt.xlabel(&quot;Epoch&quot;)
+plt.subplot(1, 2, 2)
+plt.plot(accuracies)
+plt.title(&quot;Training Accuracy&quot;)
+plt.xlabel(&quot;Epoch&quot;)
+plt.tight_layout()
+plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100)
+plt.show()
+print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Loss drops from ~2.38 (≈ -log(0.1), random) to ~0.30 — the network is becoming confident and correct.</li>
+<li>Accuracy climbs from ~0.06 to ~0.94 — a from-scratch numpy net reaches ~94% on MNIST.</li>
+<li>The curve is steepest in the first ~25 epochs, then flattens — most learning happens early.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Using a learning rate that is too large (e.g., 1.0) causes the loss to oscillate or diverge to NaN. Too small (e.g., 0.001) and 200 epochs won't be enough. 0.1 is a sweet spot for this setup.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — 200-Epoch Training Curve</h3>
+<p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. <em>Expected: final accuracy ≈ 0.937; accuracy first exceeds 0.90 around epoch 128.</em></p>
+<p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30? Check: loss[0] ≈ 2.376.</p>
+<h3>Exercise 2 — Learning Rate Showdown</h3>
+<p>Train two identical networks (same seed) with <code>lr=0.1</code> and <code>lr=0.01</code> for 200 epochs each. Plot both accuracy curves on the same axes. Report the final accuracy for each. <em>Expected: lr=0.1 → ≈ 0.937; lr=0.01 → ≈ 0.651.</em></p>
+<p><strong>Follow-up:</strong> At epoch 50, what is the accuracy gap between the two? Check: lr=0.1 ≈ 0.812 vs lr=0.01 ≈ 0.271.</p>
+<h3>Exercise 3 — Confusion Matrix: 3 vs 8</h3>
+<p>Digits 3 and 8 are the most commonly confused pair. Train the network, then build a 2×2 confusion matrix using only the test rows whose true label is 3 or 8. Report the matrix and the accuracy on this subset. <em>Expected: matrix [[90, 0], [8, 85]] (rows = true [3, 8], cols = predicted [3, 8]); subset accuracy ≈ 0.956.</em></p>
+<p><strong>Follow-up:</strong> How many true 8s were misclassified as 3? Check: 8.</p>
+<details><summary>Hint</summary>
+<p>For Exercise 3, filter with <code>mask = (y == 3) | (y == 8)</code>, then loop over <code>(true, pred)</code> pairs and increment <code>cm[int(true==8), int(pred==8)]</code>.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv(&quot;mnist_train.csv&quot;, nrows=1000)
+X = df.iloc[:, 1:].to_numpy(dtype=float) / 255.0
+y = df[&quot;label&quot;].to_numpy()
+Y = np.eye(10)[y]
+
+rng = np.random.default_rng(42)
+W1 = rng.normal(0, 0.1, size=(784, 64)); b1 = np.zeros(64)
+W2 = rng.normal(0, 0.1, size=(64, 10)); b2 = np.zeros(10)
+
+def relu(z): return np.maximum(z, 0)
+def softmax(z):
+    z = z - z.max(axis=1, keepdims=True)
+    e = np.exp(z)
+    return e / e.sum(axis=1, keepdims=True)
+
+losses, accuracies = [], []
+for epoch in range(200):
+    z1 = X @ W1 + b1; a1 = relu(z1)
+    probs = softmax(a1 @ W2 + b2)
+    N = len(X)
+    loss = -np.log(probs[np.arange(N), y] + 1e-12).mean()
+    dz2 = (probs - Y) / N
+    dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
+    dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
+    W2 -= 0.1 * dW2; b2 -= 0.1 * db2
+    W1 -= 0.1 * (X.T @ dz1); b1 -= 0.1 * dz1.sum(axis=0)
+    losses.append(loss)
+    accuracies.append((probs.argmax(axis=1) == y).mean())
+
+first_90 = next(i for i, a in enumerate(accuracies) if a &gt; 0.90)
+print(f&quot;Final accuracy: {accuracies[-1]:.4f}&quot;)
+print(f&quot;First epoch &gt; 0.90: {first_90}&quot;)
+
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1); plt.plot(losses); plt.title(&quot;Loss&quot;); plt.xlabel(&quot;Epoch&quot;)
+plt.subplot(1, 2, 2); plt.plot(accuracies); plt.title(&quot;Accuracy&quot;); plt.xlabel(&quot;Epoch&quot;)
+plt.tight_layout(); plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100); plt.show()
+
+# --- Solution 2 ---
+def train(lr, epochs=200):
+    rng = np.random.default_rng(42)
+    W1 = rng.normal(0, 0.1, (784, 64)); b1 = np.zeros(64)
+    W2 = rng.normal(0, 0.1, (64, 10)); b2 = np.zeros(10)
+    accs = []
+    for ep in range(epochs):
+        z1 = X @ W1 + b1; a1 = relu(z1)
+        probs = softmax(a1 @ W2 + b2)
+        N = len(X)
+        dz2 = (probs - Y) / N
+        dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
+        dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
+        W2 -= lr * dW2; b2 -= lr * db2
+        W1 -= lr * (X.T @ dz1); b1 -= lr * dz1.sum(axis=0)
+        accs.append((probs.argmax(axis=1) == y).mean())
+    return accs
+
+acc_01 = train(0.1)
+acc_001 = train(0.01)
+print(f&quot;lr=0.1  final: {acc_01[-1]:.4f}&quot;)
+print(f&quot;lr=0.01 final: {acc_001[-1]:.4f}&quot;)
+
+plt.figure(figsize=(7, 4))
+plt.plot(acc_01, label=&quot;lr=0.1&quot;)
+plt.plot(acc_001, label=&quot;lr=0.01&quot;)
+plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;Accuracy&quot;); plt.legend()
+plt.title(&quot;Learning Rate Comparison&quot;)
+plt.savefig(&quot;lr_comparison.png&quot;, dpi=100); plt.show()
+
+# --- Solution 3 ---
+rng = np.random.default_rng(42)
+W1 = rng.normal(0, 0.1, (784, 64)); b1 = np.zeros(64)
+W2 = rng.normal(0, 0.1, (64, 10)); b2 = np.zeros(10)
+for ep in range(200):
+    z1 = X @ W1 + b1; a1 = relu(z1)
+    probs = softmax(a1 @ W2 + b2)
+    N = len(X)
+    dz2 = (probs - Y) / N
+    dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
+    dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
+    W2 -= 0.1 * dW2; b2 -= 0.1 * db2
+    W1 -= 0.1 * (X.T @ dz1); b1 -= 0.1 * dz1.sum(axis=0)
+
+pred = probs.argmax(axis=1)
+mask = (y == 3) | (y == 8)
+sub_y, sub_p = y[mask], pred[mask]
+cm = np.zeros((2, 2), dtype=int)
+for t, p in zip(sub_y, sub_p):
+    cm[int(t == 8), int(p == 8)] += 1
+print(&quot;Confusion matrix (rows=true [3,8], cols=pred [3,8]):&quot;)
+print(cm)
+print(f&quot;Subset accuracy: {np.trace(cm) / cm.sum():.4f}&quot;)
+
+# --- Follow-up 1 ---
+assert abs(losses[0] - 2.376) &lt; 0.01, f&quot;loss[0]={losses[0]}&quot;
+print(f&quot;PASS: loss[0] = {losses[0]:.4f} ≈ -log(0.1) = 2.303 (random-guess loss)&quot;)
+
+# --- Follow-up 2 ---
+assert abs(acc_01[49] - acc_001[49]) &gt; 0.5
+print(f&quot;PASS: epoch-50 gap = {acc_01[49]:.3f} vs {acc_001[49]:.3f}&quot;)
+
+# --- Follow-up 3 ---
+assert cm[1, 0] == 8
+print(f&quot;PASS: {cm[1, 0]} true 8s misclassified as 3&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Add a validation split and implement early stopping to prevent overfitting.</li>
+<li>Implement mini-batch gradient descent (update weights every 32 samples instead of the full batch).</li>
+<li>Add a second hidden layer and observe how depth changes the learning curve.</li>
+<li>Move to sklearn's <code>MLPClassifier</code> and compare its accuracy to your from-scratch net.</li>
+<li>Explore convolutional layers (CNNs), which exploit spatial structure in images and reach &gt;99% on MNIST.</li>
+</ul>
+<p><em>Files in this folder: mnist_train.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 07 · Executable notebook: <code>lab-07-neural-net-mnist.ipynb</code></footer>
+</body>
+</html>

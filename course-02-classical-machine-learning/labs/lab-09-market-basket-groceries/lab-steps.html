@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 09 — Market Basket — Groceries</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 09 — Market Basket — Groceries</h1>
+<div class="meta">
+<p><strong>Track</strong> Unsupervised Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~60 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-09-market-basket-groceries.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-09-market-basket-groceries/lab-09-market-basket-groceries.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>groceries.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Encode transactions for association rules</li><li>Compute support, confidence, and lift</li><li>Generate Apriori-style candidate itemsets</li><li>Filter rules by lift &gt; 2</li></ul>
+
+<hr/>
+<h2>Retail Analytics: Market Basket Analysis on Grocery Receipts</h2>
+<blockquote><strong>Scenario:</strong> A supermarket chain has scanned 9,835 checkout baskets and wants to know which products are bought together. The answers drive real business decisions: which items to place on adjacent shelves, which products to bundle in promotions, and what to recommend at the checkout. You will implement association-rule mining (the Apriori idea) in pure Python — no mlxtend — to discover these patterns. <strong>You will learn:</strong> parsing headerless variable-length transaction data, transaction encoding, the three rule metrics (support, confidence, lift), Apriori-style candidate generation, and how to filter rules for actionable insights. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Concept</th><th>Where it appears</th><th>Why it matters</th></tr></thead><tbody>
+<tr><td>Transaction encoding</td><td>Section 1</td><td>Baskets → sets of items; the format all rule mining needs</td></tr>
+<tr><td>Support</td><td>Section 2</td><td>How often does this itemset appear? (frequency)</td></tr>
+<tr><td>Confidence</td><td>Section 2</td><td>If A is bought, how often is B also bought? (reliability)</td></tr>
+<tr><td>Lift</td><td>Section 2</td><td>Is the co-occurrence stronger than chance? (interestingness)</td></tr>
+<tr><td>Apriori principle</td><td>Section 2</td><td>If {A,B} is rare, {A,B,C} must be rarer — prune candidates</td></tr>
+<tr><td>Rule filtering</td><td>Section 3</td><td>Lift &gt; 2 finds genuinely surprising associations</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Parsing Transactions and Transaction Encoding</h2>
+<p>The <code>groceries.csv</code> file is <strong>headerless</strong> and <strong>variable-length</strong>: each row is one basket, items are comma-separated, and baskets range from 1 to 32 items. pandas <code>read_csv</code> fails on this format because it expects a fixed number of columns. We parse it with the <code>csv</code> module instead, converting each row to a <code>frozenset</code> of items — a set because order within a basket doesn't matter, and frozen because it can be hashed and counted.</p>
+<pre><code class="language-python">import csv
+from collections import Counter
+from itertools import combinations
+
+# Parse the headerless, variable-length CSV
+transactions = []
+with open(&quot;groceries.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+    for row in csv.reader(f):
+        items = frozenset(item.strip() for item in row if item.strip())
+        transactions.append(items)
+
+N = len(transactions)
+print(f&quot;Number of baskets: {N}&quot;)
+basket_sizes = [len(t) for t in transactions]
+print(f&quot;Basket size — min: {min(basket_sizes)}, max: {max(basket_sizes)}, &quot;
+      f&quot;mean: {sum(basket_sizes)/N:.2f}&quot;)
+
+# Count individual item frequencies
+item_counts = Counter(item for t in transactions for item in t)
+print(f&quot;Unique items: {len(item_counts)}&quot;)
+print(&quot;\nTop 10 most frequent items:&quot;)
+for item, count in item_counts.most_common(10):
+    print(f&quot;  {item:25s} {count:5d}  support={count/N:.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>There are 9,835 baskets with 169 unique items; the average basket holds 4.41 items.</li>
+<li><code>whole milk</code> appears in 2,513 baskets (support ≈ 0.2555) — it's in one of every four baskets.</li>
+<li>Using <code>frozenset</code> lets us test subset relationships (<code>itemset &lt;= transaction</code>) which is the core operation of support counting.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Not stripping whitespace from item names. The file contains entries like <code>"cream cheese "</code> with a trailing space — without <code>.strip()</code>, <code>"cream cheese"</code> and <code>"cream cheese "</code> would count as different items.</blockquote>
+<hr/>
+<h2>2. Support, Confidence, Lift, and the Apriori Principle</h2>
+<p>An <strong>association rule</strong> has the form <code>A → B</code> ("customers who buy A also buy B"). Three metrics judge a rule:</p>
+<ul>
+<li><strong>Support</strong> = fraction of all baskets containing both A and B. High support = common pattern.</li>
+<li><strong>Confidence</strong> = P(B | A) = support(A∪B) / support(A). High confidence = reliable rule.</li>
+<li><strong>Lift</strong> = confidence / support(B) = P(A∩B) / (P(A)·P(B)). Lift &gt; 1 means A and B are positively correlated; lift &gt; 2 is genuinely interesting.</li>
+</ul>
+<p>The <strong>Apriori principle</strong> makes search tractable: if an itemset is infrequent, all its supersets are also infrequent. So we build candidates level by level — first frequent 1-itemsets, then 2-itemsets whose 1-itemset subsets are all frequent, and so on — pruning the search space dramatically.</p>
+<pre><code class="language-python">def support(itemset):
+    &quot;&quot;&quot;Fraction of transactions containing all items in itemset.&quot;&quot;&quot;
+    return sum(1 for t in transactions if itemset &lt;= t) / N
+
+MIN_SUPPORT = 0.01   # itemset must appear in at least 1% of baskets
+
+# --- Level 1: frequent 1-itemsets ---
+freq_1 = {frozenset([item]) for item, c in item_counts.items() if c / N &gt;= MIN_SUPPORT}
+print(f&quot;Frequent 1-itemsets (support &gt;= {MIN_SUPPORT}): {len(freq_1)}&quot;)
+
+# --- Level 2: candidate 2-itemsets via Apriori join + prune ---
+candidate_2 = Counter()
+for t in transactions:
+    for a, b in combinations(sorted(t), 2):
+        # Apriori prune: both 1-item subsets must be frequent
+        if frozenset([a]) in freq_1 and frozenset([b]) in freq_1:
+            candidate_2[frozenset([a, b])] += 1
+
+freq_2 = {s for s, c in candidate_2.items() if c / N &gt;= MIN_SUPPORT}
+print(f&quot;Frequent 2-itemsets: {len(freq_2)}&quot;)
+
+# --- Generate rules from frequent 2-itemsets ---
+def rules_from_itemset(itemset):
+    &quot;&quot;&quot;Yield (antecedent, consequent, support, confidence, lift) for a 2-itemset.&quot;&quot;&quot;
+    for a in itemset:
+        b = next(iter(itemset - frozenset([a])))
+        sup = candidate_2[itemset] / N
+        conf = candidate_2[itemset] / item_counts[a]
+        lift = conf / (item_counts[b] / N)
+        yield (a, b, sup, conf, lift)
+
+all_rules = []
+for s in freq_2:
+    all_rules.extend(rules_from_itemset(s))
+
+print(f&quot;\nTotal 2-itemset rules generated: {len(all_rules)}&quot;)
+print(&quot;\nTop 10 rules by confidence:&quot;)
+for a, b, sup, conf, lift in sorted(all_rules, key=lambda r: -r[3])[:10]:
+    print(f&quot;  {a:20s} -&gt; {b:20s}  sup={sup:.4f}  conf={conf:.4f}  lift={lift:.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>88 frequent 1-itemsets and 213 frequent 2-itemsets survive the 1% support threshold — the Apriori prune eliminates millions of candidates.</li>
+<li>Each frequent 2-itemset generates 2 rules (A→B and B→A), giving 426 total rules before filtering.</li>
+<li>Confidence alone is misleading: a rule pointing to a very popular item (like <code>whole milk</code>) can have high confidence but lift ≈ 1, meaning it's not actually interesting.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Confusing confidence with lift. <code>butter → whole milk</code> has confidence 0.50 but lift only 1.95 — it's common because <code>whole milk</code> is everywhere, not because butter buyers are special. Lift corrects for the consequent's baseline popularity.</blockquote>
+<hr/>
+<h2>3. Filtering Rules for Actionable Insights</h2>
+<p>Raw rule lists are overwhelming. The art of market basket analysis is <strong>filtering</strong> for the rules that matter. Three practical filters:</p>
+<ol>
+<li><strong>Consequent filter:</strong> "What leads to whole milk?" — useful for shelf placement.</li>
+<li><strong>Lift filter:</strong> Keep only rules with lift &gt; 2 — genuinely surprising associations.</li>
+<li><strong>Support floor:</strong> Require minimum support so rules are based on enough data to trust.</li>
+</ol>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+
+# --- Filter 1: rules where consequent is &quot;whole milk&quot; ---
+wm_rules = [(a, b, sup, conf, lift) for a, b, sup, conf, lift in all_rules
+            if b == &quot;whole milk&quot; and conf &gt;= 0.10]
+wm_rules.sort(key=lambda r: -r[3])
+print(f&quot;Rules -&gt; whole milk (conf &gt;= 0.10): {len(wm_rules)}&quot;)
+print(&quot;Top 10 by confidence:&quot;)
+for a, b, sup, conf, lift in wm_rules[:10]:
+    print(f&quot;  {a:20s} -&gt; whole milk  sup={sup:.4f}  conf={conf:.4f}  lift={lift:.4f}&quot;)
+
+# --- Filter 2: high-lift rules (lift &gt; 2) ---
+high_lift = [(a, b, sup, conf, lift) for a, b, sup, conf, lift in all_rules
+             if lift &gt; 2.0]
+high_lift.sort(key=lambda r: -r[4])
+print(f&quot;\nRules with lift &gt; 2: {len(high_lift)}&quot;)
+print(&quot;Top 15 by lift:&quot;)
+for a, b, sup, conf, lift in high_lift[:15]:
+    print(f&quot;  {a:20s} -&gt; {b:20s}  sup={sup:.4f}  conf={conf:.4f}  lift={lift:.4f}&quot;)
+
+# --- Visualize: support vs confidence, point size = lift ---
+sups = [r[2] for r in all_rules]
+confs = [r[3] for r in all_rules]
+lifts = [r[4] for r in all_rules]
+plt.figure(figsize=(7, 5))
+plt.scatter(sups, confs, s=[l * 8 for l in lifts], alpha=0.5, c=lifts, cmap=&quot;viridis&quot;)
+plt.colorbar(label=&quot;Lift&quot;)
+plt.xlabel(&quot;Support&quot;)
+plt.ylabel(&quot;Confidence&quot;)
+plt.title(&quot;Association Rules (size/color = lift)&quot;)
+plt.savefig(&quot;rules_scatter.png&quot;, dpi=100)
+plt.show()
+print(&quot;Saved rules_scatter.png&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>45 rules have <code>whole milk</code> as the consequent with confidence ≥ 0.10; the strongest is <code>butter → whole milk</code> (conf ≈ 0.50, lift ≈ 1.95).</li>
+<li>44 rules have lift &gt; 2; the strongest is <code>root vegetables → beef</code> (lift ≈ 3.04) — root vegetable buyers are 3× more likely to buy beef than a random shopper.</li>
+<li>The scatter plot shows most rules cluster at low support and moderate confidence; the high-lift rules (bright yellow) are the actionable gems.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Acting on low-support, high-lift rules. A rule with support 0.001 (10 baskets) might have lift 5 but be pure noise. Always pair lift with a minimum support threshold.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Top 10 Itemsets by Support</h3>
+<p>Compute the support of every 1-itemset and every 2-itemset. Report the top 10 1-itemsets and the top 10 2-itemsets by support. <em>Expected: top 1-itemset = whole milk (0.2555); top 2-itemset = {other vegetables, whole milk} (0.0748).</em></p>
+<p><strong>Follow-up:</strong> How many frequent 2-itemsets survive a 1% support threshold? Check: 213.</p>
+<h3>Exercise 2 — Rules for "Whole Milk" Consequent</h3>
+<p>Generate all rules where the consequent is <code>whole milk</code> (min support 0.01, min confidence 0.10). Report the count and the top rule by confidence. <em>Expected: 45 rules; top = butter → whole milk (conf ≈ 0.4972, lift ≈ 1.9461).</em></p>
+<p><strong>Follow-up:</strong> What is the confidence of <code>root vegetables → whole milk</code>? Check: ≈ 0.4487.</p>
+<h3>Exercise 3 — High-Lift Rules Only</h3>
+<p>Filter all 2-itemset rules to those with lift &gt; 2. Report the count and the top rule by lift. <em>Expected: 44 rules; top = root vegetables → beef (lift ≈ 3.0404).</em></p>
+<p><strong>Follow-up:</strong> What is the lift of <code>tropical fruit → pip fruit</code>? Check: ≈ 2.5746.</p>
+<details><summary>Hint</summary>
+<p>For Exercise 3, iterate over <code>freq_2</code>, and for each itemset <code>{a, b}</code> generate both directions: <code>a → b</code> and <code>b → a</code>. Compute lift as <code>conf / (item_counts[b] / N)</code> and keep rules where lift &gt; 2.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import csv
+from collections import Counter
+from itertools import combinations
+
+transactions = []
+with open(&quot;groceries.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
+    for row in csv.reader(f):
+        transactions.append(frozenset(item.strip() for item in row if item.strip()))
+N = len(transactions)
+
+item_counts = Counter(item for t in transactions for item in t)
+MIN_SUPPORT = 0.01
+
+print(&quot;Top 10 1-itemsets by support:&quot;)
+for item, c in item_counts.most_common(10):
+    print(f&quot;  {item:25s} sup={c/N:.4f}&quot;)
+
+freq_1 = {frozenset([i]) for i, c in item_counts.items() if c / N &gt;= MIN_SUPPORT}
+candidate_2 = Counter()
+for t in transactions:
+    for a, b in combinations(sorted(t), 2):
+        if frozenset([a]) in freq_1 and frozenset([b]) in freq_1:
+            candidate_2[frozenset([a, b])] += 1
+freq_2 = {s for s, c in candidate_2.items() if c / N &gt;= MIN_SUPPORT}
+
+print(&quot;\nTop 10 2-itemsets by support:&quot;)
+for s, c in candidate_2.most_common(10):
+    if s in freq_2:
+        print(f&quot;  {sorted(s)}  sup={c/N:.4f}&quot;)
+
+# --- Solution 2 ---
+wm_rules = []
+for s in freq_2:
+    if &quot;whole milk&quot; in s:
+        a = next(iter(s - frozenset([&quot;whole milk&quot;])))
+        sup = candidate_2[s] / N
+        conf = candidate_2[s] / item_counts[a]
+        lift = conf / (item_counts[&quot;whole milk&quot;] / N)
+        if conf &gt;= 0.10:
+            wm_rules.append((a, sup, conf, lift))
+wm_rules.sort(key=lambda r: -r[2])
+print(f&quot;\nRules -&gt; whole milk: {len(wm_rules)}&quot;)
+for a, sup, conf, lift in wm_rules[:5]:
+    print(f&quot;  {a:20s} -&gt; whole milk  conf={conf:.4f}  lift={lift:.4f}&quot;)
+
+# --- Solution 3 ---
+high_lift = []
+for s in freq_2:
+    for a in s:
+        rest = s - frozenset([a])
+        if len(rest) != 1:
+            continue
+        b = next(iter(rest))
+        sup = candidate_2[s] / N
+        conf = candidate_2[s] / item_counts[a]
+        lift = conf / (item_counts[b] / N)
+        if lift &gt; 2.0:
+            high_lift.append((a, b, sup, conf, lift))
+high_lift.sort(key=lambda r: -r[4])
+print(f&quot;\nRules with lift &gt; 2: {len(high_lift)}&quot;)
+for a, b, sup, conf, lift in high_lift[:5]:
+    print(f&quot;  {a:20s} -&gt; {b:20s}  lift={lift:.4f}&quot;)
+
+# --- Follow-up 1 ---
+assert len(freq_2) == 213
+print(f&quot;PASS: {len(freq_2)} frequent 2-itemsets&quot;)
+
+# --- Follow-up 2 ---
+rv_conf = next(conf for a, sup, conf, lift in wm_rules if a == &quot;root vegetables&quot;)
+assert abs(rv_conf - 0.4487) &lt; 0.001
+print(f&quot;PASS: root vegetables -&gt; whole milk conf = {rv_conf:.4f}&quot;)
+
+# --- Follow-up 3 ---
+tf_lift = next(lift for a, b, sup, conf, lift in high_lift
+               if a == &quot;tropical fruit&quot; and b == &quot;pip fruit&quot;)
+assert abs(tf_lift - 2.5746) &lt; 0.001
+print(f&quot;PASS: tropical fruit -&gt; pip fruit lift = {tf_lift:.4f}&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Extend Apriori to 3-itemsets and watch the candidate count explode — then try the FP-Growth algorithm, which avoids candidate generation entirely.</li>
+<li>Implement the FP-Tree data structure and compare its runtime to Apriori on this dataset.</li>
+<li>Explore the <code>mlxtend</code> library's <code>apriori</code> and <code>association_rules</code> functions and verify they match your pure-Python results.</li>
+<li>Apply association rules to a recommendation engine: "Customers who bought X also bought Y."</li>
+<li>Move to Course 3 (Deep Learning) and learn how neural collaborative filtering discovers these patterns automatically from raw purchase history.</li>
+</ul>
+<p><em>Files in this folder: groceries.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 09 · Executable notebook: <code>lab-09-market-basket-groceries.ipynb</code></footer>
+</body>
+</html>

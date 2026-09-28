@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-02-housing-price-regression",
+  "title": "Housing Price Regression — Full Workflow",
+  "notebook": "lab-02-housing-price-regression.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-02-housing-price-regression/lab-02-housing-price-regression.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-02-housing-price-regression/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "housing.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Regression",
+    "sklearn",
+    "Intermediate"
+  ],
+  "description": "Full regression workflow: preprocess, compare models, cross-validate.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> You are a data science consultant for a real estate investment firm. The firm wants to predict median house values in California districts using features like location, income, and housing density. You have 20,640 census block-group records. Your task is to build and compare regression models, handle missing data, encode categorical variables, and identify the most important features. <strong>You will learn:</strong> train/test split, median imputation, one-hot encoding, LinearRegression vs RandomForest, cross-validation, feature importance. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Baseline Mean-Predictor MAE</h3>\n<p>Compute the MAE of a model that always predicts the training-set mean house value. <em>Expected: $92,893.94</em></p>\n<p><strong>Follow-up:</strong> Why is this baseline important? Check: baseline MAE value.</p>\n<h3>Exercise 2 — Random Forest vs Linear Regression MAE</h3>\n<p>Compare the test MAE of both models. Which is better and by how much? <em>Expected: RF MAE = $31,889.38; LR MAE = $50,752.61</em></p>\n<p><strong>Follow-up:</strong> Why does Random Forest outperform Linear Regression here? Check: improvement percentage.</p>\n<h3>Exercise 3 — Top 3 Features</h3>\n<p>Identify the three most important features from the Random Forest. <em>Expected: median_income (0.4839), ocean_proximity_INLAND (0.1465), longitude (0.1073).</em></p>\n<p><strong>Follow-up:</strong> What does <code>median_income</code> dominating tell you about the housing market? Check: top feature name and importance value.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.ensemble import RandomForestRegressor\nfrom sklearn.metrics import mean_absolute_error\n\ndf = pd.read_csv(r&quot;D:\\downloads-D\\vilabs-images\\ailab-vilabs\\course-02-classical-machine-learning\\datasets\\housing.csv&quot;)\nX = df.drop(columns=[&quot;median_house_value&quot;])\ny = df[&quot;median_house_value&quot;]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nimputer = SimpleImputer(strategy=&quot;median&quot;)\nX_train_num = pd.DataFrame(\n    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),\n    columns=X_train.select_dtypes(include=[np.number]).columns,\n    index=X_train.index,\n)\nX_test_num = pd.DataFrame(\n    imputer.transform(X_test.select_dtypes(include=[np.number])),\n    columns=X_test.select_dtypes(include=[np.number]).columns,\n    index=X_test.index,\n)\nX_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)\nX_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)\nX_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)\nX_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)\nX_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)\n\nrf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)\nrf.fit(X_train_proc, y_train)\n\n# Exercise 1\nbaseline_pred = np.full_like(y_test, y_train.mean())\nprint(mean_absolute_error(y_test, baseline_pred))\n\n# Exercise 2\nfrom sklearn.linear_model import LinearRegression\nlr = LinearRegression()\nlr.fit(X_train_proc, y_train)\nprint(f&quot;LR MAE: {mean_absolute_error(y_test, lr.predict(X_test_proc)):.2f}&quot;)\nprint(f&quot;RF MAE: {mean_absolute_error(y_test, rf.predict(X_test_proc)):.2f}&quot;)\n\n# Exercise 3\nimportances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)\nprint(importances.sort_values(ascending=False).head(3))</code></pre>\n</details>\n<hr/>",
+  "duration": "01:15:00",
+  "lab_duration": "75 Minutes",
+  "session_timeout": 6300,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

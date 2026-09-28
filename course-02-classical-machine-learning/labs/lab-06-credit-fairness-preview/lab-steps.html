@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 06 — Credit Risk + Fairness Basics</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 06 — Credit Risk + Fairness Basics</h1>
+<div class="meta">
+<p><strong>Track</strong> Responsible ML Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~50 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-06-credit-fairness-preview.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-06-credit-fairness-preview/lab-06-credit-fairness-preview.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>german_credit_prepared.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Compute group-wise accuracy and TPR</li><li>Calculate disparate impact ratio</li><li>Understand why equal accuracy ≠ fair</li><li>Sketch a reweighing mitigation</li></ul>
+
+<hr/>
+<h2>Intermediate: When the Scorecard Plays Favorites (Fairness Preview)</h2>
+<blockquote><strong>Scenario:</strong> The bank's legal team reviews your credit model and asks a uncomfortable question: "Does it treat male and female applicants fairly?" Overall accuracy looks fine — 74.5%. But averages can hide a lot. You dig into performance <em>by group</em> and find the model approves female applicants at a lower rate than males, even though their default rates are similar. This lab shows why "equal accuracy" is not the same as "fair", and previews how to measure and mitigate the gap. <strong>You will learn:</strong> how to compute group-wise accuracy and true-positive rate (TPR), what the disparate impact ratio measures and why 0.8 is a common legal benchmark, and one concrete mitigation — per-group decision thresholds. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental map</h3>
+<table><thead><tr><th>Concept</th><th>One-line idea</th><th>Where it shows up</th></tr></thead><tbody>
+<tr><td>Group-wise metrics</td><td>Accuracy/TPR computed separately per demographic group</td><td>female vs male TPR</td></tr>
+<tr><td>Disparate impact ratio</td><td>Ratio of approval rates between groups</td><td>DI &lt; 0.8 raises legal flags</td></tr>
+<tr><td>Equal accuracy ≠ fair</td><td>Two groups can have similar accuracy but very different error types</td><td>TPR/FPR gaps</td></tr>
+<tr><td>Per-group thresholds</td><td>Different score cutoffs for different groups</td><td>A simple mitigation lever</td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Group-wise metrics: accuracy and TPR by sex</h2>
+<p>A single overall accuracy can hide very different experiences for different groups. The first fairness step is always to <strong>slice the metrics by group</strong>. Here we train the same kind of credit model as Lab 05 and compute accuracy and the true-positive rate (TPR — fraction of actual defaulters the model flags) separately for female and male applicants.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+print(f&quot;overall accuracy: {accuracy_score(y_te, y_pred):.4f}\n&quot;)
+for sex, g in res.groupby(&quot;sex&quot;):
+    tn, fp, fn, tp = confusion_matrix(g[&quot;y&quot;], g[&quot;pred&quot;]).ravel()
+    acc = accuracy_score(g[&quot;y&quot;], g[&quot;pred&quot;])
+    tpr = tp / (tp + fn)
+    fpr = fp / (fp + tn)
+    approval = (g[&quot;pred&quot;] == 0).mean()
+    print(f&quot;{sex:6s}  n={len(g):3d}  acc={acc:.4f}  TPR={tpr:.4f}  FPR={fpr:.4f}  approval_rate={approval:.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Overall accuracy (≈0.745) looks respectable — but it blends two different stories.</li>
+<li>Female TPR (≈0.85) is actually <em>higher</em> than male (≈0.775): the model catches a larger share of female defaulters.</li>
+<li>Yet the female <em>approval rate</em> (≈0.49) is lower than male (≈0.60): fewer women are approved overall. That gap is the fairness problem.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> <code>sex</code> is used here only to <em>audit</em> the model, not as a model input. Feeding protected attributes into the model is both illegal in many jurisdictions and defeats the purpose of measuring their effect.</blockquote>
+<hr/>
+<h2>2. The disparate impact ratio</h2>
+<p>The <strong>disparate impact (DI) ratio</strong> compares approval rates between groups: DI = (approval rate of the disadvantaged group) / (approval rate of the advantaged group). A DI of 1.0 means perfect parity. In US employment law, DI &lt; 0.8 is the "four-fifths rule" threshold that raises legal scrutiny — and it is a useful benchmark anywhere.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+m = res[res[&quot;sex&quot;] == &quot;male&quot;]
+di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
+print(f&quot;female approval rate: {(f[&#x27;pred&#x27;] == 0).mean():.4f}&quot;)
+print(f&quot;male approval rate:   {(m[&#x27;pred&#x27;] == 0).mean():.4f}&quot;)
+print(f&quot;disparate impact ratio (female/male): {di:.4f}&quot;)
+print(f&quot;four-fifths rule (&gt;= 0.8)? {&#x27;PASS&#x27; if di &gt;= 0.8 else &#x27;FAIL&#x27;}&quot;)
+
+# base rates for context
+print(&quot;\nactual default rate by sex (test):&quot;)
+print(res.groupby(&quot;sex&quot;)[&quot;y&quot;].mean().round(4))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>DI ≈ 0.82 — just under the 0.8 four-fifths threshold, so this model would draw legal scrutiny.</li>
+<li>The gap is not explained by base rates: female default rate (≈0.33) is only slightly higher than male (≈0.29), yet the approval gap is much larger.</li>
+<li>DI is a <em>ratio of rates</em>, so it is comparable across datasets with different overall approval levels.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> DI measures <em>outcome</em> parity, not <em>error</em> parity. A model can have DI = 1.0 and still miss defaulters in one group much more often. Always look at TPR/FPR gaps alongside DI.</blockquote>
+<hr/>
+<h2>3. Why equal accuracy ≠ fair, and one mitigation</h2>
+<p>Here is the trap: overall accuracy is nearly identical across groups (≈0.72 female vs ≈0.76 male), so a naive audit says "fair". But the <em>errors</em> are distributed unevenly — women are approved less often. Accuracy is a single number that averages over both classes; fairness lives in the details.</p>
+<p>One concrete mitigation is <strong>per-group thresholds</strong>: use a different score cutoff for each group so that approval rates (or TPRs) match. This is simple, transparent, and easy to explain to regulators — though it is not the only option, and each has trade-offs.</p>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+proba = clf.predict_proba(X_te)[:, 1]
+sex_te = X_te[&quot;sex&quot;].values
+
+print(&quot;per-group threshold sweep (raise female threshold to equalize approval):&quot;)
+for t_f in [0.5, 0.55, 0.6, 0.65]:
+    yp = np.where(sex_te == &quot;female&quot;, proba &gt;= t_f, proba &gt;= 0.5).astype(int)
+    res = pd.DataFrame({&quot;sex&quot;: sex_te, &quot;y&quot;: y_te.values, &quot;pred&quot;: yp})
+    f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+    m = res[res[&quot;sex&quot;] == &quot;male&quot;]
+    di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
+    acc = (res[&quot;pred&quot;] == res[&quot;y&quot;]).mean()
+    print(f&quot;  t_female={t_f}: DI={di:.4f}  accuracy={acc:.4f}  &quot;
+          f&quot;appr_f={(f[&#x27;pred&#x27;] == 0).mean():.4f}  appr_m={(m[&#x27;pred&#x27;] == 0).mean():.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Raising the female threshold to 0.6 lifts DI from ≈0.82 to ≈0.96 — near parity — while overall accuracy stays ≈0.75.</li>
+<li>The cost is a lower female TPR (fewer female defaulters caught): mitigation trades one fairness goal against another.</li>
+<li>There is no free lunch — the "right" threshold depends on whether the business prioritizes approval parity, TPR parity, or accuracy.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> Per-group thresholds are a <em>post-hoc</em> fix. The deeper question is why the model scores women lower in the first place — often the training data itself reflects historical bias. Fixing the data beats patching the threshold.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — TPR by sex</h3>
+<p>Train the balanced logistic regression from section 1 and compute TPR separately for female and male applicants on the test set. Which group has the higher TPR? <em>Expected: female TPR ≈ 0.8500 (n=61), male TPR ≈ 0.7750 (n=139) — female is higher.</em></p>
+<p><strong>Follow-up:</strong> What are the false-positive rates? Check: female FPR ≈ 0.3415, male FPR ≈ 0.2525 — women are also falsely flagged more often.</p>
+<details><summary>Hint</summary>
+<p><code>confusion_matrix(g["y"], g["pred"]).ravel()</code> returns <code>(tn, fp, fn, tp)</code>; TPR = tp / (tp + fn).</p>
+</details>
+<h3>Exercise 2 — Disparate impact ratio</h3>
+<p>Compute the DI ratio (female approval rate / male approval rate) on the test set. Does it pass the four-fifths rule (DI ≥ 0.8)? <em>Expected: DI ≈ 0.8236 — just below 0.8, so it FAILS the four-fifths rule.</em></p>
+<p><strong>Follow-up:</strong> What are the actual default rates by sex? Check: female ≈ 0.3279, male ≈ 0.2878 — the approval gap is much larger than the base-rate gap.</p>
+<details><summary>Hint</summary>
+<p>DI = <code>(f["pred"] == 0).mean() / (m["pred"] == 0).mean()</code> where <code>f</code> and <code>m</code> are the per-group test frames.</p>
+</details>
+<h3>Exercise 3 — One mitigation idea</h3>
+<p>Using the per-group threshold sweep from section 3, find a female threshold that brings DI close to 1.0 while keeping overall accuracy near its original value. Report the threshold, DI, and accuracy. <em>Expected: t_female = 0.6 gives DI ≈ 0.9609 and accuracy ≈ 0.7500 (DI near parity, accuracy unchanged).</em></p>
+<p><strong>Follow-up:</strong> What happens to female TPR at t_female = 0.6? Check: it drops from ≈0.85 to ≈0.75 — the mitigation trades TPR parity for approval parity.</p>
+<details><summary>Hint</summary>
+<p><code>np.where(sex_te == "female", proba &gt;= t_f, proba &gt;= 0.5)</code> applies different thresholds per group.</p>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+for sex, g in res.groupby(&quot;sex&quot;):
+    tn, fp, fn, tp = confusion_matrix(g[&quot;y&quot;], g[&quot;pred&quot;]).ravel()
+    print(f&quot;{sex}: TPR={tp/(tp+fn):.4f}&quot;)
+
+# --- Solution 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+m = res[res[&quot;sex&quot;] == &quot;male&quot;]
+di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
+print(f&quot;DI = {di:.4f}&quot;)
+
+# --- Solution 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+proba = clf.predict_proba(X_te)[:, 1]
+sex_te = X_te[&quot;sex&quot;].values
+yp = np.where(sex_te == &quot;female&quot;, proba &gt;= 0.6, proba &gt;= 0.5).astype(int)
+res = pd.DataFrame({&quot;sex&quot;: sex_te, &quot;y&quot;: y_te.values, &quot;pred&quot;: yp})
+f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+m = res[res[&quot;sex&quot;] == &quot;male&quot;]
+di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
+acc = (res[&quot;pred&quot;] == res[&quot;y&quot;]).mean()
+print(f&quot;t_female=0.6: DI={di:.4f}, accuracy={acc:.4f}&quot;)
+
+# --- Follow-up 1 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import confusion_matrix
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+m = res[res[&quot;sex&quot;] == &quot;male&quot;]
+tn, fp, fn, tp = confusion_matrix(f[&quot;y&quot;], f[&quot;pred&quot;]).ravel()
+fpr_f = fp / (fp + tn)
+tn, fp, fn, tp = confusion_matrix(m[&quot;y&quot;], m[&quot;pred&quot;]).ravel()
+fpr_m = fp / (fp + tn)
+assert abs(fpr_f - 0.3415) &lt; 0.01 and abs(fpr_m - 0.2525) &lt; 0.01
+print(f&quot;FPR female={fpr_f:.4f}, male={fpr_m:.4f}&quot;)
+
+# --- Follow-up 2 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+y_pred = clf.predict(X_te)
+res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
+rates = res.groupby(&quot;sex&quot;)[&quot;y&quot;].mean()
+assert abs(rates[&quot;female&quot;] - 0.3279) &lt; 0.01 and abs(rates[&quot;male&quot;] - 0.2878) &lt; 0.01
+print(&quot;default rates:&quot;, rates.round(4).to_dict())
+
+# --- Follow-up 3 ---
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import pandas as pd, numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_prepared.csv&quot;)
+y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
+X = df.drop(columns=[&quot;default&quot;])
+cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
+num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+pre = ColumnTransformer([
+    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
+    (&quot;num&quot;, StandardScaler(), num_cols),
+])
+clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
+clf.fit(X_tr, y_tr)
+proba = clf.predict_proba(X_te)[:, 1]
+sex_te = X_te[&quot;sex&quot;].values
+yp = np.where(sex_te == &quot;female&quot;, proba &gt;= 0.6, proba &gt;= 0.5).astype(int)
+res = pd.DataFrame({&quot;sex&quot;: sex_te, &quot;y&quot;: y_te.values, &quot;pred&quot;: yp})
+f = res[res[&quot;sex&quot;] == &quot;female&quot;]
+tpr_f = ((f[&quot;pred&quot;] == 1) &amp; (f[&quot;y&quot;] == 1)).sum() / (f[&quot;y&quot;] == 1).sum()
+assert abs(tpr_f - 0.75) &lt; 0.05, tpr_f
+print(f&quot;female TPR at t=0.6: {tpr_f:.4f}&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Other fairness metrics: equalized odds, demographic parity, calibration by group.</li>
+<li>Pre-processing mitigations: reweighting or resampling the training data to remove bias at the source.</li>
+<li>The full fairness toolkit: <code>fairlearn</code> and <code>aif360</code> for production-grade audits.</li>
+</ul>
+<p><em>Files in this folder: german_credit_prepared.csv (1000 rows: default + 21 features including sex, age, credit_amount, duration_in_month).</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 06 · Executable notebook: <code>lab-06-credit-fairness-preview.ipynb</code></footer>
+</body>
+</html>

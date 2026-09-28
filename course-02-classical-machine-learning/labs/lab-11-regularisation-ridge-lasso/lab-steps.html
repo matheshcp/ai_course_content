@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 11 — Regularisation — Ridge &amp; Lasso on Housing</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 11 — Regularisation — Ridge &amp; Lasso on Housing</h1>
+<div class="meta">
+<p><strong>Track</strong> Regression Track</p>
+<p><strong>Level</strong> Intermediate · <strong>Time</strong> ~55 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-11-regularisation-ridge-lasso.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-11-regularisation-ridge-lasso/lab-11-regularisation-ridge-lasso.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>housing.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Demonstrate overfitting with high-degree polynomials</li><li>Apply Ridge (L2) and Lasso (L1) regularisation</li><li>Select alpha via GridSearchCV</li><li>Read Lasso sparsity for feature selection</li></ul>
+
+<hr/>
+<h2>Regularisation: Ridge &amp; Lasso on California Housing</h2>
+<blockquote><strong>Scenario:</strong> A property-valuation team fits polynomial regression to predict <code>median_house_value</code> from location and dwelling features. High-degree polynomials fit the training set beautifully and the validation set terribly. Your job: diagnose overfitting, then fix it with ridge and lasso regularisation. <strong>You will learn:</strong> polynomial feature expansion, the bias–variance trade-off, ridge (L2) vs lasso (L1), alpha paths, why standardisation is mandatory before regularisation. <strong>Time:</strong> ~55 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Section</th><th>Key idea</th><th>sklearn / pandas tool</th></tr></thead><tbody>
+<tr><td>1</td><td>Load housing data; notice the capped target</td><td><code>pd.read_csv</code>, <code>dropna</code></td></tr>
+<tr><td>2</td><td>Overfitting demo: degree 1→10</td><td><code>PolynomialFeatures</code></td></tr>
+<tr><td>3</td><td>Ridge: shrink all coefficients</td><td><code>Ridge</code>, <code>GridSearchCV</code></td></tr>
+<tr><td>4</td><td>Lasso: shrink some to zero</td><td><code>Lasso</code>, <code>StandardScaler</code></td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Setup and the Capped Target</h2>
+<pre><code class="language-python">import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv(&quot;housing.csv&quot;)
+print(df.shape)
+print(df.isna().sum())
+
+df = df.dropna(subset=[&quot;total_bedrooms&quot;]).reset_index(drop=True)
+print(&quot;after dropna:&quot;, df.shape)
+
+print(&quot;rows at the 500k cap:&quot;, int((df[&quot;median_house_value&quot;] &gt;= 500000).sum()))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li><code>total_bedrooms</code> is the only column with missing values (207 rows) — drop them.</li>
+<li>The target is <strong>capped at 500,000</strong>: 985 rows sit exactly at the cap. The model cannot predict above it, which flattens the top of every prediction curve.</li>
+<li>We use four numeric features for the polynomial demo so the feature counts stay readable.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> the cap is a data-collection artefact, not a market truth. Treat predictions above 500k with suspicion.</blockquote>
+<hr/>
+<h2>2. Overfitting Demo: Polynomial Degrees 1–10</h2>
+<pre><code class="language-python">from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+
+FEATS = [&quot;median_income&quot;, &quot;housing_median_age&quot;, &quot;total_rooms&quot;, &quot;population&quot;]
+X = df[FEATS]
+y = df[&quot;median_house_value&quot;]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+
+rows = []
+for deg in range(1, 11):
+    pipe = Pipeline([
+        (&quot;scaler&quot;, StandardScaler()),
+        (&quot;poly&quot;, PolynomialFeatures(degree=deg, include_bias=False)),
+        (&quot;lr&quot;, LinearRegression()),
+    ])
+    pipe.fit(X_train, y_train)
+    n_feat = pipe.named_steps[&quot;poly&quot;].n_output_features_
+    tr = mean_absolute_error(y_train, pipe.predict(X_train))
+    te = mean_absolute_error(y_test, pipe.predict(X_test))
+    rows.append((deg, n_feat, tr, te))
+
+res = pd.DataFrame(rows, columns=[&quot;degree&quot;, &quot;n_features&quot;, &quot;train_MAE&quot;, &quot;test_MAE&quot;])
+res[&quot;overfit_gap&quot;] = res[&quot;test_MAE&quot;] - res[&quot;train_MAE&quot;]
+print(res.round(0))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>Feature count explodes: degree 10 on 4 features → 1,000 columns.</li>
+<li>Test MAE bottoms out at degree 5 (≈ $56,200) and then explodes — $262,600 by degree 10. Textbook overfitting.</li>
+<li>The <code>overfit_gap</code> column (test − train) quantifies the damage: it first exceeds $10,000 at degree 7.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> standardising <strong>before</strong> <code>PolynomialFeatures</code> inside the pipeline is safe because the scaler is refit on training data only — no leakage. Fitting the scaler on the full dataset first would leak test statistics into training.</blockquote>
+<hr/>
+<h2>3. Ridge: Shrink Everything a Little</h2>
+<p>Ridge adds a penalty <code>alpha * sum(coefficients²)</code> — it shrinks all coefficients toward zero but never exactly to zero:</p>
+<pre><code class="language-python">from sklearn.linear_model import Ridge
+from sklearn.model_selection import GridSearchCV
+
+ridge_pipe = Pipeline([
+    (&quot;scaler&quot;, StandardScaler()),
+    (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
+    (&quot;ridge&quot;, Ridge()),
+])
+
+alphas = np.logspace(-2, 4, 13)
+grid = GridSearchCV(ridge_pipe, {&quot;ridge__alpha&quot;: alphas}, cv=5,
+                    scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=-1)
+grid.fit(X_train, y_train)
+
+print(&quot;best alpha:&quot;, grid.best_params_[&quot;ridge__alpha&quot;])
+print(&quot;best CV MAE:&quot;, round(-grid.best_score_, 1))
+
+cv = pd.DataFrame(grid.cv_results_)[[&quot;param_ridge__alpha&quot;, &quot;mean_test_score&quot;]]
+cv[&quot;MAE&quot;] = -cv[&quot;mean_test_score&quot;]
+print(cv.round(1))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>The CV curve is U-shaped: too little alpha overfits, too much underfits. The optimum here is alpha = 100.</li>
+<li><code>neg_mean_absolute_error</code> is sklearn's convention — higher (less negative) is better.</li>
+<li>Ridge keeps all 34 degree-3 features but with shrunken coefficients, and its test MAE (≈ $57,194) matches unregularised degree-3 OLS (≈ $57,145) — regularisation costs almost nothing when the model isn't overfitting.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> the best alpha depends on feature scale. If you forgot the <code>StandardScaler</code>, <code>median_income</code> (range ≈ 0–15) and <code>total_rooms</code> (range ≈ 3–39,000) would be penalised unequally.</blockquote>
+<hr/>
+<h2>4. Lasso: Shrink Some to Exactly Zero</h2>
+<p>Lasso penalises the sum of absolute coefficients, which drives weak features to <strong>exactly zero</strong> — automatic feature selection:</p>
+<pre><code class="language-python">from sklearn.linear_model import Lasso
+
+lasso_pipe = Pipeline([
+    (&quot;scaler&quot;, StandardScaler()),
+    (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
+    (&quot;lasso&quot;, Lasso(max_iter=10000)),
+])
+
+grid_l = GridSearchCV(lasso_pipe, {&quot;lasso__alpha&quot;: alphas}, cv=5,
+                      scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=-1)
+grid_l.fit(X_train, y_train)
+
+best = grid_l.best_estimator_
+coefs = pd.Series(best.named_steps[&quot;lasso&quot;].coef_,
+                  index=best.named_steps[&quot;poly&quot;].get_feature_names_out(FEATS))
+nonzero = coefs[coefs != 0].sort_values(key=abs, ascending=False)
+print(&quot;best alpha:&quot;, grid_l.best_params_[&quot;lasso__alpha&quot;])
+print(f&quot;non-zero coefficients: {len(nonzero)} / {len(coefs)}&quot;)
+print(nonzero.head(8).round(0))</code></pre>
+<p><strong>What to notice:</strong></p>
+<ol>
+<li>At the CV-best alpha (100), lasso keeps 32 of 34 features — CV optimises <strong>prediction</strong>, not sparsity.</li>
+<li>The survivors are interpretable: <code>median_income</code> terms dominate, as a domain expert would expect.</li>
+<li>Sparsity is a separate knob: refit with <code>alpha=10000</code> and only 7 of 34 coefficients survive. Cranking alpha trades prediction for a simpler model.</li>
+</ol>
+<blockquote><strong>Pitfall:</strong> lasso with correlated features picks one arbitrarily. If two features are near-duplicates, don't read too much into which one survives.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Locate the overfitting knee</h3>
+<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000. <em>Expected: best degree = 5; gap first exceeds $10k at degree 7.</em></p>
+<p><strong>Follow-up:</strong> How many features does degree 10 create? Check: 1000.</p>
+<h3>Exercise 2 — Best ridge alpha</h3>
+<p>Run the ridge grid search and report the best alpha and its CV MAE. <em>Expected: alpha = 100, CV MAE ≈ $56,593.</em></p>
+<p><strong>Follow-up:</strong> Does ridge beat unregularised degree-10 OLS on test MAE? Check: yes — $57,194 vs $262,600.</p>
+<h3>Exercise 3 — Lasso sparsity</h3>
+<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature. <em>Expected: 32 / 34 non-zero; top feature <code>median_income</code>.</em></p>
+<p><strong>Follow-up:</strong> Refit lasso with <code>alpha=10000</code> — how many survive? Check: 7.</p>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python"># --- Solution 1 ---
+best_deg = res.loc[res[&quot;test_MAE&quot;].idxmin(), &quot;degree&quot;]
+first_big_gap = res.loc[res[&quot;overfit_gap&quot;] &gt; 10000, &quot;degree&quot;].min()
+print(f&quot;best degree: {best_deg}, first gap&gt;10k at degree: {first_big_gap}&quot;)
+print(&quot;degree-10 feature count:&quot;, int(res.loc[res.degree == 10, &quot;n_features&quot;].iloc[0]))
+
+# --- Solution 2 ---
+print(&quot;best ridge alpha:&quot;, grid.best_params_[&quot;ridge__alpha&quot;])
+print(&quot;best ridge CV MAE:&quot;, round(-grid.best_score_, 1))
+ols3 = Pipeline([(&quot;scaler&quot;, StandardScaler()),
+                 (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
+                 (&quot;lr&quot;, LinearRegression())]).fit(X_train, y_train)
+ols3_test = mean_absolute_error(y_test, ols3.predict(X_test))
+ridge_test = mean_absolute_error(y_test, grid.best_estimator_.predict(X_test))
+print(f&quot;OLS deg-3 test MAE: {ols3_test:.1f}&quot;)
+print(f&quot;ridge test MAE: {ridge_test:.1f}&quot;)
+print(f&quot;OLS deg-10 test MAE: {res.loc[res.degree == 10, &#x27;test_MAE&#x27;].iloc[0]:.1f}&quot;)
+
+# --- Solution 3 ---
+print(&quot;non-zero lasso coefs:&quot;, len(nonzero), &quot;/&quot;, len(coefs))
+print(&quot;top feature:&quot;, nonzero.abs().idxmax())
+lasso_hard = Pipeline([(&quot;scaler&quot;, StandardScaler()),
+                       (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
+                       (&quot;lasso&quot;, Lasso(alpha=10000, max_iter=10000))]).fit(X_train, y_train)
+nz_hard = int((lasso_hard.named_steps[&quot;lasso&quot;].coef_ != 0).sum())
+print(f&quot;non-zero at alpha=10000: {nz_hard} / {len(coefs)}&quot;)
+
+# --- Follow-up 1 ---
+assert int(res.loc[res.degree == 10, &quot;n_features&quot;].iloc[0]) == 1000
+
+# --- Follow-up 2 ---
+assert ridge_test &lt; res.loc[res.degree == 10, &quot;test_MAE&quot;].iloc[0]
+print(f&quot;ridge beats deg-10 OLS by {res.loc[res.degree == 10, &#x27;test_MAE&#x27;].iloc[0] - ridge_test:.1f}&quot;)
+
+# --- Follow-up 3 ---
+assert nz_hard == 7
+print(f&quot;at alpha=10000, {nz_hard} of {len(coefs)} coefficients survive&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>ElasticNet blends L1 and L2 — try <code>ElasticNet(l1_ratio=0.5)</code>.</li>
+<li>Plot the full coefficient path (coefficients vs alpha) to see shrinkage visually.</li>
+<li>Move to <code>RidgeCV</code> / <code>LassoCV</code>, which choose alpha internally with efficient path algorithms.</li>
+</ul>
+<p><em>Files in this folder: housing.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 11 · Executable notebook: <code>lab-11-regularisation-ridge-lasso.ipynb</code></footer>
+</body>
+</html>

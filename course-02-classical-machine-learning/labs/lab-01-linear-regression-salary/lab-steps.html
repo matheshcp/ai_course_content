@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Lab 01 — Linear Regression — Salary vs Experience</title>
+<style>
+body { font-family: Georgia, 'Times New Roman', serif; max-width: 46rem; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #111; }
+h1, h2, h3, h4, h5, h6 { font-family: system-ui, -apple-system, sans-serif; line-height: 1.25; }
+h1 { font-size: 1.75rem; border-bottom: 2px solid #222; padding-bottom: 0.3rem; }
+h2 { font-size: 1.3rem; margin-top: 2rem; border-bottom: 1px solid #bbb; padding-bottom: 0.2rem; }
+h3 { font-size: 1.1rem; margin-top: 1.4rem; }
+h4 { font-size: 1rem; margin-top: 1.1rem; color: #222; }
+code, pre { font-family: ui-monospace, Consolas, 'Courier New', monospace; font-size: 0.9em; }
+code { background: #f2f2f2; padding: 0.1em 0.3em; border-radius: 3px; }
+pre { background: #f6f6f6; border: 1px solid #ddd; padding: 0.85rem 1rem; overflow-x: auto; border-radius: 4px; }
+pre code { background: none; padding: 0; }
+blockquote { border-left: 4px solid #888; margin: 1rem 0; padding: 0.4rem 0 0.4rem 1rem; color: #333; background: #fafafa; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-family: system-ui, sans-serif; font-size: 0.92rem; }
+th, td { border: 1px solid #ccc; padding: 0.4rem 0.55rem; text-align: left; }
+th { background: #eee; }
+.meta { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #f0f4f8; border: 1px solid #ccd; padding: 0.75rem 1rem; border-radius: 4px; }
+.meta strong { display: inline-block; min-width: 7rem; }
+hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
+.colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
+.colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
+details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
+details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
+details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
+footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
+</style>
+</head>
+<body>
+<h1>Lab 01 — Linear Regression — Salary vs Experience</h1>
+<div class="meta">
+<p><strong>Track</strong> Regression Track</p>
+<p><strong>Level</strong> Beginner · <strong>Time</strong> ~40 min · <strong>Env</strong> 🟢 Colab only</p>
+<p><strong>Executable lab</strong> open <code>lab-01-linear-regression-salary.ipynb</code> in this folder</p>
+</div>
+
+<div class="colab">
+<strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<ol>
+<li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-01-linear-regression-salary/lab-01-linear-regression-salary.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
+<li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
+<li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
+<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+</ol>
+<p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Salary_Data.csv</code></li></ul>
+</div>
+
+<h2>Learning goals</h2>
+<ul><li>Fit simple OLS with sklearn LinearRegression</li><li>Interpret slope and intercept in business terms</li><li>Evaluate with R² and residual plots</li><li>Predict salary at unseen experience values</li></ul>
+
+<hr/>
+<h2>Data Science: Predicting Salary from Experience</h2>
+<blockquote><strong>Scenario:</strong> You are an HR analyst at a mid-size tech company. Leadership wants a defensible model that predicts expected salary from years of experience, so they can benchmark offers and spot pay inequities. You have 30 historical employee records with <code>YearsExperience</code> and <code>Salary</code>. Your job is to build, evaluate, and interpret a simple linear regression model. <strong>You will learn:</strong> OLS intuition, sklearn LinearRegression, slope/intercept interpretation, R², residual analysis, train/test split. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>
+<h3>Mental Map</h3>
+<table><thead><tr><th>Concept</th><th>What it means</th><th>Where it shows up</th></tr></thead><tbody>
+<tr><td>Linear regression</td><td>Fit a straight line <code>y = mx + b</code> minimizing squared error</td><td><code>LinearRegression().fit(X, y)</code></td></tr>
+<tr><td>Slope (m)</td><td>Change in salary per extra year of experience</td><td><code>model.coef_</code></td></tr>
+<tr><td>Intercept (b)</td><td>Predicted salary at 0 years experience</td><td><code>model.intercept_</code></td></tr>
+<tr><td>R²</td><td>Fraction of variance explained (1 = perfect)</td><td><code>model.score(X_test, y_test)</code></td></tr>
+<tr><td>Residuals</td><td>Prediction errors (y_true − y_pred)</td><td>Residual plot</td></tr>
+<tr><td>Train/test split</td><td>Hold out data to estimate real-world performance</td><td><code>train_test_split</code></td></tr>
+</tbody></table>
+<hr/>
+<h2>1. Load and Explore the Data</h2>
+<p>Linear regression models the relationship between a continuous target and one or more features as a straight line. With a single feature, the model is <code>Salary = slope × YearsExperience + intercept</code>. The Ordinary Least Squares (OLS) algorithm finds the line that minimizes the sum of squared vertical distances between the data points and the line.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+print(df.shape)
+print(df.head())
+print(df.describe())
+print(df.isnull().sum())</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>30 rows, 2 columns — a tiny, clean dataset.</li>
+<li><code>YearsExperience</code> ranges from 1.1 to 10.5 years; <code>Salary</code> ranges from ~37k to ~122k.</li>
+<li>No missing values, so we can go straight to modeling.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> Always check for missing values before fitting. <code>LinearRegression</code> will raise an error on NaNs.</blockquote>
+<hr/>
+<h2>2. Fit a Linear Regression Model</h2>
+<p>We split the data into 70% training and 30% testing so we can evaluate the model on unseen data. Then we fit <code>LinearRegression</code> on the training set and inspect the learned parameters.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+X = df[[&quot;YearsExperience&quot;]]
+y = df[&quot;Salary&quot;]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+print(f&quot;Slope (coef_):     {model.coef_[0]:.2f}&quot;)
+print(f&quot;Intercept:         {model.intercept_:.2f}&quot;)
+print(f&quot;R² on train:       {model.score(X_train, y_train):.4f}&quot;)
+print(f&quot;R² on test:        {model.score(X_test, y_test):.4f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The slope tells you the average salary increase per additional year of experience.</li>
+<li>The intercept is the model's salary prediction at 0 years (extrapolation — interpret with caution).</li>
+<li>R² near 0.95 means the line explains ~95% of salary variance — a strong fit.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> A high R² on training data can be misleading. Always check test R² to detect overfitting.</blockquote>
+<hr/>
+<h2>3. Make Predictions</h2>
+<p>Once fitted, the model can predict salary for any experience value. We predict for 5.5 years and also compute the Mean Squared Error on the test set.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+X = df[[&quot;YearsExperience&quot;]]
+y = df[&quot;Salary&quot;]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+pred_5_5 = model.predict([[5.5]])
+print(f&quot;Predicted salary at 5.5 years: ${pred_5_5[0]:,.2f}&quot;)
+
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print(f&quot;Test MSE:  {mse:,.2f}&quot;)
+print(f&quot;Test RMSE: {np.sqrt(mse):,.2f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>The prediction at 5.5 years should be close to the actual salaries of employees with ~5 years of experience.</li>
+<li>RMSE is in the same units as salary (dollars), making it more interpretable than MSE.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> <code>model.predict</code> expects a 2D array. Use <code>[[5.5]]</code>, not <code>[5.5]</code>.</blockquote>
+<hr/>
+<h2>4. Residual Analysis</h2>
+<p>Residuals are the differences between actual and predicted values. Plotting them helps you check whether the linear model's assumptions hold — residuals should be randomly scattered around zero with no obvious pattern.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib
+matplotlib.use(&quot;Agg&quot;)
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+X = df[[&quot;YearsExperience&quot;]]
+y = df[&quot;Salary&quot;]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42
+)
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+residuals = y_test - y_pred
+
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.scatter(y_pred, residuals, color=&quot;steelblue&quot;, edgecolor=&quot;k&quot;, alpha=0.7)
+ax.axhline(0, color=&quot;red&quot;, linestyle=&quot;--&quot;)
+ax.set_xlabel(&quot;Predicted Salary&quot;)
+ax.set_ylabel(&quot;Residual (Actual − Predicted)&quot;)
+ax.set_title(&quot;Residual Plot — Salary Prediction&quot;)
+plt.tight_layout()
+plt.show()
+
+print(f&quot;Mean residual: {residuals.mean():.2f}&quot;)
+print(f&quot;Residual std:  {residuals.std():.2f}&quot;)</code></pre>
+<p><strong>What to notice:</strong></p>
+<ul>
+<li>Residuals should be roughly symmetric around the red zero line.</li>
+<li>A mean near zero confirms the model is unbiased on average.</li>
+<li>No funnel shape or curve means the linear assumption is reasonable.</li>
+</ul>
+<blockquote><strong>Pitfall:</strong> A funnel-shaped residual plot (heteroscedasticity) suggests the error variance changes with the prediction — a sign the model may need transformation.</blockquote>
+<hr/>
+<h2>Exercises (do these!)</h2>
+<h3>Exercise 1 — Predict Salary at 5.5 Years</h3>
+<p>Use the fitted model to predict the salary for a candidate with 5.5 years of experience. <em>Expected: $77,283.39</em></p>
+<p><strong>Follow-up:</strong> What is the predicted salary at 0 years? Why might this be unrealistic? Check: intercept value.</p>
+<h3>Exercise 2 — Compute Test MSE</h3>
+<p>Calculate the Mean Squared Error on the held-out test set. <em>Expected: MSE = 37,784,662.47 (RMSE = $6,146.92)</em></p>
+<p><strong>Follow-up:</strong> Why is RMSE more interpretable than MSE? Check: RMSE value.</p>
+<h3>Exercise 3 — Interpret R²</h3>
+<p>The test R² is approximately 0.95. What does this mean in plain language? <em>Expected: The model explains 94.1% of the variance in salary using years of experience.</em></p>
+<p><strong>Follow-up:</strong> What would R² = 0 mean? What would R² = 1 mean? Check: R² on train vs test.</p>
+<details><summary>Hint</summary>
+<pre><code class="language-python">import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+X = df[[&quot;YearsExperience&quot;]]
+y = df[&quot;Salary&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# Exercise 1
+pred = model.predict([[5.5]])
+print(pred[0])
+
+# Exercise 2
+from sklearn.metrics import mean_squared_error
+mse = mean_squared_error(y_test, model.predict(X_test))
+print(mse)
+
+# Exercise 3
+print(model.score(X_test, y_test))</code></pre>
+</details>
+<hr/>
+<h2>Solutions</h2>
+<p>Try for 15 min each before peeking.</p>
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\Salary_Data.csv&quot;)
+X = df[[&quot;YearsExperience&quot;]]
+y = df[&quot;Salary&quot;]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+# --- Solution 1 ---
+pred_5_5 = model.predict([[5.5]])
+print(f&quot;Predicted salary at 5.5 years: ${pred_5_5[0]:,.2f}&quot;)
+
+# --- Solution 2 ---
+y_pred = model.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+print(f&quot;Test MSE:  {mse:,.2f}&quot;)
+print(f&quot;Test RMSE: {np.sqrt(mse):,.2f}&quot;)
+
+# --- Solution 3 ---
+r2_train = model.score(X_train, y_train)
+r2_test = model.score(X_test, y_test)
+print(f&quot;R² train: {r2_train:.4f}&quot;)
+print(f&quot;R² test:  {r2_test:.4f}&quot;)
+print(f&quot;The model explains {r2_test*100:.1f}% of salary variance.&quot;)
+
+# --- Follow-up 1 ---
+print(f&quot;Intercept (salary at 0 years): ${model.intercept_:,.2f}&quot;)
+
+# --- Follow-up 2 ---
+print(f&quot;RMSE: ${np.sqrt(mse):,.2f} — in salary dollars, unlike MSE.&quot;)
+
+# --- Follow-up 3 ---
+assert r2_test &gt; 0.90, &quot;R² should be above 0.90&quot;
+print(f&quot;R² test = {r2_test:.4f} — strong fit confirmed.&quot;)</code></pre>
+<h3>What to learn next</h3>
+<ul>
+<li>Multiple linear regression with more features</li>
+<li>Regularization (Ridge, Lasso) to prevent overfitting</li>
+<li>Polynomial regression for non-linear relationships</li>
+</ul>
+<p><em>Files in this folder: Salary_Data.csv.</em></p>
+
+<footer>Course 2 — Classical Machine Learning · Lesson for Lab 01 · Executable notebook: <code>lab-01-linear-regression-salary.ipynb</code></footer>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-07-neural-net-mnist",
+  "title": "Neural Net from Scratch — MNIST",
+  "notebook": "lab-07-neural-net-mnist.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-07-neural-net-mnist/lab-07-neural-net-mnist.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-07-neural-net-mnist/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "mnist_train.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Deep Learning",
+    "Neural Net",
+    "Advanced"
+  ],
+  "description": "Build and train a feed-forward neural net from scratch on MNIST.",
+  "level": "Intermediate–Advanced",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> You are building the core engine for a postal service that must automatically read handwritten ZIP codes on envelopes. Before reaching for a deep-learning framework, your team wants to understand exactly what happens inside a neural network — the forward pass, the loss, and the gradient updates — by building one from scratch with numpy only. <strong>You will learn:</strong> perceptron → MLP intuition, forward pass with matrix multiplication, ReLU and softmax activations, cross-entropy loss, one full backpropagation training epoch, learning-rate effects, and reading a confusion matrix. <strong>Time:</strong> ~75 minutes. <strong>Level:</strong> Intermediate–Advanced. <strong>Needs:</strong> pandas + numpy + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — 200-Epoch Training Curve</h3>\n<p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. <em>Expected: final accuracy ≈ 0.937; accuracy first exceeds 0.90 around epoch 128.</em></p>\n<p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30? Check: loss[0] ≈ 2.376.</p>\n<h3>Exercise 2 — Learning Rate Showdown</h3>\n<p>Train two identical networks (same seed) with <code>lr=0.1</code> and <code>lr=0.01</code> for 200 epochs each. Plot both accuracy curves on the same axes. Report the final accuracy for each. <em>Expected: lr=0.1 → ≈ 0.937; lr=0.01 → ≈ 0.651.</em></p>\n<p><strong>Follow-up:</strong> At epoch 50, what is the accuracy gap between the two? Check: lr=0.1 ≈ 0.812 vs lr=0.01 ≈ 0.271.</p>\n<h3>Exercise 3 — Confusion Matrix: 3 vs 8</h3>\n<p>Digits 3 and 8 are the most commonly confused pair. Train the network, then build a 2×2 confusion matrix using only the test rows whose true label is 3 or 8. Report the matrix and the accuracy on this subset. <em>Expected: matrix [[90, 0], [8, 85]] (rows = true [3, 8], cols = predicted [3, 8]); subset accuracy ≈ 0.956.</em></p>\n<p><strong>Follow-up:</strong> How many true 8s were misclassified as 3? Check: 8.</p>\n<details><summary>Hint</summary>\n<p>For Exercise 3, filter with <code>mask = (y == 3) | (y == 8)</code>, then loop over <code>(true, pred)</code> pairs and increment <code>cm[int(true==8), int(pred==8)]</code>.</p>\n</details>\n<hr/>",
+  "duration": "01:15:00",
+  "lab_duration": "75 Minutes",
+  "session_timeout": 6300,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

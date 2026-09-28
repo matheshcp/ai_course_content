@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-08-kmeans-mall-segments",
+  "title": "Customer Segments — Mall K-Means",
+  "notebook": "lab-08-kmeans-mall-segments.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-08-kmeans-mall-segments/lab-08-kmeans-mall-segments.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-08-kmeans-mall-segments/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "Mall_Customers.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Clustering",
+    "Unsupervised",
+    "Intermediate"
+  ],
+  "description": "Customer segmentation with K-Means, elbow, and silhouette.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> A shopping mall's marketing team has collected data on 200 customers — age, annual income, and spending score — but no predefined segments. They want to discover natural groupings so they can tailor promotions: a \"high-income big-spender\" campaign makes no sense for a \"budget-conscious retiree\" segment. You will use K-Means clustering to find these segments and give each a marketing persona. <strong>You will learn:</strong> unsupervised learning vs supervised, why feature scaling matters, the elbow method for choosing k, silhouette score for cluster quality, and how to interpret cluster centroids as business personas. <strong>Time:</strong> ~50 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Elbow Method</h3>\n<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. <em>Expected: elbow at k=5; inertia at k=5 ≈ 168.25.</em></p>\n<p><strong>Follow-up:</strong> What is the inertia at k=1? Check: 600.00 (equals 200 rows × 3 features, since each feature has variance 1 after scaling).</p>\n<h3>Exercise 2 — Best k by Silhouette</h3>\n<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? <em>Expected: k=6 with silhouette ≈ 0.4284.</em></p>\n<p><strong>Follow-up:</strong> What is the silhouette score at k=5? Check: ≈ 0.4166.</p>\n<h3>Exercise 3 — Name the Segments</h3>\n<p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., \"Young Enthusiasts: age ~25, high spend\"). Report the cluster sizes. <em>Expected: sizes 20, 54, 40, 39, 47 for clusters 0–4.</em></p>\n<p><strong>Follow-up:</strong> Which cluster has the highest average income? Check: clusters 2 and 3 both ≈ 86.1k.</p>\n<details><summary>Hint</summary>\n<p>For Exercise 3, use <code>scaler.inverse_transform(km.cluster_centers_)</code> to get centroids in original units, then loop over clusters and print <code>mall[labels == c].mean()</code>.</p>\n</details>\n<hr/>",
+  "duration": "00:50:00",
+  "lab_duration": "50 Minutes",
+  "session_timeout": 4800,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

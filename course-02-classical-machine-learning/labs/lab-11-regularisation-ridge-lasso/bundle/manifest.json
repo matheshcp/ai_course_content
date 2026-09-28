@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-11-regularisation-ridge-lasso",
+  "title": "Regularisation — Ridge & Lasso on Housing",
+  "notebook": "lab-11-regularisation-ridge-lasso.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-11-regularisation-ridge-lasso/lab-11-regularisation-ridge-lasso.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-11-regularisation-ridge-lasso/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "housing.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Regularisation",
+    "Regression",
+    "Intermediate"
+  ],
+  "description": "Ridge and Lasso regularisation to fight overfitting on housing.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> A property-valuation team fits polynomial regression to predict <code>median_house_value</code> from location and dwelling features. High-degree polynomials fit the training set beautifully and the validation set terribly. Your job: diagnose overfitting, then fix it with ridge and lasso regularisation. <strong>You will learn:</strong> polynomial feature expansion, the bias–variance trade-off, ridge (L2) vs lasso (L1), alpha paths, why standardisation is mandatory before regularisation. <strong>Time:</strong> ~55 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Locate the overfitting knee</h3>\n<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000. <em>Expected: best degree = 5; gap first exceeds $10k at degree 7.</em></p>\n<p><strong>Follow-up:</strong> How many features does degree 10 create? Check: 1000.</p>\n<h3>Exercise 2 — Best ridge alpha</h3>\n<p>Run the ridge grid search and report the best alpha and its CV MAE. <em>Expected: alpha = 100, CV MAE ≈ $56,593.</em></p>\n<p><strong>Follow-up:</strong> Does ridge beat unregularised degree-10 OLS on test MAE? Check: yes — $57,194 vs $262,600.</p>\n<h3>Exercise 3 — Lasso sparsity</h3>\n<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature. <em>Expected: 32 / 34 non-zero; top feature <code>median_income</code>.</em></p>\n<p><strong>Follow-up:</strong> Refit lasso with <code>alpha=10000</code> — how many survive? Check: 7.</p>\n<hr/>",
+  "duration": "00:55:00",
+  "lab_duration": "55 Minutes",
+  "session_timeout": 5100,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}

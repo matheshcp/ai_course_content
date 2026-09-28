@@ -1,0 +1,26 @@
+{
+  "lab_id": "lab-05-credit-risk-german",
+  "title": "Credit Risk — German Credit",
+  "notebook": "lab-05-credit-risk-german.ipynb",
+  "colab_url": "https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-05-credit-risk-german/lab-05-credit-risk-german.ipynb",
+  "dataset_zip": "https://raw.githubusercontent.com/matheshcp/ai_course_content/main/course-02-classical-machine-learning/labs/lab-05-credit-risk-german/bundle/dataset.zip",
+  "images_zip": null,
+  "files": [
+    "german_credit_data.csv"
+  ],
+  "host_notes": "Hosted on matheshcp/ai_course_content (branch main).",
+  "tags": [
+    "Classification",
+    "Credit Risk",
+    "Intermediate"
+  ],
+  "description": "Credit risk classification with mixed feature types and ROC-AUC.",
+  "level": "Intermediate",
+  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> You are the data scientist at a regional bank. The loan team wants a model that flags which applicants are likely to default, so a human officer can review risky cases before approving. You have 5,000 past applications with 21 features — a mix of numbers (loan amount, age, duration) and categories (checking account status, credit history, job). Only about 1 in 3 applicants is risky, so a lazy model that says \"no risk\" for everyone still looks decent. Your job is to build a model the bank can actually trust. <strong>You will learn:</strong> how to preprocess mixed categorical/numeric data with a ColumnTransformer, why class imbalance demands <code>class_weight</code>, how ROC-AUC measures ranking quality, and how to pick a decision threshold that matches business costs. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
+  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Risk rate by checking status</h3>\n<p>Group the full dataset by <code>CheckingStatus</code> and compute the risk rate (fraction with <code>Risk == \"Risk\"</code>) for each group. Which group is riskiest, and which is safest? <em>Expected: no_checking ≈ 0.5665 (n=1993) is riskiest; less_0 ≈ 0.0930 (n=1398) is safest; 0_to_200 ≈ 0.2178; greater_200 ≈ 0.4164.</em></p>\n<p><strong>Follow-up:</strong> What is the overall risk rate across all 5,000 applicants? Check: ≈ 0.334.</p>\n<details><summary>Hint</summary>\n<p><code>df.groupby(\"CheckingStatus\")[\"Risk\"].apply(lambda s: (s == \"Risk\").mean())</code> gives the per-group rate.</p>\n</details>\n<h3>Exercise 2 — ROC-AUC of the pipeline</h3>\n<p>Train the balanced logistic regression from section 3 and compute ROC-AUC on the held-out test set. Then retrain without <code>class_weight</code> and compare. <em>Expected: balanced AUC ≈ 0.8664; unbalanced AUC ≈ 0.8666 (nearly identical — AUC is a ranking metric).</em></p>\n<p><strong>Follow-up:</strong> At the default 0.5 threshold, what is the balanced model's TPR? Check: ≈ 0.7545.</p>\n<details><summary>Hint</summary>\n<p><code>roc_auc_score(y_te, proba)</code> where <code>proba = clf.predict_proba(X_te)[:, 1]</code>.</p>\n</details>\n<h3>Exercise 3 — Top 5 features by permutation importance</h3>\n<p>Permutation importance measures how much the model's AUC drops when one feature is randomly shuffled — a model-agnostic way to rank what matters. Compute it on the test set and list the top 5 features. <em>Expected: EmploymentDuration (≈0.047), OwnsProperty (≈0.039), CheckingStatus (≈0.024), LoanDuration (≈0.016), ExistingCreditsCount (≈0.013).</em></p>\n<p><strong>Follow-up:</strong> Why is permutation importance computed on the <em>test</em> set, not the training set? Check: on training data the model may have memorized noise, so shuffling a useless feature shows no drop.</p>\n<details><summary>Hint</summary>\n<p><code>permutation_importance(clf, X_te, y_te, n_repeats=10, random_state=42, scoring=\"roc_auc\")</code> returns importances aligned with <code>X.columns</code>.</p>\n</details>\n<hr/>",
+  "duration": "01:00:00",
+  "lab_duration": "1 Hour",
+  "session_timeout": 5400,
+  "intro_walkthrough_iframe": "",
+  "intro_walkthrough_hidden": false
+}
