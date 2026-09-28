@@ -73,7 +73,11 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 </tbody></table>
 <hr/>
 <h2>1. Load and Explore the Data</h2>
-<p>The California housing dataset contains 20,640 census block groups. The target is <code>median_house_value</code> (in hundreds of thousands of dollars). Features include location (longitude/latitude), housing age, room counts, population, households, median income, and ocean proximity category.</p>
+<p>The California housing dataset is a classic for a reason: it is messy enough to be realistic, clean enough to be approachable, and rich enough to teach the full ML workflow. With 20,640 census block groups and 10 columns, it is large enough that computational choices matter but small enough that every model trains in seconds.</p>
+<p>The target is <code>median_house_value</code> — the median price of homes in that block group, in hundreds of thousands of dollars. The features tell a story about each neighbourhood: where it is (longitude, latitude), how old the homes are (housing_median_age), how big they are (total_rooms, total_bedrooms), how many people live there (population, households), how wealthy the residents are (median_income), and how close the ocean is (ocean_proximity).</p>
+<p>Two data quality issues jump out immediately. First, <code>total_bedrooms</code> has 207 missing values — about 1% of the data. We cannot simply drop these rows; that would discard 1% of our data and potentially bias the sample. Instead, we will <strong>impute</strong> them: fill in reasonable values based on the rest of the data. Second, <code>ocean_proximity</code> is a categorical variable with five values (<code>&lt;1H OCEAN</code>, <code>INLAND</code>, <code>NEAR OCEAN</code>, <code>NEAR BAY</code>, <code>ISLAND</code>). Machine learning models need numbers, so we will <strong>encode</strong> these categories as binary columns — a process called one-hot encoding.</p>
+<p>The target also has a quirk: it is capped at 500,001. Any home worth more than $500,000 is recorded as exactly $500,001. This means the model cannot predict above that value — a limitation we must remember when interpreting results.</p>
+<p>Let us load the data and see what we are working with.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 
@@ -93,7 +97,10 @@ print(df[&quot;ocean_proximity&quot;].value_counts())</code></pre>
 <blockquote><strong>Pitfall:</strong> Never fit an imputer on the full dataset before splitting — that leaks test information into training. Fit on train only.</blockquote>
 <hr/>
 <h2>2. Preprocess: Impute and Encode</h2>
-<p>We split first, then fit a median imputer on the training data only. For the categorical <code>ocean_proximity</code> column, we use one-hot encoding so both linear and tree models can consume it.</p>
+<p>Before any model can learn from data, the data must be in a form the model can understand. This is the unglamorous but critical work of <strong>preprocessing</strong>, and it is where most real-world ML projects spend most of their time. The rule is simple: garbage in, garbage out. No model, no matter how sophisticated, can overcome badly prepared data.</p>
+<p>Our preprocessing has two steps. First, we handle the missing <code>total_bedrooms</code> values. The safest approach is <strong>median imputation</strong>: fill each missing value with the median of that column. We use the median rather than the mean because it is robust to outliers — a few mansions with 50 bedrooms will not skew our imputed values. Crucially, we fit the imputer on the <strong>training data only</strong>, then apply it to both train and test. If we fit on the full dataset, information from the test set leaks into training — a subtle but serious form of cheating that inflates your metrics.</p>
+<p>Second, we encode the categorical <code>ocean_proximity</code> column. One-hot encoding creates a binary column for each category: <code>ocean_proximity_INLAND</code>, <code>ocean_proximity_NEAR_BAY</code>, etc. We drop the first category to avoid the "dummy variable trap" — perfect collinearity that can confuse linear models. The <code>reindex</code> step ensures the test set has the same columns as the training set, even if some categories happen to be missing from the test split.</p>
+<p>The result is a clean numeric matrix ready for modelling. Let us build it.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -162,7 +169,11 @@ print(f&quot;Baseline (mean) MAE: ${baseline_mae:,.2f}&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Always compute the baseline on the training mean, not the test mean — using test data for the baseline is leakage.</blockquote>
 <hr/>
 <h2>4. Linear Regression vs Random Forest</h2>
-<p>We fit both a LinearRegression and a RandomForestRegressor on the same preprocessed data and compare their test MAE.</p>
+<p>Here is where the lab gets interesting. We are going to fit two very different models on the same preprocessed data and see which one wins. This is not just an academic exercise — model comparison is a core skill in applied machine learning, and the choice of model can mean the difference between a project that ships and one that does not.</p>
+<p><strong>Linear Regression</strong> assumes the target is a linear combination of the features. It is fast, interpretable, and works well when the true relationship is approximately linear. But housing prices are not linear: the effect of income on price diminishes at high incomes, location interacts with size in complex ways, and the capped target creates a ceiling effect. A straight line cannot capture these nuances.</p>
+<p><strong>Random Forest</strong> takes a completely different approach. It builds hundreds of decision trees, each trained on a random subset of the data and features, then averages their predictions. Each tree asks a series of yes/no questions about the features ("Is median_income &gt; 5.2?" "Is longitude &lt; -118?") and arrives at a prediction. By averaging many trees, the forest captures complex non-linear relationships and feature interactions that a linear model cannot see. The cost is interpretability — a forest of 100 trees is much harder to explain than a single equation.</p>
+<p>The metric we will use is <strong>Mean Absolute Error (MAE)</strong> — the average absolute difference between predicted and actual prices. Unlike MSE, MAE is in the same units as the target (dollars), making it directly interpretable. An MAE of $30,000 means the model's predictions are typically about $30,000 off.</p>
+<p>Let us fit both models and compare.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -213,7 +224,10 @@ print(f&quot;Improvement:           ${lr_mae - rf_mae:,.2f} ({(1 - rf_mae/lr_mae
 <blockquote><strong>Pitfall:</strong> Random Forests can overfit if trees are too deep. Use <code>max_depth</code> or <code>min_samples_leaf</code> to control complexity.</blockquote>
 <hr/>
 <h2>5. Cross-Validation Comparison</h2>
-<p>A single train/test split can be noisy. We use 5-fold cross-validation to get a more robust estimate of model performance.</p>
+<p>A single train/test split is a coin flip. You might get a lucky split where the test set is easy, or an unlucky one where it is hard. Either way, one number is not enough to trust a model — you need to know how it performs across many different subsets of the data. This is where <strong>cross-validation</strong> comes in, and it is one of the most important ideas in applied machine learning.</p>
+<p>The idea is elegant: instead of splitting the data once, we split it five times. Each time, we train on 4/5 of the data and test on the remaining 1/5, rotating which fifth is held out. This gives us five performance estimates — a mean and a standard deviation. The mean tells us the expected performance; the standard deviation tells us how much that performance varies across different data subsets. A model with high mean and low variance is reliable; a model with high mean and high variance is a gamble.</p>
+<p>We use <code>cross_val_score</code> with 5-fold CV and the <code>neg_mean_absolute_error</code> scoring metric. The "neg" prefix is an sklearn convention: since cross-validation always maximises the score, and we want to <em>minimise</em> MAE, sklearn negates it so that "higher is better" still holds. Remember to negate the result when reporting.</p>
+<p>The key question we are answering: is Random Forest's advantage over Linear Regression real, or just an artifact of one particular train/test split? Cross-validation gives us the honest answer.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -254,7 +268,10 @@ print(f&quot;RF  CV MAE: ${-rf_cv.mean():,.2f} (+/- ${rf_cv.std():,.2f})&quot;)<
 <blockquote><strong>Pitfall:</strong> Use <code>neg_mean_absolute_error</code> (sklearn convention: higher is better, so MAE is negated). Remember to negate the result.</blockquote>
 <hr/>
 <h2>6. Feature Importance</h2>
-<p>Random Forest provides feature importances that show which features drive predictions. We plot them to identify the top predictors.</p>
+<p>A model that cannot be explained is a model that will not be trusted. In high-stakes applications — lending, healthcare, criminal justice — stakeholders will not accept "the computer said so." They want to know <em>why</em> the model makes its predictions. <strong>Feature importance</strong> is the most direct answer to that question.</p>
+<p>Random Forest provides feature importances for free. The idea is intuitive: when building each tree, the algorithm chooses which feature to split on based on how much that split reduces impurity (variance for regression). Features that are used often and produce large reductions in impurity are more important. The result is a ranking: which features drive the model's predictions?</p>
+<p>On California housing, the answer is no surprise: <code>median_income</code> dominates. This makes perfect sense — income is the strongest predictor of housing wealth, and the model has correctly identified it as the most informative feature. The one-hot encoded <code>ocean_proximity</code> columns and location features (longitude, latitude) also contribute, reflecting the old real estate adage: location, location, location.</p>
+<p>But feature importance has a caveat: it is biased toward features with many unique values (high cardinality). A feature with 100 distinct values has more opportunities to produce a "good" split than a feature with only 2 values, even if the latter is more predictive. For a more reliable ranking, use <strong>permutation importance</strong>: shuffle one feature, measure how much the model's performance drops, and repeat for every feature. We will see this technique in later labs.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 import matplotlib

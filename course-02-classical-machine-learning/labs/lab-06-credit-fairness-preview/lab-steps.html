@@ -71,6 +71,17 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <hr/>
 <h2>1. Group-wise metrics: accuracy and TPR by sex</h2>
 <p>A single overall accuracy can hide very different experiences for different groups. The first fairness step is always to <strong>slice the metrics by group</strong>. Here we train the same kind of credit model as Lab 05 and compute accuracy and the true-positive rate (TPR — fraction of actual defaulters the model flags) separately for female and male applicants.</p>
+<p>Fairness in machine learning is not an abstract philosophical debate — it is a concrete, measurable property of models that affect real people's lives. When a credit model approves 60% of male applicants but only 49% of female applicants, that gap has real consequences: women are denied loans at higher rates, which affects their ability to buy homes, start businesses, and build wealth. The question is not whether the model is "biased" in some vague sense, but whether its <em>outcomes</em> are equitable across groups.</p>
+<p>The first step in any fairness audit is to compute <strong>group-wise metrics</strong>. Overall accuracy might look fine — 74.5% sounds respectable — but that number blends two very different stories. When we slice by sex, we find that female applicants have a higher TPR (the model catches more female defaulters) but a lower approval rate (fewer women are approved overall). These two facts together reveal a pattern that the overall metric hides.</p>
+<p>The key metrics to compute per group are:</p>
+<ul>
+<li><strong>Accuracy</strong>: overall correctness within the group</li>
+<li><strong>TPR (True Positive Rate)</strong>: fraction of actual defaulters the model flags — also called recall or sensitivity</li>
+<li><strong>FPR (False Positive Rate)</strong>: fraction of safe applicants the model falsely flags</li>
+<li><strong>Approval rate</strong>: fraction of applicants the model approves (predicts "no default")</li>
+</ul>
+<p>A fair model should have similar TPR and FPR across groups. If one group has a much lower TPR, the model is missing defaulters in that group. If one group has a much higher FPR, the model is falsely flagging safe applicants in that group. Both are forms of unfairness.</p>
+<p>Let us compute these metrics by sex and see what the model reveals.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
@@ -115,6 +126,11 @@ for sex, g in res.groupby(&quot;sex&quot;):
 <hr/>
 <h2>2. The disparate impact ratio</h2>
 <p>The <strong>disparate impact (DI) ratio</strong> compares approval rates between groups: DI = (approval rate of the disadvantaged group) / (approval rate of the advantaged group). A DI of 1.0 means perfect parity. In US employment law, DI &lt; 0.8 is the "four-fifths rule" threshold that raises legal scrutiny — and it is a useful benchmark anywhere.</p>
+<p>The disparate impact ratio is one of the oldest and most widely used fairness metrics. It originated in US employment law in the 1970s, when courts needed a simple test for whether a hiring practice was discriminatory. The "four-fifths rule" states that a selection rate for any race, sex, or ethnic group that is less than four-fifths (80%) of the rate for the group with the highest selection rate is evidence of adverse impact.</p>
+<p>The beauty of DI is its simplicity. It is a single number that captures outcome parity: are both groups being approved at similar rates? A DI of 1.0 means perfect parity. A DI of 0.82 means the disadvantaged group is approved at 82% of the rate of the advantaged group — a gap that may or may not be justified by legitimate factors.</p>
+<p>But DI has limitations. It measures <em>outcome</em> parity, not <em>error</em> parity. A model can have DI = 1.0 and still miss defaulters in one group much more often. It also does not account for base rates: if one group genuinely has a higher default rate, a lower approval rate might be justified. For a complete fairness picture, you need to look at DI alongside TPR and FPR gaps.</p>
+<p>In this dataset, the DI is approximately 0.82 — just below the 0.8 threshold. This means the model would draw legal scrutiny in a US employment context. The question is whether the gap is explained by legitimate factors (income, credit history) or by bias in the model or the training data.</p>
+<p>Let us compute the DI and see how close we are to the threshold.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
@@ -160,7 +176,11 @@ print(res.groupby(&quot;sex&quot;)[&quot;y&quot;].mean().round(4))</code></pre>
 <hr/>
 <h2>3. Why equal accuracy ≠ fair, and one mitigation</h2>
 <p>Here is the trap: overall accuracy is nearly identical across groups (≈0.72 female vs ≈0.76 male), so a naive audit says "fair". But the <em>errors</em> are distributed unevenly — women are approved less often. Accuracy is a single number that averages over both classes; fairness lives in the details.</p>
-<p>One concrete mitigation is <strong>per-group thresholds</strong>: use a different score cutoff for each group so that approval rates (or TPRs) match. This is simple, transparent, and easy to explain to regulators — though it is not the only option, and each has trade-offs.</p>
+<p>This is one of the most important lessons in fairness-aware machine learning: <strong>equal accuracy does not imply fairness</strong>. Accuracy is a single number that blends performance on both classes. A model can have the same accuracy for two groups while making very different <em>types</em> of errors. Women might be approved less often (lower approval rate) even though the model catches a higher fraction of female defaulters (higher TPR). These two facts are not contradictory — they are two sides of the same coin.</p>
+<p>The reason is base rates. If women in this dataset have a slightly higher default rate, the model will (correctly) flag more women as risky. But this means fewer women are approved, even if the model is equally accurate for both groups. The approval gap is a consequence of the base-rate difference, not necessarily of model bias.</p>
+<p>So what can we do? One concrete mitigation is <strong>per-group thresholds</strong>: use a different score cutoff for each group so that approval rates (or TPRs) match. This is simple, transparent, and easy to explain to regulators. The idea is to raise the threshold for the group that is over-approved and lower it for the group that is under-approved, until the outcomes are balanced.</p>
+<p>The trade-off is that per-group thresholds can reduce TPR for the group whose threshold is raised. In this case, raising the female threshold to 0.6 brings DI from 0.82 to 0.96 — near parity — but drops female TPR from 0.85 to 0.75. There is no free lunch: the "right" threshold depends on whether the business prioritises approval parity, TPR parity, or accuracy.</p>
+<p>Let us sweep through different female thresholds and see how DI and accuracy change.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np

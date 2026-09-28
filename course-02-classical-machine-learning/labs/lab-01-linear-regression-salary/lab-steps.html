@@ -72,7 +72,11 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 </tbody></table>
 <hr/>
 <h2>1. Load and Explore the Data</h2>
-<p>Linear regression models the relationship between a continuous target and one or more features as a straight line. With a single feature, the model is <code>Salary = slope × YearsExperience + intercept</code>. The Ordinary Least Squares (OLS) algorithm finds the line that minimizes the sum of squared vertical distances between the data points and the line.</p>
+<p>Every data scientist's first model is a straight line — and for good reason. Linear regression is the "hello world" of predictive modelling: simple enough to fit in one line of code, yet powerful enough to answer real business questions. When an HR team asks "what should we offer a candidate with 5 years of experience?", they are asking for a prediction. When they ask "are we paying fairly across experience levels?", they are asking for a relationship. Linear regression answers both.</p>
+<p>The idea is beautifully simple. Imagine plotting every employee on a graph: years of experience on the x-axis, salary on the y-axis. Each person is a dot. Now draw a straight line through the cloud of dots that minimises the total squared distance from each dot to the line. That line <em>is</em> your model. The slope tells you how much salary increases per year of experience; the intercept tells you where the line crosses the y-axis (theoretical salary at zero experience).</p>
+<p>This is called <strong>Ordinary Least Squares (OLS)</strong> — "ordinary" because it is the standard approach, "least squares" because it minimises the sum of squared errors. The squaring is important: it penalises large errors more than small ones, and it ensures that predictions above and below the line contribute equally to the total error.</p>
+<p>With a single feature, the model is just <code>Salary = slope × YearsExperience + intercept</code> — the same equation you learned in high school algebra, now fitted to real data. The magic is in how sklearn finds the best slope and intercept: it uses a closed-form mathematical solution (the "normal equation") that gives the exact optimal values in one step, no iteration required.</p>
+<p>Let us load the data and see what we are working with.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 
@@ -90,7 +94,11 @@ print(df.isnull().sum())</code></pre>
 <blockquote><strong>Pitfall:</strong> Always check for missing values before fitting. <code>LinearRegression</code> will raise an error on NaNs.</blockquote>
 <hr/>
 <h2>2. Fit a Linear Regression Model</h2>
-<p>We split the data into 70% training and 30% testing so we can evaluate the model on unseen data. Then we fit <code>LinearRegression</code> on the training set and inspect the learned parameters.</p>
+<p>Here is a question that separates careful data scientists from careless ones: how do you know your model actually works? The answer is humbling — you don't, until you test it on data it has never seen. This is why we split our data before doing anything else.</p>
+<p>We use 70% of the data for <strong>training</strong> — this is the data the model learns from, the dots on our graph. We hold back 30% for <strong>testing</strong> — this is the exam the model takes after studying. If the model performs well on training data but poorly on test data, it has <strong>overfit</strong>: it memorised the training examples instead of learning the underlying pattern. The train/test split is the simplest defence against overfitting, and it is non-negotiable in any real project.</p>
+<p>The <code>random_state=42</code> parameter ensures the split is reproducible — you and I will get the exact same train and test sets, so we can compare results fairly. Without it, every run would produce a different split, and your metrics would be noisy.</p>
+<p>Once the data is split, fitting the model is one line: <code>model.fit(X_train, y_train)</code>. Behind the scenes, sklearn solves the normal equation to find the slope and intercept that minimise squared error on the training data. The result is a model with two key parameters: <code>model.coef_</code> (the slope — how much salary increases per year) and <code>model.intercept_</code> (the baseline salary at zero experience).</p>
+<p>Let us fit the model and inspect what it learned.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -120,7 +128,10 @@ print(f&quot;R² on test:        {model.score(X_test, y_test):.4f}&quot;)</code>
 <blockquote><strong>Pitfall:</strong> A high R² on training data can be misleading. Always check test R² to detect overfitting.</blockquote>
 <hr/>
 <h2>3. Make Predictions</h2>
-<p>Once fitted, the model can predict salary for any experience value. We predict for 5.5 years and also compute the Mean Squared Error on the test set.</p>
+<p>A model that cannot predict is just a maths exercise. The whole point of fitting a linear regression is to use it: feed in a new value, get out a prediction. This is where the model becomes a tool rather than a curiosity.</p>
+<p>When we call <code>model.predict([[5.5]])</code>, we are asking: "Based on the pattern you learned from 21 employees, what salary would you expect for someone with 5.5 years of experience?" The model plugs 5.5 into the equation <code>Salary = slope × 5.5 + intercept</code> and returns a number. That number is our best guess — not a guarantee, but the most defensible estimate we can make from this data.</p>
+<p>But how good is that guess? To answer, we need a metric. <strong>Mean Squared Error (MSE)</strong> measures the average squared difference between predicted and actual salaries on the test set. Squaring the errors ensures that large misses are penalised more than small ones, and that over-predictions and under-predictions contribute equally. The problem with MSE is its units: if salary is in dollars, MSE is in <em>squared dollars</em> — a number that is hard to interpret. That is why we also compute <strong>Root Mean Squared Error (RMSE)</strong>, which takes the square root and puts the error back in dollars. An RMSE of $6,000 means the model's predictions are typically about $6,000 off — a number an HR director can actually understand.</p>
+<p>Let us make a prediction and compute both metrics.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -153,7 +164,15 @@ print(f&quot;Test RMSE: {np.sqrt(mse):,.2f}&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> <code>model.predict</code> expects a 2D array. Use <code>[[5.5]]</code>, not <code>[5.5]</code>.</blockquote>
 <hr/>
 <h2>4. Residual Analysis</h2>
-<p>Residuals are the differences between actual and predicted values. Plotting them helps you check whether the linear model's assumptions hold — residuals should be randomly scattered around zero with no obvious pattern.</p>
+<p>Here is a secret that separates junior analysts from senior ones: the model's coefficients tell you what the model learned, but the <strong>residuals</strong> tell you whether to trust it. A residual is simply the difference between the actual value and the predicted value: <code>residual = actual - predicted</code>. If the model is good, residuals should look like random noise — scattered around zero with no discernible pattern. If they show a pattern, the model is missing something.</p>
+<p>Plotting residuals against predicted values is the single most important diagnostic in regression analysis. Here is what to look for:</p>
+<ul>
+<li><strong>Random scatter around zero</strong>: The model has captured the underlying pattern. The remaining error is irreducible noise.</li>
+<li><strong>Funnel shape (heteroscedasticity)</strong>: The spread of residuals changes with the prediction. This means the model is more confident in some regions than others — a sign that a transformation (like log-scaling the target) might help.</li>
+<li><strong>Curved pattern</strong>: The relationship is not linear. A straight line is the wrong shape for this data, and you need polynomial features or a different model.</li>
+<li><strong>Outliers</strong>: A few points with huge residuals may be data errors or special cases that deserve investigation.</li>
+</ul>
+<p>The mean residual should be near zero (the model is unbiased on average), and the standard deviation tells you the typical error size. Let us plot the residuals and see what story they tell.</p>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 import matplotlib

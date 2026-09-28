@@ -71,12 +71,16 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 </tbody></table>
 <hr/>
 <h2>1. How KNN thinks: "tell me who your neighbors are"</h2>
+<p>Every recommendation system you have ever used — "customers who bought this also bought…" — is KNN wearing a costume. It is the simplest idea in machine learning: to understand something new, look at the things most like it. If you can define "like", you can build a classifier with zero training.</p>
 <p>KNN has no training step in the usual sense. To classify a new flower, it measures the distance from that flower to every flower in the training set, finds the <strong>k closest</strong> ones, and lets them vote. The majority species wins. The only real choice (beyond k) is <strong>how you measure distance</strong>.</p>
+<p>Think of each flower as a point in a 4-dimensional space — one axis per measurement. Two flowers that are close in this space have similar sepals and petals, so they are probably the same species. "Close" sounds obvious, but you must pick a geometry, and different geometries give different answers.</p>
 <p>The two most common metrics:</p>
 <ul>
 <li><strong>Euclidean</strong> — straight-line distance: <code>sqrt(sum((a - b)^2))</code>. Think "as the crow flies".</li>
 <li><strong>Manhattan</strong> — sum of absolute differences: <code>sum(|a - b|)</code>. Think "city blocks" in a grid-like city.</li>
 </ul>
+<p>Euclidean penalizes one large gap more than several small ones (because of the squaring); Manhattan treats every gap equally. In low dimensions they usually agree; in high dimensions they drift apart. On iris, both work well — the species form tight, well-separated clusters.</p>
+<p>The snippet below loads the iris data, then trains two KNN classifiers — one Euclidean, one Manhattan — each wrapped in a pipeline with a StandardScaler. It scores both with 5-fold cross-validation and prints the mean accuracy, so you can compare the two geometries on equal footing.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
@@ -100,10 +104,15 @@ for metric in [&quot;euclidean&quot;, &quot;manhattan&quot;]:
 <li>Scaling is baked into the pipeline so both metrics see comparable features.</li>
 </ol>
 <blockquote><strong>Pitfall:</strong> KNN is a <em>lazy</em> learner — it stores all 150 rows and does all the work at prediction time. With 150 rows that's instant; with 10 million rows it would crawl.</blockquote>
+<blockquote><strong>In practice:</strong> KNN powers "similar item" search in e-commerce, anomaly detection (a point far from everything else is suspicious), and imputation (fill a missing value with the average of its nearest neighbors). Production systems use approximate neighbor search (KD-trees, ball trees, FAISS) because brute-force distance to millions of rows is too slow.</blockquote>
 <hr/>
 <h2>2. Why scaling matters (and when it doesn't)</h2>
+<p>Imagine measuring height in centimeters and weight in kilograms, then computing distance without scaling. A 10 cm gap in height and a 10 kg gap in weight contribute the same raw amount to the distance — but heights range over ~30 cm while weights range over ~100 kg, so weight quietly dominates every neighbor search. Scaling is how you give every feature an equal vote.</p>
 <p>Distance is measured in the units of your features. If one feature ranges 0–100 and another 0–1, the big-range feature dominates every distance calculation — the small-range feature might as well not exist.</p>
 <p>A quick way to see this: compute each feature's <strong>share of the total squared distance</strong> (variance) across the dataset.</p>
+<p>Here is the intuition: squared distance is additive across features. If feature A's values swing over a wide range, its squared gaps are huge, and they swamp the squared gaps of a feature that barely moves. KNN then effectively classifies on the wide-range feature alone — the other features are decoration.</p>
+<p>The fix is StandardScaler: subtract each feature's mean and divide by its standard deviation. After scaling, every feature has mean 0 and std 1, so a "one unit" gap means the same thing — one standard deviation — for every feature. Distances become comparable, and every feature gets a say.</p>
+<p>The snippet prints each feature's share of total squared distance, then runs a sabotage experiment: multiply <code>sepal_length</code> by 100 and watch unscaled KNN collapse. Finally it re-runs with StandardScaler in the pipeline to show the fix.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
@@ -140,9 +149,15 @@ print(f&quot;Scaled, k=5 CV accuracy: {acc_scaled:.4f}&quot;)</code></pre>
 <li><code>StandardScaler</code> (subtract mean, divide by std) gives every feature an equal vote.</li>
 </ol>
 <blockquote><strong>Pitfall:</strong> Scaling is not a free lunch — it assumes every feature <em>deserves</em> equal weight. If one feature is genuinely far more predictive, scaling can slightly dilute it. Always compare scaled vs unscaled with cross-validation, not with a single train/test split.</blockquote>
+<blockquote><strong>In practice:</strong> Any distance- or gradient-based model — KNN, k-means, SVMs, neural networks, regularized regression — needs scaled features. Tree-based models (random forests, gradient boosting) are the exception: they split on single features, so scale never matters. A common production bug is scaling with statistics computed on the full dataset before the train/test split, which leaks test information into training.</blockquote>
 <hr/>
 <h2>3. Choosing k with cross-validation</h2>
+<p>k is the bias-variance trade-off wearing a small integer. Choose k badly and your model is either a nervous wreck that panics at every outlier, or a sleepy committee that always says "whatever the majority thinks". Cross-validation is how you find the sweet spot with data instead of vibes.</p>
 <p>k is the one knob you must tune. k=1 memorizes the training set (one noisy neighbor decides everything). Huge k smooths into a blur where the majority class wins everywhere. The honest way to choose is a <strong>cross-validation curve</strong>: try many k values, estimate accuracy for each, pick the best.</p>
+<p>With k=1, the prediction for any point is the label of its single closest training point. That makes the model hypersensitive: one mislabeled flower in the training set creates a tiny wrong-species island around itself. This is high variance — the model chases noise.</p>
+<p>As k grows, each vote averages over more neighbors, and the decision smooths. But smoothing has a cost: the vote starts reaching across class boundaries, and in imbalanced data the majority class eventually wins everywhere. That is high bias — the model is too simple to see the structure.</p>
+<p>The CV curve makes the trade-off visible. For each candidate k, cross-validation trains on 4/5 of the data and scores on the held-out 1/5, rotating five times, so every k gets an honest accuracy estimate that reflects performance on unseen flowers. The peak of the curve is your k.</p>
+<p>The snippet sweeps k from 1 to 15, computing 5-fold CV accuracy for both scaled and unscaled pipelines at each k, prints the table, picks the best scaled k, and plots the two curves so you can see the shape of the trade-off.</p>
 <pre><code class="language-python">import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
@@ -187,6 +202,7 @@ plt.show()</code></pre>
 <li>The curve is the deliverable: it turns "what should k be?" from a guess into a measurement.</li>
 </ol>
 <blockquote><strong>Pitfall:</strong> Never pick k on the full dataset and then report that same number as your accuracy — that's training on the test set. The CV score is the honest estimate.</blockquote>
+<blockquote><strong>In practice:</strong> The same curve method tunes every hyperparameter — tree depth, regularization strength, the number of clusters. The production version is <code>GridSearchCV</code> or <code>RandomizedSearchCV</code>, which automate the sweep and refit on the full training data with the winning setting. Always choose hyperparameters on validation data, never on the test set — the test set is for the final honest report.</blockquote>
 <hr/>
 <h2>4. Reading a decision boundary</h2>
 <p>A decision boundary is the map of "which region of feature-space belongs to which species". We can draw it by laying a fine grid over two features, asking the trained model to label every grid point, and coloring the regions. We use the two petal features because they separate the species best.</p>
