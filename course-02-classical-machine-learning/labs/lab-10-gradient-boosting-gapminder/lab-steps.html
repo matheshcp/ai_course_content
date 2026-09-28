@@ -75,7 +75,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <p>This matters because the alternative, <code>pd.cut</code>, divides the axis into equal-width intervals. On a skewed target like life expectancy — where most countries cluster between 60 and 80 years — equal-width bins would dump the vast majority of rows into one or two bands and leave the rest nearly empty. Quantile binning guarantees balance, and balance is what makes accuracy a meaningful metric in the next section.</p>
 <p>The snippet below loads the Gapminder five-year panel, prints the shape and summary statistics, then applies <code>pd.qcut</code> with three quantile-based bins labelled Low / Mid / High. The two prints after binning let you verify the cut points and inspect the per-band min/max ranges, so you can see exactly where the boundaries landed.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

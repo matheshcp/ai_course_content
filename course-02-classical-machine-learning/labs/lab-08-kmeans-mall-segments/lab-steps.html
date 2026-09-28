@@ -74,7 +74,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <p>In <strong>supervised</strong> learning (like the MNIST lab), every row comes with a label and the algorithm learns to predict it. In <strong>unsupervised</strong> learning there are no labels — the algorithm's job is to find hidden structure in the features themselves. <strong>K-Means</strong> is the most common unsupervised algorithm: it partitions points into <code>k</code> clusters by minimizing the squared distance from each point to its cluster center (centroid).</p>
 <p>A critical preprocessing step: K-Means uses Euclidean distance, so features with larger scales dominate. Annual income ranges 15–137 while age ranges 18–70 — without scaling, income would pull clusters along its axis almost exclusively. <strong>StandardScaler</strong> transforms each feature to mean 0, standard deviation 1, putting all features on equal footing.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
@@ -211,7 +210,6 @@ print(&quot;Saved mall_segments.png&quot;)</code></pre>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import StandardScaler

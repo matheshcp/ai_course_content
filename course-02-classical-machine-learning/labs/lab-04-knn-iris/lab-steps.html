@@ -82,7 +82,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <p>Euclidean penalizes one large gap more than several small ones (because of the squaring); Manhattan treats every gap equally. In low dimensions they usually agree; in high dimensions they drift apart. On iris, both work well — the species form tight, well-separated clusters.</p>
 <p>The snippet below loads the iris data, then trains two KNN classifiers — one Euclidean, one Manhattan — each wrapped in a pipeline with a StandardScaler. It scores both with 5-fold cross-validation and prints the mean accuracy, so you can compare the two geometries on equal footing.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -114,7 +113,6 @@ for metric in [&quot;euclidean&quot;, &quot;manhattan&quot;]:
 <p>The fix is StandardScaler: subtract each feature's mean and divide by its standard deviation. After scaling, every feature has mean 0 and std 1, so a "one unit" gap means the same thing — one standard deviation — for every feature. Distances become comparable, and every feature gets a say.</p>
 <p>The snippet prints each feature's share of total squared distance, then runs a sabotage experiment: multiply <code>sepal_length</code> by 100 and watch unscaled KNN collapse. Finally it re-runs with StandardScaler in the pipeline to show the fix.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -159,7 +157,6 @@ print(f&quot;Scaled, k=5 CV accuracy: {acc_scaled:.4f}&quot;)</code></pre>
 <p>The CV curve makes the trade-off visible. For each candidate k, cross-validation trains on 4/5 of the data and scores on the held-out 1/5, rotating five times, so every k gets an honest accuracy estimate that reflects performance on unseen flowers. The peak of the curve is your k.</p>
 <p>The snippet sweeps k from 1 to 15, computing 5-fold CV accuracy for both scaled and unscaled pipelines at each k, prints the table, picks the best scaled k, and plots the two curves so you can see the shape of the trade-off.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
@@ -207,7 +204,6 @@ plt.show()</code></pre>
 <h2>4. Reading a decision boundary</h2>
 <p>A decision boundary is the map of "which region of feature-space belongs to which species". We can draw it by laying a fine grid over two features, asking the trained model to label every grid point, and coloring the regions. We use the two petal features because they separate the species best.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
 from sklearn.neighbors import KNeighborsClassifier
@@ -273,7 +269,6 @@ plt.show()</code></pre>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -293,7 +288,6 @@ print(f&quot;best unscaled acc={max(unscaled_acc):.4f}&quot;)
 
 # --- Solution 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -315,7 +309,6 @@ print(f&quot;x100 unscaled k=5 CV acc: {acc_bad:.4f}&quot;)
 
 # --- Solution 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -334,7 +327,6 @@ print(&quot;classes:&quot;, pipe.classes_)
 
 # --- Follow-up 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
@@ -352,7 +344,6 @@ print(f&quot;k=1: {acc1:.4f}, k=15: {acc15:.4f} — both worse than the middle&q
 
 # --- Follow-up 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.preprocessing import StandardScaler
 
@@ -365,7 +356,6 @@ print(&quot;scaled means ~ 0, scaled stds ~ 1: OK&quot;)
 
 # --- Follow-up 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler

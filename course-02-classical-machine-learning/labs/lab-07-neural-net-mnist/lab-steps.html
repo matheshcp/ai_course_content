@@ -85,7 +85,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 </ul>
 <p>The forward pass is just matrix multiplication plus activation, applied layer by layer. The code below loads 1,000 MNIST images, initializes small random weights, and runs one forward pass — no training yet, just the raw machinery:</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -216,7 +215,6 @@ print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd

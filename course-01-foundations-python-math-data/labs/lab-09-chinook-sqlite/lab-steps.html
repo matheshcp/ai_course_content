@@ -195,7 +195,6 @@ print(&quot;months:&quot;, len(monthly), &quot;total:&quot;, monthly[&quot;reven
 # months: 60, total ≈ 2328.60</code></pre>
 <p>Plot the tidy monthly frame — rotate the x labels so all 60 months stay readable:</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import matplotlib.pyplot as plt
 fig, ax = plt.subplots(figsize=(10, 3))
 ax.plot(monthly[&quot;ym&quot;], monthly[&quot;revenue&quot;], marker=&quot;o&quot;, ms=3)

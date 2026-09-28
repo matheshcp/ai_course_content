@@ -83,7 +83,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <p>A fair model should have similar TPR and FPR across groups. If one group has a much lower TPR, the model is missing defaulters in that group. If one group has a much higher FPR, the model is falsely flagging safe applicants in that group. Both are forms of unfairness.</p>
 <p>Let us compute these metrics by sex and see what the model reveals.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -132,7 +131,6 @@ for sex, g in res.groupby(&quot;sex&quot;):
 <p>In this dataset, the DI is approximately 0.82 — just below the 0.8 threshold. This means the model would draw legal scrutiny in a US employment context. The question is whether the gap is explained by legitimate factors (income, credit history) or by bias in the model or the training data.</p>
 <p>Let us compute the DI and see how close we are to the threshold.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -182,7 +180,6 @@ print(res.groupby(&quot;sex&quot;)[&quot;y&quot;].mean().round(4))</code></pre>
 <p>The trade-off is that per-group thresholds can reduce TPR for the group whose threshold is raised. In this case, raising the female threshold to 0.6 brings DI from 0.82 to 0.96 — near parity — but drops female TPR from 0.85 to 0.75. There is no free lunch: the "right" threshold depends on whether the business prioritises approval parity, TPR parity, or accuracy.</p>
 <p>Let us sweep through different female thresholds and see how DI and accuracy change.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -247,7 +244,6 @@ for t_f in [0.5, 0.55, 0.6, 0.65]:
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -276,7 +272,6 @@ for sex, g in res.groupby(&quot;sex&quot;):
 
 # --- Solution 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -305,7 +300,6 @@ print(f&quot;DI = {di:.4f}&quot;)
 
 # --- Solution 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -337,7 +331,6 @@ print(f&quot;t_female=0.6: DI={di:.4f}, accuracy={acc:.4f}&quot;)
 
 # --- Follow-up 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -371,7 +364,6 @@ print(f&quot;FPR female={fpr_f:.4f}, male={fpr_m:.4f}&quot;)
 
 # --- Follow-up 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -399,7 +391,6 @@ print(&quot;default rates:&quot;, rates.round(4).to_dict())
 
 # --- Follow-up 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer

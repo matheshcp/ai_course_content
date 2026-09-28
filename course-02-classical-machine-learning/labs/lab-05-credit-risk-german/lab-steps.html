@@ -78,7 +78,6 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <p>We also use <code>stratify=y</code> in the train/test split to preserve the 33% risk rate in both sets. With imbalanced data, an unstratified split might produce a test set with 40% risk or 25% risk by chance, making our metrics unreliable.</p>
 <p>Let us build the preprocessing pipeline and fit a first model.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -122,7 +121,6 @@ print(&quot;model trained OK&quot;)</code></pre>
 <p>The key insight is that <strong>accuracy is the wrong metric</strong> for imbalanced data. A model that always predicts the majority class has high accuracy but zero value. Instead, we should use metrics that focus on the minority class: precision, recall, F1, and ROC-AUC. ROC-AUC is particularly useful because it is threshold-free — it evaluates the model's ability to <em>rank</em> risky applicants above safe ones, regardless of where we set the cutoff.</p>
 <p>Let us see how class weighting affects the model's performance.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -169,7 +167,6 @@ for weighted in [False, True]:
 <p>But AUC does not tell you where to set the threshold. That is a business decision. If the bank's cost of a false alarm (reviewing a safe applicant) is low compared to the cost of a missed default, set a low threshold to catch more risk. If false alarms are expensive, set a high threshold. <strong>Youden's J statistic</strong> (TPR − FPR) provides a data-driven starting point: it finds the threshold that maximises the difference between true positives and false positives.</p>
 <p>Let us compute the ROC curve, find the optimal threshold, and see how the trade-off looks.</p>
 <pre><code class="language-python">import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
@@ -247,7 +244,6 @@ plt.show()</code></pre>
 <p>Try for 15 min each before peeking.</p>
 <pre><code class="language-python"># --- Solution 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 
 df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
@@ -258,7 +254,6 @@ print(&quot;overall risk rate:&quot;, round((df[&quot;Risk&quot;] == &quot;Risk&
 
 # --- Solution 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -287,7 +282,6 @@ for weighted in [False, True]:
 
 # --- Solution 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -315,7 +309,6 @@ print(imp.head(5).round(4))
 
 # --- Follow-up 1 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 
 df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
@@ -325,7 +318,6 @@ print(&quot;overall risk rate:&quot;, round(overall, 4))
 
 # --- Follow-up 2 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
@@ -355,7 +347,6 @@ print(&quot;balanced TPR @0.5:&quot;, round(tpr, 4))
 
 # --- Follow-up 3 ---
 import matplotlib
-matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
