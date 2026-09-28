@@ -16,11 +16,11 @@
   ],
   "description": "Capstone: end-to-end churn pipeline with a written model card.",
   "level": "Capstone",
-  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> The retention team at a telecom wants a churn model they can actually trust: clean the raw contract data, encode it properly, train and compare two models, pick a decision threshold, explain the drivers, and document everything in a model card. You will run the full pipeline end-to-end and leave with a deployable artifact and its documentation. <strong>You will learn:</strong> messy-data cleaning (blank <code>TotalCharges</code>), binary + one-hot encoding, pipeline-based preprocessing, model selection by PR-AUC, threshold tuning, permutation importance, fairness slicing, model-card documentation. <strong>Time:</strong> ~90 minutes. <strong>Level:</strong> Capstone. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
-  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Reproduce the metrics with the new encoding</h3>\n<p>Using the pipeline encoding from section 2, report test ROC-AUC and PR-AUC for both models. <em>Expected: Logistic ROC-AUC ≈ 0.840 / PR-AUC ≈ 0.624; GBM ROC-AUC ≈ 0.843 / PR-AUC ≈ 0.662.</em></p>\n<p><strong>Follow-up:</strong> Which model has higher PR-AUC? Check: GBM (0.662 vs 0.624).</p>\n<h3>Exercise 2 — Fairness slice table</h3>\n<p>Build a table of churn rate by <code>Contract</code> and by <code>gender</code>. <em>Expected: Month-to-month ≈ 0.427, One year ≈ 0.113, Two year ≈ 0.028; Female ≈ 0.270, Male ≈ 0.262.</em></p>\n<p><strong>Follow-up:</strong> Which slice has the highest churn rate? Check: Month-to-month (0.427).</p>\n<h3>Exercise 3 — Fill the model card</h3>\n<p>Run the model-card writer and verify the file exists with all five required sections. <em>Expected: <code>churn_model_card.md</code> contains \"Intended Use\", \"Training Data\", \"Performance Metrics\", \"Fairness\", \"Limitations\".</em></p>\n<p><strong>Follow-up:</strong> What is the F1-optimal threshold? Check: ≈ 0.395.</p>\n<hr/>",
-  "duration": "01:30:00",
-  "lab_duration": "90 Minutes",
-  "session_timeout": 7200,
+  "overview_content": "",
+  "steps_content": "",
+  "duration": "",
+  "lab_duration": "90 min",
+  "session_timeout": 3600,
   "intro_walkthrough_iframe": "",
   "intro_walkthrough_hidden": false
 }

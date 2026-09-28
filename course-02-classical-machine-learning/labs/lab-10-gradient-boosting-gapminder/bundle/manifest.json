@@ -16,11 +16,11 @@
   ],
   "description": "Gradient boosting classification of life expectancy bands.",
   "level": "Intermediate",
-  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> The World Health Organisation wants a lightweight screening tool that classifies countries into Low / Mid / High life-expectancy bands using only GDP per capita, population, and the survey year. You will build a gradient boosting classifier, interrogate its feature importances, and discover why one of your features is a leakage trap. <strong>You will learn:</strong> tercile binning with <code>pd.qcut</code>, GradientBoostingClassifier, feature importances, partial dependence, temporal leakage. <strong>Time:</strong> ~55 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
-  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Find the tercile cut points</h3>\n<p>Compute the exact <code>lifeExp</code> values at the 1/3 and 2/3 quantiles that <code>pd.qcut</code> used. <em>Expected: q(1/3) ≈ 52.10, q(2/3) ≈ 68.91.</em></p>\n<p><strong>Follow-up:</strong> How many rows fall in each band? Check: 568 / 568 / 568.</p>\n<h3>Exercise 2 — Honest test accuracy</h3>\n<p>Refit the GBM <strong>without</strong> <code>year</code> (features: <code>gdpPercap</code>, <code>pop</code>) and report test accuracy. <em>Expected: ≈ 0.6925.</em></p>\n<p><strong>Follow-up:</strong> How much accuracy did the year leak buy you? Check: ≈ +0.054.</p>\n<h3>Exercise 3 — Partial dependence endpoints</h3>\n<p>Using the PD array from section 4, print the softmax probability for the <strong>High</strong> band at the smallest and largest <code>gdpPercap</code> grid points. <em>Expected: ≈ 0.004 at the low end, ≈ 0.934 at the high end.</em></p>\n<p><strong>Follow-up:</strong> Does the High-band curve rise overall? Check: yes — from 0.004 to 0.934.</p>\n<hr/>",
-  "duration": "00:55:00",
-  "lab_duration": "55 Minutes",
-  "session_timeout": 5100,
+  "overview_content": "",
+  "steps_content": "",
+  "duration": "",
+  "lab_duration": "55 min",
+  "session_timeout": 3600,
   "intro_walkthrough_iframe": "",
   "intro_walkthrough_hidden": false
 }

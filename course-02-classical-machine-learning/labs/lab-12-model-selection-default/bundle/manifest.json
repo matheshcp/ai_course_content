@@ -16,11 +16,11 @@
   ],
   "description": "Model selection with ROC/PR curves, k-fold CV, and calibration.",
   "level": "Intermediate",
-  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> A bank's risk team must flag likely credit-card defaulters. Only ~3% of customers default, so a model that says \"no default\" for everyone scores 97% accuracy — and is worthless. You will learn why accuracy misleads on imbalanced data, how ROC and PR curves tell the real story, and how to compare Logistic Regression vs Random Forest vs Gradient Boosting honestly. <strong>You will learn:</strong> the accuracy paradox, class imbalance, ROC-AUC vs PR-AUC, stratified k-fold CV, probability calibration, reliability diagrams. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + sklearn. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
-  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Majority-class baseline</h3>\n<p>Compute the accuracy of always predicting \"no default\" on the test set. <em>Expected: ≈ 0.9668.</em></p>\n<p><strong>Follow-up:</strong> What is the test-set default rate? Check: ≈ 0.0332.</p>\n<h3>Exercise 2 — PR-AUC for all three models</h3>\n<p>Report PR-AUC for Logistic, RandomForest, and GradientBoosting on the test set. <em>Expected: Logistic ≈ 0.509, RandomForest ≈ 0.386, GradientBoosting ≈ 0.354.</em></p>\n<p><strong>Follow-up:</strong> Which model wins on ROC-AUC? Check: Logistic (≈ 0.945).</p>\n<h3>Exercise 3 — Reliability diagram</h3>\n<p>Sketch the reliability diagram and report the logistic model's mean predicted probability vs actual fraction of positives in the highest bin. <em>Expected: mean predicted ≈ 0.95, fraction ≈ 1.00.</em></p>\n<p><strong>Follow-up:</strong> Is logistic regression close to the diagonal in the high bins? Check: yes — max deviation ≈ 0.05 for bins above 0.5.</p>\n<hr/>",
-  "duration": "01:00:00",
-  "lab_duration": "1 Hour",
-  "session_timeout": 5400,
+  "overview_content": "",
+  "steps_content": "",
+  "duration": "",
+  "lab_duration": "60 min",
+  "session_timeout": 3600,
   "intro_walkthrough_iframe": "",
   "intro_walkthrough_hidden": false
 }

@@ -16,11 +16,11 @@
   ],
   "description": "Association rule mining on grocery baskets with support/confidence/lift.",
   "level": "Intermediate",
-  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> A supermarket chain has scanned 9,835 checkout baskets and wants to know which products are bought together. The answers drive real business decisions: which items to place on adjacent shelves, which products to bundle in promotions, and what to recommend at the checkout. You will implement association-rule mining (the Apriori idea) in pure Python — no mlxtend — to discover these patterns. <strong>You will learn:</strong> parsing headerless variable-length transaction data, transaction encoding, the three rule metrics (support, confidence, lift), Apriori-style candidate generation, and how to filter rules for actionable insights. <strong>Time:</strong> ~60 minutes. <strong>Level:</strong> Intermediate. <strong>Needs:</strong> pandas + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
-  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Top 10 Itemsets by Support</h3>\n<p>Compute the support of every 1-itemset and every 2-itemset. Report the top 10 1-itemsets and the top 10 2-itemsets by support. <em>Expected: top 1-itemset = whole milk (0.2555); top 2-itemset = {other vegetables, whole milk} (0.0748).</em></p>\n<p><strong>Follow-up:</strong> How many frequent 2-itemsets survive a 1% support threshold? Check: 213.</p>\n<h3>Exercise 2 — Rules for \"Whole Milk\" Consequent</h3>\n<p>Generate all rules where the consequent is <code>whole milk</code> (min support 0.01, min confidence 0.10). Report the count and the top rule by confidence. <em>Expected: 45 rules; top = butter → whole milk (conf ≈ 0.4972, lift ≈ 1.9461).</em></p>\n<p><strong>Follow-up:</strong> What is the confidence of <code>root vegetables → whole milk</code>? Check: ≈ 0.4487.</p>\n<h3>Exercise 3 — High-Lift Rules Only</h3>\n<p>Filter all 2-itemset rules to those with lift &gt; 2. Report the count and the top rule by lift. <em>Expected: 44 rules; top = root vegetables → beef (lift ≈ 3.0404).</em></p>\n<p><strong>Follow-up:</strong> What is the lift of <code>tropical fruit → pip fruit</code>? Check: ≈ 2.5746.</p>\n<details><summary>Hint</summary>\n<p>For Exercise 3, iterate over <code>freq_2</code>, and for each itemset <code>{a, b}</code> generate both directions: <code>a → b</code> and <code>b → a</code>. Compute lift as <code>conf / (item_counts[b] / N)</code> and keep rules where lift &gt; 2.</p>\n</details>\n<hr/>",
-  "duration": "01:00:00",
-  "lab_duration": "1 Hour",
-  "session_timeout": 5400,
+  "overview_content": "",
+  "steps_content": "",
+  "duration": "",
+  "lab_duration": "60 min",
+  "session_timeout": 3600,
   "intro_walkthrough_iframe": "",
   "intro_walkthrough_hidden": false
 }

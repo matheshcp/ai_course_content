@@ -16,11 +16,11 @@
   ],
   "description": "Fit and interpret simple linear regression on salary data.",
   "level": "Beginner",
-  "overview_content": "<h2>Lab intro</h2>\n<blockquote><strong>Scenario:</strong> You are an HR analyst at a mid-size tech company. Leadership wants a defensible model that predicts expected salary from years of experience, so they can benchmark offers and spot pay inequities. You have 30 historical employee records with <code>YearsExperience</code> and <code>Salary</code>. Your job is to build, evaluate, and interpret a simple linear regression model. <strong>You will learn:</strong> OLS intuition, sklearn LinearRegression, slope/intercept interpretation, R², residual analysis, train/test split. <strong>Time:</strong> ~40 minutes. <strong>Level:</strong> Beginner. <strong>Needs:</strong> pandas + sklearn + matplotlib. <strong>Env:</strong> 🟢 Colab only.</blockquote>",
-  "steps_content": "<h2>Exercises (do these!)</h2>\n<h3>Exercise 1 — Predict Salary at 5.5 Years</h3>\n<p>Use the fitted model to predict the salary for a candidate with 5.5 years of experience. <em>Expected: $77,283.39</em></p>\n<p><strong>Follow-up:</strong> What is the predicted salary at 0 years? Why might this be unrealistic? Check: intercept value.</p>\n<h3>Exercise 2 — Compute Test MSE</h3>\n<p>Calculate the Mean Squared Error on the held-out test set. <em>Expected: MSE = 37,784,662.47 (RMSE = $6,146.92)</em></p>\n<p><strong>Follow-up:</strong> Why is RMSE more interpretable than MSE? Check: RMSE value.</p>\n<h3>Exercise 3 — Interpret R²</h3>\n<p>The test R² is approximately 0.95. What does this mean in plain language? <em>Expected: The model explains 94.1% of the variance in salary using years of experience.</em></p>\n<p><strong>Follow-up:</strong> What would R² = 0 mean? What would R² = 1 mean? Check: R² on train vs test.</p>\n<details><summary>Hint</summary>\n<pre><code class=\"language-python\">import pandas as pd\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LinearRegression\n\ndf = pd.read_csv(r&quot;Salary_Data.csv&quot;)\nX = df[[&quot;YearsExperience&quot;]]\ny = df[&quot;Salary&quot;]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)\nmodel = LinearRegression()\nmodel.fit(X_train, y_train)\n\n# Exercise 1\npred = model.predict([[5.5]])\nprint(pred[0])\n\n# Exercise 2\nfrom sklearn.metrics import mean_squared_error\nmse = mean_squared_error(y_test, model.predict(X_test))\nprint(mse)\n\n# Exercise 3\nprint(model.score(X_test, y_test))</code></pre>\n</details>\n<hr/>",
-  "duration": "00:40:00",
-  "lab_duration": "40 Minutes",
-  "session_timeout": 4200,
+  "overview_content": "",
+  "steps_content": "",
+  "duration": "",
+  "lab_duration": "40 min",
+  "session_timeout": 3600,
   "intro_walkthrough_iframe": "",
   "intro_walkthrough_hidden": false
 }

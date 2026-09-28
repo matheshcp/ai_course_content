@@ -24,9 +24,11 @@ th { background: #eee; }
 hr { border: none; border-top: 1px solid #ccc; margin: 1.5rem 0; }
 .colab { font-family: system-ui, sans-serif; font-size: 0.92rem; background: #e8f5e9; border: 1px solid #a5d6a7; padding: 0.75rem 1rem; border-radius: 4px; }
 .colab ol { margin: 0.4rem 0; padding-left: 1.2rem; }
+.colab img { max-width: 100%; height: auto; display: block; margin: 0.3rem 0; }
 details { margin: 0.6rem 0; padding: 0.5rem 0.75rem; background: #fff8e1; border: 1px solid #ffe082; border-radius: 4px; }
 details summary { cursor: pointer; font-family: system-ui, sans-serif; font-weight: 600; }
 details p { margin: 0.4rem 0 0; }
+.next { font-family: system-ui, sans-serif; font-size: 0.95rem; background: #fff8e1; border: 1px solid #ffe082; padding: 0.75rem 1rem; border-radius: 4px; }
 footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2.5rem; border-top: 1px solid #ccc; padding-top: 0.75rem; }
 </style>
 </head>
@@ -40,6 +42,9 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
+<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
 <ol>
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/lab-11-visualisation-studio.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
@@ -47,7 +52,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
-<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>tips.csv</code> — <a href="https://raw.githubusercontent.com/mwaskom/seaborn-data/master/tips.csv">raw GitHub</a></li><li><code>tickets.csv</code> — <a href="https://raw.githubusercontent.com/vihar/datasets/master/tickets.csv">raw GitHub</a></li></ul>
+<ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>tips.csv</code></li><li><code>tickets.csv</code></li></ul>
 </div>
 
 <h2>Learning goals</h2>
@@ -132,6 +137,7 @@ ax.annotate(&quot;Overall mean ≈ 16.1%&quot;,
             xy=(0.1608, tips.groupby(&quot;day&quot;).size().max() * 0.45),
             fontsize=9)
 fig.tight_layout(); fig.savefig(&quot;chart1_tip_pct_by_day.png&quot;, dpi=120)
+plt.show()
 print(&quot;saved chart1_tip_pct_by_day.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> the annotation anchors the overall mean <strong>≈ 16.1%</strong> (0.1608) as a landmark against every day’s bars; most mass sits in a band around that mean rather than in long tails, which is why the mean comparisons in Exercise 1 are fair starting points.</p>
 <p>Mean tip % by day (for the caption): <strong>Fri 17.0% · Thur 16.1% · Sun 16.7% · Sat 15.3%</strong>.</p>
@@ -149,6 +155,7 @@ ax.set_ylim(0, 0.25)
 ax.legend(title=&quot;Sitting&quot;)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart2_tip_pct_day_time.png&quot;, dpi=120)
+plt.show()
 print(&quot;saved chart2_tip_pct_day_time.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> <code>ylim=(0, 0.25)</code> starts the axis at zero — bars only compare honestly from a true baseline — and the printed pivot shows every day/sitting cell before it’s drawn. The overall sitting comparison (Lunch <strong>16.4%</strong> vs Dinner <strong>16.0%</strong>) is only ~0.4 pp: a small gap worth stating with its magnitude rather than as a headline.</p>
 <p>Insight to annotate: lunch tips slightly higher on average (Lunch 16.4% vs Dinner 16.0% overall).</p>
@@ -171,6 +178,7 @@ ax.annotate(&quot;Open work concentrated in low/med priority&quot;,
             xy=(0.02, 0.92), xycoords=&quot;axes fraction&quot;, fontsize=9)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart3_tickets_status.png&quot;, dpi=120)
+plt.show()
 print(&quot;saved chart3_tickets_status.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> the title itself declares “(PII redacted)”, so anyone who sees the PNG knows the provenance; column totals still equal the Section 1 counts — <strong>open 42 · in-progress 34 · closed 31 (n = 107)</strong> — because redaction changed strings, not rows. The annotation names the pattern (“open work concentrated in low/med priority”) instead of leaving the reader to squint at segment heights.</p>
 <p>Expected status totals: open 42 · in-progress 34 · closed 31 (n = 107).</p>
@@ -194,6 +202,7 @@ ax.annotate(f&quot;max bill ${tips.loc[i, &#x27;total_bill&#x27;]:.2f}&quot;,
             xytext=(tips.loc[i, &quot;total_bill&quot;] - 12, tips.loc[i, &quot;tip&quot;] + 1.2),
             arrowprops=dict(arrowstyle=&quot;-&gt;&quot;, lw=0.8))
 fig.tight_layout(); fig.savefig(&quot;chart4_tip_vs_bill.png&quot;, dpi=120)
+plt.show()
 print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> points rise together — larger bills get larger tips in dollars — but tip <em>percentage</em> still clusters in the 15–20% band even at the <strong>$50.81</strong> maximum, which is why percentage (not dollars) is the fair cross-group comparison. The legend already carries each group’s mean: Female ≈ <strong>16.7%</strong>, Male ≈ <strong>15.8%</strong>.</p>
 <p>Female mean tip % ≈ 16.7% · Male ≈ 15.8% (small gap, don’t over-claim).</p>

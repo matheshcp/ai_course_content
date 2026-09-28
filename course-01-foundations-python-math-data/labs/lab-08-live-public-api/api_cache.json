@@ -1,0 +1,37 @@
+{
+  "latitude": -37.785587,
+  "longitude": 144.93976,
+  "generationtime_ms": 0.06377696990966797,
+  "utc_offset_seconds": 36000,
+  "timezone": "Australia/Melbourne",
+  "timezone_abbreviation": "GMT+10",
+  "elevation": 21.0,
+  "daily_units": {
+    "time": "iso8601",
+    "temperature_2m_max": "\u00b0C",
+    "temperature_2m_min": "\u00b0C",
+    "precipitation_probability_max": "%"
+  },
+  "daily": {
+    "time": [
+      "2026-09-29",
+      "2026-09-30",
+      "2026-10-01"
+    ],
+    "temperature_2m_max": [
+      22.1,
+      22.2,
+      24.2
+    ],
+    "temperature_2m_min": [
+      9.0,
+      17.0,
+      12.9
+    ],
+    "precipitation_probability_max": [
+      0,
+      14,
+      95
+    ]
+  }
+}
