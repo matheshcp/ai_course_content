@@ -77,7 +77,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <pre><code class="language-python">import pandas as pd
 import numpy as np
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 print(df.shape)
 print(df.head())
 print(df.dtypes)
@@ -99,7 +99,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 
@@ -146,7 +146,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -171,7 +171,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -221,7 +221,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -264,7 +264,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -319,7 +319,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -370,7 +370,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\housing.csv&quot;)
+df = pd.read_csv(r&quot;housing.csv&quot;)
 X = df.drop(columns=[&quot;median_house_value&quot;])
 y = df[&quot;median_house_value&quot;]
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

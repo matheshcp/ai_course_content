@@ -81,7 +81,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
@@ -122,7 +122,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import roc_auc_score, confusion_matrix
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
@@ -166,7 +166,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
@@ -237,7 +237,7 @@ import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 risk = df.groupby(&quot;CheckingStatus&quot;)[&quot;Risk&quot;].agg(total=&quot;count&quot;, risky=lambda s: (s == &quot;Risk&quot;).sum())
 risk[&quot;risk_rate&quot;] = risk[&quot;risky&quot;] / risk[&quot;total&quot;]
 print(risk.sort_values(&quot;risk_rate&quot;, ascending=False).round(4))
@@ -254,7 +254,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import roc_auc_score, confusion_matrix
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
@@ -283,7 +283,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.inspection import permutation_importance
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
@@ -305,7 +305,7 @@ import matplotlib
 matplotlib.use(&quot;Agg&quot;)
 import pandas as pd, numpy as np
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 overall = (df[&quot;Risk&quot;] == &quot;Risk&quot;).mean()
 assert abs(overall - 0.334) &lt; 0.005, overall
 print(&quot;overall risk rate:&quot;, round(overall, 4))
@@ -321,7 +321,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import confusion_matrix
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
@@ -351,7 +351,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import make_pipeline
 from sklearn.inspection import permutation_importance
 
-df = pd.read_csv(r&quot;D:\downloads-D\vilabs-images\ailab-vilabs\course-02-classical-machine-learning\datasets\german_credit_data.csv&quot;)
+df = pd.read_csv(r&quot;german_credit_data.csv&quot;)
 df = df.drop(columns=[&quot;CustomerID&quot;])
 y = (df[&quot;Risk&quot;] == &quot;Risk&quot;).astype(int)
 X = df.drop(columns=[&quot;Risk&quot;])
