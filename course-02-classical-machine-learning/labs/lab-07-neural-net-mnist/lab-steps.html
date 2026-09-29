@@ -187,7 +187,8 @@ plt.title(&quot;Training Accuracy&quot;)
 plt.xlabel(&quot;Epoch&quot;)
 plt.tight_layout()
 plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100)
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
@@ -255,7 +256,9 @@ print(f&quot;First epoch &gt; 0.90: {first_90}&quot;)
 plt.figure(figsize=(10, 4))
 plt.subplot(1, 2, 1); plt.plot(losses); plt.title(&quot;Loss&quot;); plt.xlabel(&quot;Epoch&quot;)
 plt.subplot(1, 2, 2); plt.plot(accuracies); plt.title(&quot;Accuracy&quot;); plt.xlabel(&quot;Epoch&quot;)
-plt.tight_layout(); plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100); plt.show()
+plt.tight_layout(); plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100)
+from IPython.display import display
+display(plt.gcf())
 
 # --- Solution 2 ---
 def train(lr, epochs=200):
@@ -285,7 +288,9 @@ plt.plot(acc_01, label=&quot;lr=0.1&quot;)
 plt.plot(acc_001, label=&quot;lr=0.01&quot;)
 plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;Accuracy&quot;); plt.legend()
 plt.title(&quot;Learning Rate Comparison&quot;)
-plt.savefig(&quot;lr_comparison.png&quot;, dpi=100); plt.show()
+plt.savefig(&quot;lr_comparison.png&quot;, dpi=100)
+from IPython.display import display
+display(plt.gcf())
 
 # --- Solution 3 ---
 rng = np.random.default_rng(42)

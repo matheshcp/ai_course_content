@@ -146,7 +146,8 @@ axes[1].set_title(&quot;PR curve&quot;); axes[1].set_xlabel(&quot;Recall&quot;);
 for ax in axes: ax.legend()
 fig.tight_layout()
 fig.savefig(&quot;lab12_roc_pr.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved lab12_roc_pr.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
@@ -185,7 +186,8 @@ ax.set_title(&quot;Reliability diagram&quot;)
 ax.legend()
 fig.tight_layout()
 fig.savefig(&quot;lab12_reliability.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved lab12_reliability.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>

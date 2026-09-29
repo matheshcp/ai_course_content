@@ -139,7 +139,8 @@ plt.title(&quot;Silhouette Score&quot;)
 plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Silhouette&quot;)
 plt.tight_layout()
 plt.savefig(&quot;elbow_silhouette.png&quot;, dpi=100)
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 print(&quot;Saved elbow_silhouette.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
@@ -180,7 +181,8 @@ plt.ylabel(&quot;Spending Score (1-100)&quot;)
 plt.title(&quot;Mall Customer Segments (k=5)&quot;)
 plt.legend()
 plt.savefig(&quot;mall_segments.png&quot;, dpi=100)
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 print(&quot;Saved mall_segments.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
@@ -228,7 +230,9 @@ plt.figure(figsize=(7, 4))
 plt.plot(range(1, 11), inertias, &quot;bo-&quot;)
 plt.title(&quot;Elbow Method&quot;)
 plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Inertia&quot;)
-plt.savefig(&quot;elbow.png&quot;, dpi=100); plt.show()
+plt.savefig(&quot;elbow.png&quot;, dpi=100)
+from IPython.display import display
+display(plt.gcf())
 print(f&quot;Inertia at k=5: {inertias[4]:.2f}&quot;)
 
 # --- Solution 2 ---

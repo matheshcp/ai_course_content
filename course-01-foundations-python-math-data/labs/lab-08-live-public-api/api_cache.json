@@ -1,7 +1,7 @@
 {
   "latitude": -37.785587,
   "longitude": 144.93976,
-  "generationtime_ms": 0.06377696990966797,
+  "generationtime_ms": 0.051140785217285156,
   "utc_offset_seconds": 36000,
   "timezone": "Australia/Melbourne",
   "timezone_abbreviation": "GMT+10",
@@ -19,19 +19,19 @@
       "2026-10-01"
     ],
     "temperature_2m_max": [
-      22.1,
-      22.2,
-      24.2
+      22.3,
+      22.0,
+      23.6
     ],
     "temperature_2m_min": [
-      9.0,
-      17.0,
-      12.9
+      8.8,
+      16.4,
+      13.5
     ],
     "precipitation_probability_max": [
       0,
-      14,
-      95
+      12,
+      96
     ]
   }
 }

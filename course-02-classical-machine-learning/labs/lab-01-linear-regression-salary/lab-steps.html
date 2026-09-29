@@ -200,7 +200,8 @@ ax.set_xlabel(&quot;Predicted Salary&quot;)
 ax.set_ylabel(&quot;Residual (Actual − Predicted)&quot;)
 ax.set_title(&quot;Residual Plot — Salary Prediction&quot;)
 plt.tight_layout()
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 
 print(f&quot;Mean residual: {residuals.mean():.2f}&quot;)
 print(f&quot;Residual std:  {residuals.std():.2f}&quot;)</code></pre>

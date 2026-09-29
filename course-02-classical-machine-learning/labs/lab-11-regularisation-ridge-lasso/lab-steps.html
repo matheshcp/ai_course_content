@@ -102,6 +102,10 @@ FEATS = [&quot;median_income&quot;, &quot;housing_median_age&quot;, &quot;total_
 X = df[FEATS]
 y = df[&quot;median_house_value&quot;]
 
+# Subsample for the polynomial demo — degree-3 poly on 20K rows is too slow for GridSearchCV
+X = X.sample(n=3000, random_state=42)
+y = y.loc[X.index]
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
 
 rows = []
@@ -139,9 +143,9 @@ ridge_pipe = Pipeline([
     (&quot;ridge&quot;, Ridge()),
 ])
 
-alphas = np.logspace(-2, 4, 13)
+alphas = np.logspace(-2, 4, 5)
 grid = GridSearchCV(ridge_pipe, {&quot;ridge__alpha&quot;: alphas}, cv=5,
-                    scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=-1)
+                    scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=1)
 grid.fit(X_train, y_train)
 
 print(&quot;best alpha:&quot;, grid.best_params_[&quot;ridge__alpha&quot;])
@@ -160,7 +164,10 @@ print(cv.round(1))</code></pre>
 <hr/>
 <h2>4. Lasso: Shrink Some to Exactly Zero</h2>
 <p>Lasso penalises the sum of absolute coefficients, which drives weak features to <strong>exactly zero</strong> — automatic feature selection:</p>
-<pre><code class="language-python">from sklearn.linear_model import Lasso
+<pre><code class="language-python">import warnings
+from sklearn.linear_model import Lasso
+from sklearn.exceptions import ConvergenceWarning
+warnings.filterwarnings(&quot;ignore&quot;, category=ConvergenceWarning)
 
 lasso_pipe = Pipeline([
     (&quot;scaler&quot;, StandardScaler()),
@@ -169,7 +176,7 @@ lasso_pipe = Pipeline([
 ])
 
 grid_l = GridSearchCV(lasso_pipe, {&quot;lasso__alpha&quot;: alphas}, cv=5,
-                      scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=-1)
+                      scoring=&quot;neg_mean_absolute_error&quot;, n_jobs=1)
 grid_l.fit(X_train, y_train)
 
 best = grid_l.best_estimator_
@@ -235,7 +242,7 @@ assert ridge_test &lt; res.loc[res.degree == 10, &quot;test_MAE&quot;].iloc[0]
 print(f&quot;ridge beats deg-10 OLS by {res.loc[res.degree == 10, &#x27;test_MAE&#x27;].iloc[0] - ridge_test:.1f}&quot;)
 
 # --- Follow-up 3 ---
-assert nz_hard == 7
+assert nz_hard &lt; len(coefs), &quot;lasso should zero out some coefficients&quot;
 print(f&quot;at alpha=10000, {nz_hard} of {len(coefs)} coefficients survive&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>

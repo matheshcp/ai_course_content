@@ -202,7 +202,8 @@ ax.set_title(&quot;Chinook monthly revenue&quot;)
 ax.set_ylabel(&quot;Revenue ($)&quot;)
 plt.xticks(rotation=90, fontsize=6)
 fig.tight_layout(); fig.savefig(&quot;monthly_revenue.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved monthly_revenue.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ul>

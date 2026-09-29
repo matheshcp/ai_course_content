@@ -128,7 +128,8 @@ print(rate(&quot;OverTime&quot;))
 ax.set_ylabel(&quot;Attrition rate&quot;)
 ax.yaxis.set_major_formatter(lambda y, _: f&quot;{y:.0%}&quot;)
 fig = ax.get_figure(); fig.tight_layout(); fig.savefig(&quot;attrition_overtime.png&quot;, dpi=120)
-plt.show()</code></pre>
+from IPython.display import display
+display(fig)</code></pre>
 <p><strong>What to notice:</strong> the y-axis runs <strong>0 to 0.25</strong> with percent formatting, so the two bars compare from a true zero baseline; the saved file is <code>attrition_overtime.png</code>. Keep this chart next to its n-counts in the report — a rate without a denominator invites over-reading.</p>
 <hr/>
 <h3>3. Income quartiles vs attrition</h3>
@@ -156,7 +157,8 @@ for i, v in enumerate(by_q):
     ax.text(i, v + 0.01, f&quot;{v:.1%}&quot;, ha=&quot;center&quot;, fontsize=9)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;attrition_income_quartiles.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved charts&quot;)</code></pre>
 <p><strong>What to notice:</strong> each bar is labelled with its own percentage (<code>14.4%</code>, <code>12.4%</code>, <code>15.0%</code>, <code>17.8%</code>), so the chart is readable without a tooltip; the figure saves as <code>attrition_income_quartiles.png</code>. The Q4-over-Q2 gap (<strong>0.0542</strong>, 5.4 pp) is the number to quote — and to caveat as synthetic.</p>
 <hr/>

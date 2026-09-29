@@ -198,7 +198,8 @@ plt.xlabel(&quot;Support&quot;)
 plt.ylabel(&quot;Confidence&quot;)
 plt.title(&quot;Association Rules (size/color = lift)&quot;)
 plt.savefig(&quot;rules_scatter.png&quot;, dpi=100)
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 print(&quot;Saved rules_scatter.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>

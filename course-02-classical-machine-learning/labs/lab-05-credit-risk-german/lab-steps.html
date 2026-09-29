@@ -211,7 +211,8 @@ plt.title(&quot;ROC curve — credit risk model&quot;)
 plt.legend()
 plt.grid(alpha=0.3)
 plt.savefig(&quot;roc_curve.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
-plt.show()</code></pre>
+from IPython.display import display
+display(plt.gcf())</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
 <li>AUC ≈ 0.87 means the model ranks a random risky applicant above a random safe one about 87% of the time.</li>

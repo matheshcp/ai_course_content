@@ -176,7 +176,8 @@ print(f&quot;95% CI = ({ci[0]:.4f}, {ci[1]:.4f})&quot;)
     import matplotlib.pyplot as plt
     sns.pairplot(df, hue=&quot;species&quot;, corner=True)
     plt.savefig(&quot;iris_pairplot.png&quot;, dpi=120)
-    plt.show()
+    from IPython.display import display
+    display(plt.gcf())
     print(&quot;saved iris_pairplot.png (seaborn)&quot;)
 except ImportError:
     import matplotlib.pyplot as plt
@@ -196,7 +197,8 @@ except ImportError:
             if i == 3: ax.set_xlabel(ci_, fontsize=8)
             if j == 0: ax.set_ylabel(ri, fontsize=8)
     fig.tight_layout(); fig.savefig(&quot;iris_pairplot.png&quot;, dpi=120)
-    plt.show()
+    from IPython.display import display
+    display(fig)
     print(&quot;saved iris_pairplot.png (matplotlib)&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ul>

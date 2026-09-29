@@ -136,7 +136,8 @@ ax.annotate(&quot;Overall mean ≈ 16.1%&quot;,
             xy=(0.1608, tips.groupby(&quot;day&quot;).size().max() * 0.45),
             fontsize=9)
 fig.tight_layout(); fig.savefig(&quot;chart1_tip_pct_by_day.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved chart1_tip_pct_by_day.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> the annotation anchors the overall mean <strong>≈ 16.1%</strong> (0.1608) as a landmark against every day’s bars; most mass sits in a band around that mean rather than in long tails, which is why the mean comparisons in Exercise 1 are fair starting points.</p>
 <p>Mean tip % by day (for the caption): <strong>Fri 17.0% · Thur 16.1% · Sun 16.7% · Sat 15.3%</strong>.</p>
@@ -154,7 +155,8 @@ ax.set_ylim(0, 0.25)
 ax.legend(title=&quot;Sitting&quot;)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart2_tip_pct_day_time.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved chart2_tip_pct_day_time.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> <code>ylim=(0, 0.25)</code> starts the axis at zero — bars only compare honestly from a true baseline — and the printed pivot shows every day/sitting cell before it’s drawn. The overall sitting comparison (Lunch <strong>16.4%</strong> vs Dinner <strong>16.0%</strong>) is only ~0.4 pp: a small gap worth stating with its magnitude rather than as a headline.</p>
 <p>Insight to annotate: lunch tips slightly higher on average (Lunch 16.4% vs Dinner 16.0% overall).</p>
@@ -177,7 +179,8 @@ ax.annotate(&quot;Open work concentrated in low/med priority&quot;,
             xy=(0.02, 0.92), xycoords=&quot;axes fraction&quot;, fontsize=9)
 fig = ax.get_figure(); fig.tight_layout()
 fig.savefig(&quot;chart3_tickets_status.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved chart3_tickets_status.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> the title itself declares “(PII redacted)”, so anyone who sees the PNG knows the provenance; column totals still equal the Section 1 counts — <strong>open 42 · in-progress 34 · closed 31 (n = 107)</strong> — because redaction changed strings, not rows. The annotation names the pattern (“open work concentrated in low/med priority”) instead of leaving the reader to squint at segment heights.</p>
 <p>Expected status totals: open 42 · in-progress 34 · closed 31 (n = 107).</p>
@@ -201,7 +204,8 @@ ax.annotate(f&quot;max bill ${tips.loc[i, &#x27;total_bill&#x27;]:.2f}&quot;,
             xytext=(tips.loc[i, &quot;total_bill&quot;] - 12, tips.loc[i, &quot;tip&quot;] + 1.2),
             arrowprops=dict(arrowstyle=&quot;-&gt;&quot;, lw=0.8))
 fig.tight_layout(); fig.savefig(&quot;chart4_tip_vs_bill.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
 <p><strong>What to notice:</strong> points rise together — larger bills get larger tips in dollars — but tip <em>percentage</em> still clusters in the 15–20% band even at the <strong>$50.81</strong> maximum, which is why percentage (not dollars) is the fair cross-group comparison. The legend already carries each group’s mean: Female ≈ <strong>16.7%</strong>, Male ≈ <strong>15.8%</strong>.</p>
 <p>Female mean tip % ≈ 16.7% · Male ≈ 15.8% (small gap, don’t over-claim).</p>

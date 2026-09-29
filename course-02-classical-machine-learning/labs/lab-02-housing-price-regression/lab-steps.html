@@ -305,7 +305,8 @@ importances.plot(kind=&quot;barh&quot;, ax=ax, color=&quot;steelblue&quot;)
 ax.set_xlabel(&quot;Feature Importance&quot;)
 ax.set_title(&quot;Random Forest — Feature Importance (Housing)&quot;)
 plt.tight_layout()
-plt.show()
+from IPython.display import display
+display(plt.gcf())
 
 print(&quot;Top 3 features:&quot;)
 print(importances.sort_values(ascending=False).head(3))</code></pre>

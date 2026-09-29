@@ -173,7 +173,8 @@ ax.axvline(thr[best_i], color=&quot;k&quot;, ls=&quot;--&quot;, lw=1, label=f&qu
 ax.set_xlabel(&quot;threshold&quot;); ax.set_ylabel(&quot;score&quot;); ax.legend()
 fig.tight_layout()
 fig.savefig(&quot;lab13_threshold.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved lab13_threshold.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>

@@ -138,7 +138,8 @@ for ax, col in zip(axes, [&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quo
     ax.set_title(f&quot;{col} vs Sales  r={df[col].corr(df[&#x27;Sales&#x27;]):.3f}&quot;)
 fig.tight_layout()
 fig.savefig(&quot;eda_scatters.png&quot;, dpi=120)
-plt.show()
+from IPython.display import display
+display(fig)
 print(&quot;saved eda_scatters.png&quot;)</code></pre>
 <p><strong>What to notice:</strong></p>
 <ul>
@@ -173,7 +174,8 @@ print(tv_bins)</code></pre>
                           title=&quot;Mean Sales by TV quartile&quot;)
 ax.set_ylabel(&quot;Mean Sales&quot;)
 fig = ax.get_figure(); fig.tight_layout(); fig.savefig(&quot;eda_tv_quartiles.png&quot;, dpi=120)
-plt.show()</code></pre>
+from IPython.display import display
+display(fig)</code></pre>
 <p><strong>What to notice (chart):</strong></p>
 <ul>
 <li>Four ascending bars make the quartile trend readable at a glance — this is the figure to paste next to bullet 2 of the memo.</li>

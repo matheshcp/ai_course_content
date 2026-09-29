@@ -191,7 +191,8 @@ plt.title(&quot;KNN accuracy vs k&quot;)
 plt.legend()
 plt.grid(alpha=0.3)
 plt.savefig(&quot;knn_k_curve.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
-plt.show()</code></pre>
+from IPython.display import display
+display(plt.gcf())</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
 <li>Accuracy is flat-to-noisy for small k, peaks in the middle (k≈5–8), then slowly declines as k grows.</li>
@@ -236,7 +237,8 @@ plt.ylabel(&quot;petal_width&quot;)
 plt.title(&quot;KNN (k=5) decision regions — petal features&quot;)
 plt.legend()
 plt.savefig(&quot;knn_decision_boundary.png&quot;, dpi=100, bbox_inches=&quot;tight&quot;)
-plt.show()</code></pre>
+from IPython.display import display
+display(plt.gcf())</code></pre>
 <p><strong>What to notice:</strong></p>
 <ol>
 <li>Setosa is a clean island — it is linearly separable from the other two.</li>
