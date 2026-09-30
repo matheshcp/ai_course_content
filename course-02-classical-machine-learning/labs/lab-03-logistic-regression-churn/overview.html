@@ -42,9 +42,18 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 
 <div class="colab">
 <strong>Run this lab on Google Colab</strong>
-<p style="margin:0.2rem 0 0.5rem"><strong>Step 1 — Start the lab:</strong> click <strong>Start Lab</strong>, then open the notebook with the button shown below.</p>
-<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/WhatsApp%20Image%202026-09-24%20at%2012.20.26%20PM.jpeg" alt="Start Lab — click Start Lab then Open in Colab" style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
-<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Screenshot: Start Lab → Open in Colab (hosted asset).</span></p>
+<p style="margin:0.2rem 0 0.5rem"><strong>1. Copy the lab token.</strong> Click <strong>Start Lab</strong>, then <strong>View lab token</strong>, then the copy icon next to the token.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/copy-token.png" alt="Lab token dialog. Copy the token with the icon on the right." style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Copy the token. Do not copy the seed.</span></p>
+<p style="margin:0.2rem 0 0.5rem"><strong>2. Open the notebook.</strong> Click <strong>Open notebook in Colab</strong>.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/open-notebook.png" alt="Open notebook in Colab button on the lab page." style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Open notebook in Colab.</span></p>
+<p style="margin:0.2rem 0 0.5rem"><strong>3. Cell 0 starts empty.</strong> Find <code>VL_TOKEN = ""</code> near the top of the first code cell.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/empty-token.png" alt="Cell 0 with VL_TOKEN still empty." style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">VL_TOKEN is empty until you paste.</span></p>
+<p style="margin:0.2rem 0 0.5rem"><strong>4. Paste the token</strong> into <code>VL_TOKEN</code>, then run Cell 0. After the exercises, run the submit cell and click <strong>Validate My Lab</strong>.</p>
+<p style="margin:0 0 0.6rem"><img src="https://assetsvlab.codepurple.in/Colab_lab/common_overview/pasted-token.png" alt="Cell 0 after the lab token is pasted into VL_TOKEN." style="max-width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;"/>
+<span style="font-family:system-ui,sans-serif; font-size:0.82rem; color:#555">Paste the token, then run Cell 0.</span></p>
 <ol>
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-03-logistic-regression-churn/lab-03-logistic-regression-churn.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
