@@ -1,0 +1,24 @@
+{
+  "variables": {
+    "petal_gap": {
+      "close": 4.09,
+      "tol": 0.005
+    },
+    "mean_low": {
+      "close": 2.8823,
+      "tol": 0.0001
+    },
+    "mean_high": {
+      "close": 3.0657,
+      "tol": 0.0001
+    },
+    "ci_width": {
+      "close": 0.1834,
+      "tol": 0.0001
+    },
+    "anova_f": {
+      "close": 1180.16,
+      "tol": 0.05
+    }
+  }
+}

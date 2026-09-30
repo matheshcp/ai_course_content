@@ -1,0 +1,7 @@
+{
+  "variables": {
+    "leak_bonus": {
+      "gte": 0
+    }
+  }
+}

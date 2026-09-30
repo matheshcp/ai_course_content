@@ -1,0 +1,10 @@
+{
+  "variables": {
+    "churn_rate": {
+      "gte": 0.25
+    },
+    "recall_at_best": {
+      "gte": 0.8
+    }
+  }
+}

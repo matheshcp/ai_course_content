@@ -1,0 +1,20 @@
+{
+  "variables": {
+    "spam_recall": {
+      "close": 0.9489,
+      "tol": 0.001
+    },
+    "ham_precision": {
+      "close": 0.9928,
+      "tol": 0.001
+    },
+    "p_free_spam": {
+      "close": 0.2482,
+      "tol": 0.001
+    },
+    "p_free_ham": {
+      "close": 0.0143,
+      "tol": 0.001
+    }
+  }
+}

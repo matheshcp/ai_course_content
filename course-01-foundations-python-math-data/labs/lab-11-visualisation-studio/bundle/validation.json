@@ -1,0 +1,16 @@
+{
+  "variables": {
+    "weekday_gap": {
+      "close": 0.0167,
+      "tol": 0.0001
+    },
+    "online_share": {
+      "close": 0.3925,
+      "tol": 0.001
+    },
+    "customer_share": {
+      "close": 0.2897,
+      "tol": 0.001
+    }
+  }
+}

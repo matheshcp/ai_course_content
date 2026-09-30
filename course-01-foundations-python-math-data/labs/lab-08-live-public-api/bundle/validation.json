@@ -1,0 +1,13 @@
+{
+  "variables": {
+    "sleeps": {
+      "eq": 3
+    },
+    "success_attempt": {
+      "eq": 2
+    },
+    "n_days": {
+      "eq": 3
+    }
+  }
+}

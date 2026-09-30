@@ -1,0 +1,12 @@
+{
+  "variables": {
+    "parseable_share": {
+      "close": 0.842,
+      "tol": 0.001
+    },
+    "per_row": {
+      "close": 4462.84,
+      "tol": 0.01
+    }
+  }
+}

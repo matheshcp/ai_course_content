@@ -1,0 +1,11 @@
+{
+  "variables": {
+    "units": {
+      "eq": 472
+    },
+    "mean_price": {
+      "close": 12.685,
+      "tol": 0.001
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "variables": {
+    "relative_lift": {
+      "close": -0.0123,
+      "tol": 0.0001
+    },
+    "ci_low": {
+      "close": -0.003824,
+      "tol": 1e-05
+    },
+    "ci_high": {
+      "close": 0.000865,
+      "tol": 1e-05
+    }
+  }
+}

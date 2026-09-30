@@ -1,0 +1,13 @@
+{
+  "variables": {
+    "poly_features": {
+      "eq": 1000
+    },
+    "ridge_savings": {
+      "gte": 0
+    },
+    "lasso_dropped": {
+      "gte": 1
+    }
+  }
+}

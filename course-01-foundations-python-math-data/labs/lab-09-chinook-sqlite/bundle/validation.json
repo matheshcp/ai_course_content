@@ -1,0 +1,20 @@
+{
+  "variables": {
+    "avg_invoice": {
+      "close": 38.81,
+      "tol": 0.01
+    },
+    "rock_revenue": {
+      "close": 826.65,
+      "tol": 0.01
+    },
+    "rock_share": {
+      "close": 0.355,
+      "tol": 0.001
+    },
+    "mean_spend": {
+      "close": 39.47,
+      "tol": 0.01
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "variables": {
+    "leavers": {
+      "eq": 298
+    },
+    "quartile_gap": {
+      "close": 0.0542,
+      "tol": 0.001
+    },
+    "rd_leavers": {
+      "eq": 178
+    }
+  }
+}

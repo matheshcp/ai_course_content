@@ -1,0 +1,7 @@
+{
+  "variables": {
+    "calibration_headroom": {
+      "gte": 0
+    }
+  }
+}

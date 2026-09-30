@@ -1,0 +1,12 @@
+{
+  "variables": {
+    "inertia_k1": {
+      "close": 600.0,
+      "tol": 0.01
+    },
+    "silhouette_k5": {
+      "close": 0.4166,
+      "tol": 0.001
+    }
+  }
+}

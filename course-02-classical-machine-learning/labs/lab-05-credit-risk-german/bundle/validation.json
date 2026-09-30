@@ -1,0 +1,12 @@
+{
+  "variables": {
+    "overall_risk": {
+      "close": 0.334,
+      "tol": 0.005
+    },
+    "balanced_tpr": {
+      "close": 0.7545,
+      "tol": 0.01
+    }
+  }
+}

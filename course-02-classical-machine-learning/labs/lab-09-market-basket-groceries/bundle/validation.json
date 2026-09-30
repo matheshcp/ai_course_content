@@ -1,0 +1,15 @@
+{
+  "variables": {
+    "freq_pairs": {
+      "eq": 213
+    },
+    "rv_confidence": {
+      "close": 0.4487,
+      "tol": 0.001
+    },
+    "tf_lift": {
+      "close": 2.5746,
+      "tol": 0.001
+    }
+  }
+}

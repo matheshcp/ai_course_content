@@ -1,0 +1,11 @@
+{
+  "variables": {
+    "epoch0_loss": {
+      "close": 2.376,
+      "tol": 0.01
+    },
+    "eights_as_three": {
+      "eq": 8
+    }
+  }
+}

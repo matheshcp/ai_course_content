@@ -1,0 +1,7 @@
+{
+  "variables": {
+    "rf_mae_gap": {
+      "gte": 0
+    }
+  }
+}

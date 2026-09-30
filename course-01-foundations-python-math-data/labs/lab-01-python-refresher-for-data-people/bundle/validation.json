@@ -1,0 +1,16 @@
+{
+  "variables": {
+    "high_value_share": {
+      "close": 0.7184,
+      "tol": 0.001
+    },
+    "computer_share": {
+      "close": 0.8333,
+      "tol": 0.0001
+    },
+    "east_total": {
+      "close": 477.46,
+      "tol": 0.01
+    }
+  }
+}

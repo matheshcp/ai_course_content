@@ -1,0 +1,16 @@
+{
+  "variables": {
+    "fpr_female": {
+      "close": 0.3415,
+      "tol": 0.01
+    },
+    "fpr_male": {
+      "close": 0.2525,
+      "tol": 0.01
+    },
+    "female_tpr": {
+      "close": 0.75,
+      "tol": 0.05
+    }
+  }
+}

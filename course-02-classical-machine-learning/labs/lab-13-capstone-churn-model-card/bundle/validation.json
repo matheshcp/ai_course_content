@@ -1,0 +1,10 @@
+{
+  "variables": {
+    "pr_auc_gap": {
+      "gte": 0
+    },
+    "f1_threshold": {
+      "gte": 0.3
+    }
+  }
+}
