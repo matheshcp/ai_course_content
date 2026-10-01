@@ -2,11 +2,11 @@
   "exercises": {
     "units": {
       "question": "How many units are in stock across all products?",
-      "reference": "header, body = parse_table(read_local())\nrecords = rows_to_dicts(header, body)\nprint(len(records), [r[\"Name\"] for r in records])\n\n\nmissing = [r[\"Name\"] for r in records if r[\"Price\"] is None]\nprint(missing, len(missing), \"-> Price stored as None\")\n\n\nwith open(\"scraped.csv\", encoding=\"utf-8\") as f:\n    lines = sum(1 for _ in f)\nprint(\"OK\", lines, \"lines for\", len(records), \"records\")\n\n\nunits = sum(r[\"Stock\"] for r in records)\nprint(units)\n"
+      "reference": "header, body = parse_table(read_local())\nrecords = rows_to_dicts(header, body)\nprint(len(records), [r[\"Name\"] for r in records])\n\n\n\nunits = sum(r[\"Stock\"] for r in records)\nprint(units)\n"
     },
     "mean_price": {
       "question": "What is the mean price over priced products?",
-      "reference": "header, body = parse_table(read_local())\nrecords = rows_to_dicts(header, body)\nprint(len(records), [r[\"Name\"] for r in records])\n\n\nmissing = [r[\"Name\"] for r in records if r[\"Price\"] is None]\nprint(missing, len(missing), \"-> Price stored as None\")\n\n\nwith open(\"scraped.csv\", encoding=\"utf-8\") as f:\n    lines = sum(1 for _ in f)\nprint(\"OK\", lines, \"lines for\", len(records), \"records\")\n\n\nunits = sum(r[\"Stock\"] for r in records)\nprint(units)\n\n\npriced = [r[\"Price\"] for r in records if r[\"Price\"] is not None]\nmp = sum(priced) / len(priced)\nprint(round(mp, 3))\n"
+      "reference": "missing = [r[\"Name\"] for r in records if r[\"Price\"] is None]\nprint(missing, len(missing), \"-> Price stored as None\")\n\n\n\npriced = [r[\"Price\"] for r in records if r[\"Price\"] is not None]\nmp = sum(priced) / len(priced)\nprint(round(mp, 3))\n"
     }
   }
 }

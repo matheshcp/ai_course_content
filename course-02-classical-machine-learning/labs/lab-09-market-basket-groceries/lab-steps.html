@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-09-market-basket-groceries/lab-09-market-basket-groceries.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>groceries.csv</code></li></ul>
@@ -210,7 +210,7 @@ print(&quot;Saved rules_scatter.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Acting on low-support, high-lift rules. A rule with support 0.001 (10 baskets) might have lift 5 but be pure noise. Always pair lift with a minimum support threshold.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
 <h3>Exercise 1 — Top 10 Itemsets by Support</h3>
 <p>Compute the support of every 1-itemset and every 2-itemset. Report the top 10 1-itemsets and the top 10 2-itemsets by support. </p>
 <p><strong>Follow-up:</strong> How many frequent 2-itemsets survive a 1% support threshold?</p>

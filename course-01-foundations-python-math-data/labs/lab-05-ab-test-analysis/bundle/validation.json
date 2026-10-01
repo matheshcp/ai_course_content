@@ -2,15 +2,15 @@
   "exercises": {
     "relative_lift": {
       "question": "Express the lift relative to control.",
-      "reference": "rates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\nprint(rates)\n\n\nc0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\nprint(f\"z={z:.4f} p={pv:.4f}\")\nprint(\"significant?\", pv < 0.05)  # False\n\n\nmde = (1.959964 + 0.841621) * se\nprint(f\"MDE={mde:.6f} ({mde/p0*100:.2f}% of control)\")\n\n\nrel = round((p1 - p0) / p0, 4)\nprint(rel)\n"
+      "reference": "rates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\nprint(rates)\n\n\n\nrel = round((p1 - p0) / p0, 4)\nprint(rel)\n"
     },
     "ci_low": {
-      "question": "Confirm the observed diff lies inside the 95 percent CI.",
-      "reference": "# --- Solution 1 ---\nrates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\nprint(rates)\n\n# --- Solution 2 ---\nc0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\nprint(f\"z={z:.4f} p={pv:.4f}\")\nprint(\"significant?\", pv < 0.05)  # False\n\n# --- Solution 3 ---\nmde = (1.959964 + 0.841621) * se\nprint(f\"MDE={mde:.6f} ({mde/p0*100:.2f}% of control)\")\n\n# --- Follow-up 1 ---\nrel = round((p1 - p0) / p0, 4)\nprint(rel)\n\n# --- Follow-up 2 ---\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nprint(round(lo, 6), round(hi, 6))\n\n# --- Follow-up 3 ---\nprint(abs(p1 - p0) < mde)  # True -> underpowered for this effect\n"
+      "question": "Confirm the observed diff lies inside the 95 percent CI Compute ci low.",
+      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\nprint(f\"z={z:.4f} p={pv:.4f}\")\nprint(\"significant?\", pv < 0.05)  # False\n\n\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nprint(round(lo, 6), round(hi, 6))\n"
     },
     "ci_high": {
-      "question": "Is the observed effect even detectable — compare its size to the MDE.",
-      "reference": "# --- Solution 1 ---\nrates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\nprint(rates)\n\n# --- Solution 2 ---\nc0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\nprint(f\"z={z:.4f} p={pv:.4f}\")\nprint(\"significant?\", pv < 0.05)  # False\n\n# --- Solution 3 ---\nmde = (1.959964 + 0.841621) * se\nprint(f\"MDE={mde:.6f} ({mde/p0*100:.2f}% of control)\")\n\n# --- Follow-up 1 ---\nrel = round((p1 - p0) / p0, 4)\nprint(rel)\n\n# --- Follow-up 2 ---\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nprint(round(lo, 6), round(hi, 6))\n\n# --- Follow-up 3 ---\nprint(abs(p1 - p0) < mde)  # True -> underpowered for this effect\n"
+      "question": "Confirm the observed diff lies inside the 95 percent CI Compute ci high.",
+      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\nprint(f\"z={z:.4f} p={pv:.4f}\")\nprint(\"significant?\", pv < 0.05)  # False\n\n\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nprint(round(lo, 6), round(hi, 6))\n"
     }
   }
 }

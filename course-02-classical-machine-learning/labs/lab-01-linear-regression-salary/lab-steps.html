@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-01-linear-regression-salary/lab-01-linear-regression-salary.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Salary_Data.csv</code></li></ul>
@@ -214,7 +214,7 @@ print(f&quot;Residual std:  {residuals.std():.2f}&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> A funnel-shaped residual plot (heteroscedasticity) suggests the error variance changes with the prediction — a sign the model may need transformation.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
 <h3>Exercise 1 — Predict Salary at 5.5 Years</h3>
 <p>Use the fitted model to predict the salary for a candidate with 5.5 years of experience. </p>
 <p><strong>Follow-up:</strong> What is the predicted salary at 0 years? Why might this be unrealistic?</p>
