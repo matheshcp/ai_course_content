@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-09-market-basket-groceries/lab-09-market-basket-groceries.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>groceries.csv</code></li></ul>
@@ -210,99 +210,20 @@ print(&quot;Saved rules_scatter.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Acting on low-support, high-lift rules. A rule with support 0.001 (10 baskets) might have lift 5 but be pure noise. Always pair lift with a minimum support threshold.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Top 10 Itemsets by Support</h3>
-<p>Compute the support of every 1-itemset and every 2-itemset. Report the top 10 1-itemsets and the top 10 2-itemsets by support. <em>Expected: top 1-itemset = whole milk (0.2555); top 2-itemset = {other vegetables, whole milk} (0.0748).</em></p>
-<p><strong>Follow-up:</strong> How many frequent 2-itemsets survive a 1% support threshold? Check: 213.</p>
+<p>Compute the support of every 1-itemset and every 2-itemset. Report the top 10 1-itemsets and the top 10 2-itemsets by support. </p>
+<p><strong>Follow-up:</strong> How many frequent 2-itemsets survive a 1% support threshold?</p>
 <h3>Exercise 2 — Rules for "Whole Milk" Consequent</h3>
-<p>Generate all rules where the consequent is <code>whole milk</code> (min support 0.01, min confidence 0.10). Report the count and the top rule by confidence. <em>Expected: 45 rules; top = butter → whole milk (conf ≈ 0.4972, lift ≈ 1.9461).</em></p>
-<p><strong>Follow-up:</strong> What is the confidence of <code>root vegetables → whole milk</code>? Check: ≈ 0.4487.</p>
+<p>Generate all rules where the consequent is <code>whole milk</code> (min support 0.01, min confidence 0.10). Report the count and the top rule by confidence. </p>
+<p><strong>Follow-up:</strong> What is the confidence of <code>root vegetables → whole milk</code>?</p>
 <h3>Exercise 3 — High-Lift Rules Only</h3>
-<p>Filter all 2-itemset rules to those with lift &gt; 2. Report the count and the top rule by lift. <em>Expected: 44 rules; top = root vegetables → beef (lift ≈ 3.0404).</em></p>
-<p><strong>Follow-up:</strong> What is the lift of <code>tropical fruit → pip fruit</code>? Check: ≈ 2.5746.</p>
+<p>Filter all 2-itemset rules to those with lift &gt; 2. Report the count and the top rule by lift. </p>
+<p><strong>Follow-up:</strong> What is the lift of <code>tropical fruit → pip fruit</code>?</p>
 <details><summary>Hint</summary>
 <p>For Exercise 3, iterate over <code>freq_2</code>, and for each itemset <code>{a, b}</code> generate both directions: <code>a → b</code> and <code>b → a</code>. Compute lift as <code>conf / (item_counts[b] / N)</code> and keep rules where lift &gt; 2.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-import csv
-from collections import Counter
-from itertools import combinations
-
-transactions = []
-with open(&quot;groceries.csv&quot;, newline=&quot;&quot;, encoding=&quot;utf-8&quot;) as f:
-    for row in csv.reader(f):
-        transactions.append(frozenset(item.strip() for item in row if item.strip()))
-N = len(transactions)
-
-item_counts = Counter(item for t in transactions for item in t)
-MIN_SUPPORT = 0.01
-
-print(&quot;Top 10 1-itemsets by support:&quot;)
-for item, c in item_counts.most_common(10):
-    print(f&quot;  {item:25s} sup={c/N:.4f}&quot;)
-
-freq_1 = {frozenset([i]) for i, c in item_counts.items() if c / N &gt;= MIN_SUPPORT}
-candidate_2 = Counter()
-for t in transactions:
-    for a, b in combinations(sorted(t), 2):
-        if frozenset([a]) in freq_1 and frozenset([b]) in freq_1:
-            candidate_2[frozenset([a, b])] += 1
-freq_2 = {s for s, c in candidate_2.items() if c / N &gt;= MIN_SUPPORT}
-
-print(&quot;\nTop 10 2-itemsets by support:&quot;)
-for s, c in candidate_2.most_common(10):
-    if s in freq_2:
-        print(f&quot;  {sorted(s)}  sup={c/N:.4f}&quot;)
-
-# --- Solution 2 ---
-wm_rules = []
-for s in freq_2:
-    if &quot;whole milk&quot; in s:
-        a = next(iter(s - frozenset([&quot;whole milk&quot;])))
-        sup = candidate_2[s] / N
-        conf = candidate_2[s] / item_counts[a]
-        lift = conf / (item_counts[&quot;whole milk&quot;] / N)
-        if conf &gt;= 0.10:
-            wm_rules.append((a, sup, conf, lift))
-wm_rules.sort(key=lambda r: -r[2])
-print(f&quot;\nRules -&gt; whole milk: {len(wm_rules)}&quot;)
-for a, sup, conf, lift in wm_rules[:5]:
-    print(f&quot;  {a:20s} -&gt; whole milk  conf={conf:.4f}  lift={lift:.4f}&quot;)
-
-# --- Solution 3 ---
-high_lift = []
-for s in freq_2:
-    for a in s:
-        rest = s - frozenset([a])
-        if len(rest) != 1:
-            continue
-        b = next(iter(rest))
-        sup = candidate_2[s] / N
-        conf = candidate_2[s] / item_counts[a]
-        lift = conf / (item_counts[b] / N)
-        if lift &gt; 2.0:
-            high_lift.append((a, b, sup, conf, lift))
-high_lift.sort(key=lambda r: -r[4])
-print(f&quot;\nRules with lift &gt; 2: {len(high_lift)}&quot;)
-for a, b, sup, conf, lift in high_lift[:5]:
-    print(f&quot;  {a:20s} -&gt; {b:20s}  lift={lift:.4f}&quot;)
-
-# --- Follow-up 1 ---
-assert len(freq_2) == 213
-print(f&quot;PASS: {len(freq_2)} frequent 2-itemsets&quot;)
-
-# --- Follow-up 2 ---
-rv_conf = next(conf for a, sup, conf, lift in wm_rules if a == &quot;root vegetables&quot;)
-assert abs(rv_conf - 0.4487) &lt; 0.001
-print(f&quot;PASS: root vegetables -&gt; whole milk conf = {rv_conf:.4f}&quot;)
-
-# --- Follow-up 3 ---
-tf_lift = next(lift for a, b, sup, conf, lift in high_lift
-               if a == &quot;tropical fruit&quot; and b == &quot;pip fruit&quot;)
-assert abs(tf_lift - 2.5746) &lt; 0.001
-print(f&quot;PASS: tropical fruit -&gt; pip fruit lift = {tf_lift:.4f}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Extend Apriori to 3-itemsets and watch the candidate count explode — then try the FP-Growth algorithm, which avoids candidate generation entirely.</li>

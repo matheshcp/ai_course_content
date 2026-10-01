@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-03-logistic-regression-churn/lab-03-logistic-regression-churn.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Telco-Customer-Churn.csv</code></li></ul>
@@ -273,15 +273,16 @@ print(f&quot;\nHighest threshold with recall &gt;= {target_recall}: {best_thresh
 <blockquote><strong>Pitfall:</strong> Don't tune the threshold on the test set in production — use a validation set or cross-validation to avoid overfitting the threshold.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Churn Base Rate</h3>
-<p>What percentage of customers in the dataset churned? <em>Expected: 26.54% (1,869 out of 7,043).</em></p>
-<p><strong>Follow-up:</strong> Why is the base rate important for evaluating classifier performance? Check: base rate value.</p>
+<p>What percentage of customers in the dataset churned? </p>
+<p><strong>Follow-up:</strong> Why is the base rate important for evaluating classifier performance?</p>
 <h3>Exercise 2 — Precision and Recall at Threshold 0.5</h3>
-<p>Compute precision and recall using the default 0.5 threshold. <em>Expected: Precision = 0.6531, Recall = 0.5588.</em></p>
-<p><strong>Follow-up:</strong> Which metric matters more for a retention campaign — precision or recall? Check: both values.</p>
+<p>Compute precision and recall using the default 0.5 threshold. </p>
+<p><strong>Follow-up:</strong> Which metric matters more for a retention campaign — precision or recall?</p>
 <h3>Exercise 3 — Threshold for Recall ≥ 0.80</h3>
-<p>Find the highest threshold that achieves recall of at least 0.80. <em>Expected: 0.25 (precision = 0.4983, recall = 0.8075).</em></p>
-<p><strong>Follow-up:</strong> What happens to precision at this threshold? Check: precision at the chosen threshold.</p>
+<p>Find the highest threshold that achieves recall of at least 0.80. </p>
+<p><strong>Follow-up:</strong> What happens to precision at this threshold?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
@@ -320,63 +321,6 @@ for t in np.arange(0.1, 0.9, 0.05):
         print(f&quot;Threshold {t:.2f}: recall = {r:.4f}&quot;)</code></pre>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python">import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_score, recall_score
-
-df = pd.read_csv(r&quot;Telco-Customer-Churn.csv&quot;)
-df[&quot;TotalCharges&quot;] = pd.to_numeric(df[&quot;TotalCharges&quot;], errors=&quot;coerce&quot;)
-df[&quot;TotalCharges&quot;] = df[&quot;TotalCharges&quot;].fillna(0)
-df = df.drop(columns=[&quot;customerID&quot;])
-df[&quot;Churn&quot;] = df[&quot;Churn&quot;].map({&quot;Yes&quot;: 1, &quot;No&quot;: 0})
-X = df.drop(columns=[&quot;Churn&quot;])
-y = df[&quot;Churn&quot;]
-cat_cols = X.select_dtypes(include=&quot;object&quot;).columns.tolist()
-X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-model = LogisticRegression(max_iter=1000, random_state=42)
-model.fit(X_train, y_train)
-y_proba = model.predict_proba(X_test)[:, 1]
-
-# --- Solution 1 ---
-churn_rate = y.mean()
-churn_count = y.sum()
-print(f&quot;Churn rate: {churn_rate:.4f} ({churn_count}/{len(y)})&quot;)
-
-# --- Solution 2 ---
-y_pred_05 = (y_proba &gt;= 0.5).astype(int)
-prec = precision_score(y_test, y_pred_05)
-rec = recall_score(y_test, y_pred_05)
-print(f&quot;Precision @ 0.5: {prec:.4f}&quot;)
-print(f&quot;Recall @ 0.5:    {rec:.4f}&quot;)
-
-# --- Solution 3 ---
-thresholds = np.arange(0.1, 0.9, 0.05)
-best_t = None
-for t in thresholds:
-    y_pred_t = (y_proba &gt;= t).astype(int)
-    if recall_score(y_test, y_pred_t) &gt;= 0.80:
-        best_t = t
-print(f&quot;Best threshold for recall &gt;= 0.80: {best_t:.2f}&quot;)
-
-# --- Follow-up 1 ---
-assert 0.25 &lt; churn_rate &lt; 0.28, &quot;Churn rate should be ~26.5%&quot;
-print(f&quot;Base rate = {churn_rate:.4f} — accuracy must beat this to be useful.&quot;)
-
-# --- Follow-up 2 ---
-print(f&quot;Precision = {prec:.4f}, Recall = {rec:.4f}&quot;)
-print(&quot;For retention, recall matters more — catching churners is priority.&quot;)
-
-# --- Follow-up 3 ---
-y_pred_best = (y_proba &gt;= best_t).astype(int)
-prec_at_best = precision_score(y_test, y_pred_best)
-rec_at_best = recall_score(y_test, y_pred_best)
-assert rec_at_best &gt;= 0.80, &quot;Recall must be &gt;= 0.80&quot;
-print(f&quot;At threshold {best_t:.2f}: precision = {prec_at_best:.4f}, recall = {rec_at_best:.4f}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Handling class imbalance with SMOTE or class weights</li>

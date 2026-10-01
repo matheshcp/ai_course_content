@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/lab-01-python-refresher-for-data-people.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sales_spreadsheet.csv</code></li></ul>
@@ -356,15 +356,16 @@ print(json.dumps(analyse(sales), indent=2))
 </ul>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — High-value orders (lists + loops)</h3>
-<p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. <em>Expected: 2 orders (101 and 106). Hint: <code>if qty is not None and price is not None:</code> then compute.</em></p>
-<p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders? Check: about 0.7184 (two orders drive ~72%).</p>
+<p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. </p>
+<p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders?</p>
 <details><summary>Hint</summary>
 <p>Loop, compute <code>qty * price</code>, collect matches in a list, then print.</p>
 </details>
 <h3>Exercise 2 — Category counter (dicts + functions)</h3>
 <p>Write a function <code>category(product)</code> that returns <code>"Computer"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>"Audio"</code> for Headset, else <code>"Other"</code> (and <code>"Unknown"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>
-<p><strong>Follow-up:</strong> What share of the 12 orders are Computers? Check: 10/12, about 0.8333.</p>
+<p><strong>Follow-up:</strong> What share of the 12 orders are Computers?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">def category(product):
     p = clean_text(product)
@@ -372,67 +373,12 @@ print(json.dumps(analyse(sales), indent=2))
 <p>Use a dict + <code>.get(cat, 0) + 1</code> to count.</p>
 </details>
 <h3>Exercise 3 — One-line clean (comprehensions)</h3>
-<p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == "East"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. <em>Expected: Orders 102 (127.5), 108 (150.0), and 110 (199.96) — note 110’s Region is <code>"east"</code>, which <code>clean_text</code> normalises to <code>"East"</code>. Hint: <code>[clean_row(r) for r in sales if ...]</code> — but filter on cleaned values, so either clean twice or clean first then filter.</em></p>
-<p><strong>Follow-up:</strong> Confirm east_big sums to East's regional total. Check: 477.46.</p>
+<p>In <strong>one</strong> list comprehension (plus <code>clean_row</code> if you want), build <code>east_big</code> = list of cleaned rows where <code>Region == "East"</code> and <code>Total &gt;= 100</code>. Then in one dict comprehension build <code>{OrderID: Total}</code> from it. </p>
+<p><strong>Follow-up:</strong> Confirm east_big sums to East's regional total.</p>
 <details><summary>Hint</summary>
 <p>Easiest readable answer is two steps: <code>cleaned = [clean_row(r) for r in sales]</code> then <code>east_big = [r for r in cleaned if ...]</code>. One-liner is possible but two lines is more Pythonic — say so in a comment.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-big = []
-for r in sales:
-    qty, price = r[&quot;Quantity&quot;], r[&quot;Price&quot;]
-    if qty is None or price is None:
-        continue
-    total = qty * price
-    if total &gt; 500:
-        big.append((r[&quot;OrderID&quot;], round(total, 2)))
-        print(r[&quot;OrderID&quot;], round(total, 2))
-print(&quot;count:&quot;, len(big))  # 101 1799.98 / 106 899.99 / count: 2
-
-# --- Solution 2 ---
-def category(product):
-    p = clean_text(product)
-    if p == &quot;&quot;:
-        return &quot;Unknown&quot;
-    if p in (&quot;Laptop&quot;, &quot;Monitor&quot;, &quot;Keyboard&quot;, &quot;Mouse&quot;):
-        return &quot;Computer&quot;
-    if p == &quot;Headset&quot;:
-        return &quot;Audio&quot;
-    return &quot;Other&quot;
-
-counts = {}
-for r in sales:
-    cat = category(r[&quot;Product&quot;])
-    counts[cat] = counts.get(cat, 0) + 1
-print(counts)  # {&#x27;Computer&#x27;: 10, &#x27;Unknown&#x27;: 1, &#x27;Audio&#x27;: 1}
-
-# --- Solution 3 ---
-cleaned = [clean_row(r) for r in sales]
-east_big = [r for r in cleaned if r[&quot;Region&quot;] == &quot;East&quot; and r[&quot;Total&quot;] &gt;= 100]
-east_map = {r[&quot;OrderID&quot;]: r[&quot;Total&quot;] for r in east_big}
-print(east_big)
-print(east_map)  # {102: 127.5, 108: 150.0, 110: 199.96}
-
-# --- Follow-up 1 ---
-valid = [r for r in sales if str(r[&quot;Product&quot;]).strip()
-         and r[&quot;Quantity&quot;] is not None and r[&quot;Price&quot;] is not None]
-valid_rev = sum(r[&quot;Quantity&quot;] * r[&quot;Price&quot;] for r in valid)
-share = round(sum(t for _, t in big) / valid_rev, 4)
-print(share)  # ~0.7184 — two orders drive ~72% of valid revenue
-assert abs(share - 0.7184) &lt; 0.001
-
-# --- Follow-up 2 ---
-cshare = round(counts[&quot;Computer&quot;] / len(sales), 4)
-print(cshare)  # 0.8333
-assert cshare == 0.8333
-
-# --- Follow-up 3 ---
-etot = round(sum(east_map.values()), 2)
-print(etot)  # 477.46 == East regional total
-assert etot == 477.46</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li><code>csv.DictReader</code> / <code>csv.DictWriter</code> to load/save the real file without pandas.</li>

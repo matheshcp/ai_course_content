@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-02-housing-price-regression/lab-02-housing-price-regression.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>housing.csv</code></li></ul>
@@ -319,15 +319,16 @@ print(importances.sort_values(ascending=False).head(3))</code></pre>
 <blockquote><strong>Pitfall:</strong> Feature importance from Random Forest can be biased toward high-cardinality features. Use permutation importance for a more reliable ranking.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Baseline Mean-Predictor MAE</h3>
-<p>Compute the MAE of a model that always predicts the training-set mean house value. <em>Expected: $92,893.94</em></p>
-<p><strong>Follow-up:</strong> Why is this baseline important? Check: baseline MAE value.</p>
+<p>Compute the MAE of a model that always predicts the training-set mean house value. </p>
+<p><strong>Follow-up:</strong> Why is this baseline important?</p>
 <h3>Exercise 2 — Random Forest vs Linear Regression MAE</h3>
-<p>Compare the test MAE of both models. Which is better and by how much? <em>Expected: RF MAE = $31,889.38; LR MAE = $50,752.61</em></p>
-<p><strong>Follow-up:</strong> Why does Random Forest outperform Linear Regression here? Check: improvement percentage.</p>
+<p>Compare the test MAE of both models. Which is better and by how much? </p>
+<p><strong>Follow-up:</strong> Why does Random Forest outperform Linear Regression here?</p>
 <h3>Exercise 3 — Top 3 Features</h3>
-<p>Identify the three most important features from the Random Forest. <em>Expected: median_income (0.4839), ocean_proximity_INLAND (0.1465), longitude (0.1073).</em></p>
-<p><strong>Follow-up:</strong> What does <code>median_income</code> dominating tell you about the housing market? Check: top feature name and importance value.</p>
+<p>Identify the three most important features from the Random Forest. </p>
+<p><strong>Follow-up:</strong> What does <code>median_income</code> dominating tell you about the housing market?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">import pandas as pd
 import numpy as np
@@ -377,72 +378,6 @@ importances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)
 print(importances.sort_values(ascending=False).head(3))</code></pre>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python">import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.impute import SimpleImputer
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error
-
-df = pd.read_csv(r&quot;housing.csv&quot;)
-X = df.drop(columns=[&quot;median_house_value&quot;])
-y = df[&quot;median_house_value&quot;]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-imputer = SimpleImputer(strategy=&quot;median&quot;)
-X_train_num = pd.DataFrame(
-    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),
-    columns=X_train.select_dtypes(include=[np.number]).columns,
-    index=X_train.index,
-)
-X_test_num = pd.DataFrame(
-    imputer.transform(X_test.select_dtypes(include=[np.number])),
-    columns=X_test.select_dtypes(include=[np.number]).columns,
-    index=X_test.index,
-)
-X_train_cat = pd.get_dummies(X_train[[&quot;ocean_proximity&quot;]], drop_first=True)
-X_test_cat = pd.get_dummies(X_test[[&quot;ocean_proximity&quot;]], drop_first=True)
-X_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)
-X_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)
-X_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)
-
-lr = LinearRegression()
-lr.fit(X_train_proc, y_train)
-lr_mae = mean_absolute_error(y_test, lr.predict(X_test_proc))
-
-rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
-rf.fit(X_train_proc, y_train)
-rf_mae = mean_absolute_error(y_test, rf.predict(X_test_proc))
-
-# --- Solution 1 ---
-baseline_pred = np.full_like(y_test, y_train.mean())
-baseline_mae = mean_absolute_error(y_test, baseline_pred)
-print(f&quot;Baseline MAE: ${baseline_mae:,.2f}&quot;)
-
-# --- Solution 2 ---
-print(f&quot;LR MAE: ${lr_mae:,.2f}&quot;)
-print(f&quot;RF MAE: ${rf_mae:,.2f}&quot;)
-print(f&quot;RF is ${(lr_mae - rf_mae):,.2f} better ({(1 - rf_mae/lr_mae)*100:.1f}% improvement)&quot;)
-
-# --- Solution 3 ---
-importances = pd.Series(rf.feature_importances_, index=X_train_proc.columns)
-top3 = importances.sort_values(ascending=False).head(3)
-print(&quot;Top 3 features:&quot;)
-print(top3)
-
-# --- Follow-up 1 ---
-print(f&quot;Baseline MAE = ${baseline_mae:,.2f} — any useful model must beat this.&quot;)
-
-# --- Follow-up 2 ---
-assert rf_mae &lt; lr_mae, &quot;Random Forest should beat Linear Regression&quot;
-print(f&quot;RF beats LR by ${(lr_mae - rf_mae):,.2f}&quot;)
-
-# --- Follow-up 3 ---
-assert top3.index[0] == &quot;median_income&quot;, &quot;median_income should be the top feature&quot;
-print(f&quot;Top feature: {top3.index[0]} (importance = {top3.iloc[0]:.4f})&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Gradient boosting (XGBoost, LightGBM) for even better regression performance</li>

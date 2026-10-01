@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-03-messy-retail-cleanup/lab-03-messy-retail-cleanup.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>warehouse_messy_data.csv</code></li></ul>
@@ -301,9 +301,10 @@ print(&quot;wrote&quot;, out_path, &quot;rows:&quot;, len(cleaned))</code></pre>
 <blockquote><strong>Pitfall:</strong> Never add a row to <code>value</code> when <code>Stock Value</code> is <code>None</code> by substituting <code>0</code> "just to keep the loop simple" — that wouldn't change the sum, but it <em>would</em> corrupt <code>rows</code>/<code>units</code> consistency and hide how much value is missing. Conversely, don't coerce missing price to <code>0</code> before multiplying: <code>qty * None</code> raises, and treating missing as <code>$0</code> unit price understates inventory. Keep missing as <code>None</code> until the aggregation explicitly skips it (as <code>if c["Stock Value"]:</code> does).</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Fix Quantity word-numbers</h3>
-<p>Convert every <code>Quantity</code> with <code>parse_qty</code>. Print how many rows were <code>"two hundred"</code>, how many <code>"NaN"</code>, and the sum of all parseable quantities. <em>Expected: 160 × "two hundred" → 200 each; 158 × NaN → None; 842 parseable rows; sum of parseable qty = 135,900 (run the sum yourself to confirm).</em></p>
-<p><strong>Follow-up:</strong> What fraction of rows have parseable quantities? Check: 0.842.</p>
+<p>Convert every <code>Quantity</code> with <code>parse_qty</code>. Print how many rows were <code>"two hundred"</code>, how many <code>"NaN"</code>, and the sum of all parseable quantities. </p>
+<p><strong>Follow-up:</strong> What fraction of rows have parseable quantities?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">from collections import Counter
 c = Counter(r[&quot;Quantity&quot;] for r in rows)
@@ -311,69 +312,19 @@ words = c[&quot;two hundred&quot;]; missing = c[&quot;NaN&quot;]
 total = sum(parse_qty(r[&quot;Quantity&quot;]) or 0 for r in rows)</code></pre>
 </details>
 <h3>Exercise 2 — Flag invalid Status</h3>
-<p>Using <code>ALLOWED_STATUS = {"In Stock", "Out of Stock"}</code>, count rows whose <code>Status</code> is <strong>not</strong> allowed. Which status value causes all of them? <em>Expected: 328 rows, all <code>"Low Stock"</code>.</em></p>
-<p><strong>Follow-up:</strong> What is the average stock value per usable row? Check: about 4462.84.</p>
+<p>Using <code>ALLOWED_STATUS = {"In Stock", "Out of Stock"}</code>, count rows whose <code>Status</code> is <strong>not</strong> allowed. Which status value causes all of them? </p>
+<p><strong>Follow-up:</strong> What is the average stock value per usable row?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED_STATUS]
 print(len(bad), Counter(r[&quot;Status&quot;] for r in bad))</code></pre>
 </details>
 <h3>Exercise 3 — Inventory value per Category</h3>
 <p>Compute <code>Stock Value = Quantity * Price</code> only when both parse; sum by <code>Category</code>. Print the four category totals and the grand total. <em>Expected (2 d.p.): Electronics 830214.00 · Clothing 716252.50 · Furniture 796211.50 · Toys 607261.00 · Grand total 2949939.00 (661 usable rows).</em></p>
-<p><strong>Follow-up:</strong> Which category holds the most value? Check: Electronics.</p>
+<p><strong>Follow-up:</strong> Which category holds the most value?</p>
 <details><summary>Hint</summary>
 <p>Skip rows where <code>parse_qty</code> or <code>parse_price</code> returns <code>None</code> — do <strong>not</strong> treat missing as 0 for value (that understates inventory).</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-from collections import Counter
-c = Counter(r[&quot;Quantity&quot;] for r in rows)
-print(&quot;two hundred:&quot;, c[&quot;two hundred&quot;], &quot;NaN:&quot;, c[&quot;NaN&quot;])
-parseable = [parse_qty(r[&quot;Quantity&quot;]) for r in rows]
-print(&quot;parseable:&quot;, sum(1 for q in parseable if q is not None))
-print(&quot;sum qty:&quot;, sum(q for q in parseable if q is not None))
-# two hundred: 160 NaN: 158
-# parseable: 842
-# sum qty: 135900
-
-# --- Solution 2 ---
-ALLOWED = {&quot;In Stock&quot;, &quot;Out of Stock&quot;}
-bad = [r for r in rows if str(r[&quot;Status&quot;]).strip() not in ALLOWED]
-print(len(bad), Counter(str(r[&quot;Status&quot;]).strip() for r in bad))
-# 328 Counter({&#x27;Low Stock&#x27;: 328})
-
-# --- Solution 3 ---
-by_cat = defaultdict(float)
-usable = 0
-for r in rows:
-    q, p = parse_qty(r[&quot;Quantity&quot;]), parse_price(r[&quot;Price&quot;])
-    if q and p:
-        by_cat[clean_text(r[&quot;Category&quot;])] += q * p
-        usable += 1
-for cat in sorted(by_cat):
-    print(f&quot;{cat}: {by_cat[cat]:,.2f}&quot;)
-print(f&quot;TOTAL: {sum(by_cat.values()):,.2f}  (rows={usable})&quot;)
-# Clothing: 716,252.50
-# Electronics: 830,214.00
-# Furniture: 796,211.50
-# Toys: 607,261.00
-# TOTAL: 2,949,939.00  (rows=661)
-
-# --- Follow-up 1 ---
-pshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)
-print(pshr)  # 0.842
-assert pshr == 0.842
-
-# --- Follow-up 2 ---
-per_row = round(sum(by_cat.values()) / usable, 2)
-print(per_row)  # ~4462.84
-assert per_row == 4462.84
-
-# --- Follow-up 3 ---
-top = max(by_cat, key=by_cat.get)
-print(top)  # Electronics
-assert top == &quot;Electronics&quot;</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>pandas equivalent: <code>pd.to_numeric(..., errors="coerce")</code> + <code>.fillna</code>.</li>

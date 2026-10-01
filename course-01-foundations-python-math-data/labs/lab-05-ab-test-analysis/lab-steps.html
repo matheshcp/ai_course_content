@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>ab_test.csv</code></li></ul>
@@ -189,63 +189,26 @@ print(f&quot;MDE absolute: {mde:.6f}  (~{mde/p0*100:.2f}% relative to control)&q
 <blockquote><strong>Pitfall:</strong> Checking the z-test every hour and stopping when p &lt; 0.05 inflates false positives — each peek is another chance to cross the threshold by noise, so your real α is far above 0.05. Pre-register sample size / duration from the MDE; use sequential methods (e.g. mSPRT, group-sequential boundaries) if you must peek. Peeking is the fastest way to “discover” effects that do not replicate.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Conversion by group</h3>
-<p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). <em>Expected: control 17723/147202 = 0.120399 · treatment 17514/147276 = 0.118920.</em></p>
-<p><strong>Follow-up:</strong> Express the lift relative to control. Check: about minus 1.23 percent.</p>
+<p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). </p>
+<p><strong>Follow-up:</strong> Express the lift relative to control.</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>.</p>
 </details>
 <h3>Exercise 2 — Z-test + p-value</h3>
-<p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? <em>Expected: z ≈ −1.2369, p ≈ 0.2161 → not significant.</em></p>
-<p><strong>Follow-up:</strong> Confirm the observed diff lies inside the 95 percent CI. Check: minus 0.003824 &lt; diff &lt; 0.000865.</p>
+<p>Run the two-proportion z-test. Report z (4 d.p.) and p (4 d.p.). Significant at α=0.05? </p>
+<p><strong>Follow-up:</strong> Confirm the observed diff lies inside the 95 percent CI.</p>
 <details><summary>Hint</summary>
 <p>Pool proportions for SE under H₀; two-sided p via <code>2*(1-Φ(|z|))</code>.</p>
 </details>
 <h3>Exercise 3 — MDE at 80% power</h3>
-<p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. <em>Expected: ≈ 0.00335 absolute ≈ 2.78% of 0.1204.</em></p>
-<p><strong>Follow-up:</strong> Is the observed effect even detectable — compare its size to the MDE. Check: no, the test is underpowered for this effect.</p>
+<p>Using the pooled SE from the null, compute MDE = (1.96+0.84)·SE. Report absolute and % of control rate. </p>
+<p><strong>Follow-up:</strong> Is the observed effect even detectable — compare its size to the MDE.</p>
 <details><summary>Hint</summary>
 <p><code>mde = (1.96 + 0.84) * se_pool</code>; relative = <code>mde / p0</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<pre><code class="language-python"># --- Solution 1 ---
-rates = df.groupby(&quot;con_treat&quot;)[&quot;converted&quot;].agg([&quot;sum&quot;, &quot;count&quot;, &quot;mean&quot;])
-print(rates)
-# control:   17723 / 147202 = 0.120399
-# treatment: 17514 / 147276 = 0.118920
-
-# --- Solution 2 ---
-c0, n0 = 17723, 147202
-c1, n1 = 17514, 147276
-p0, p1 = c0/n0, c1/n1
-p = (c0+c1)/(n0+n1)
-se = math.sqrt(p*(1-p)*(1/n0 + 1/n1))
-z = (p1-p0)/se
-pv = 2*(1 - stats.norm.cdf(abs(z)))
-print(f&quot;z={z:.4f} p={pv:.4f}&quot;)   # z=-1.2369 p=0.2161
-print(&quot;significant?&quot;, pv &lt; 0.05)  # False
-
-# --- Solution 3 ---
-mde = (1.959964 + 0.841621) * se
-print(f&quot;MDE={mde:.6f} ({mde/p0*100:.2f}% of control)&quot;)
-# MDE=0.003351 (2.78% of control)
-
-# --- Follow-up 1 ---
-rel = round((p1 - p0) / p0, 4)
-print(rel)  # ~-0.0123
-assert rel == -0.0123
-
-# --- Follow-up 2 ---
-se_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)
-lo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u
-print(round(lo, 6), round(hi, 6))
-assert lo &lt; (p1 - p0) &lt; hi
-assert abs(lo + 0.003824) &lt; 1e-5 and abs(hi - 0.000865) &lt; 1e-5
-
-# --- Follow-up 3 ---
-print(abs(p1 - p0) &lt; mde)  # True -&gt; underpowered for this effect
-assert abs(p1 - p0) &lt; mde</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Chi-square test of independence on the same 2×2 table (should agree with z).</li>

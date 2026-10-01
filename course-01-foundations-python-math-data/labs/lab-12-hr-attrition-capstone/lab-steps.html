@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>HR-Employee-Attrition-synth.csv</code></li></ul>
@@ -222,71 +222,26 @@ print(report[:400])</code></pre>
 <p>A report missing any of these reads as a vibe, not an analysis — fix the gap rather than dressing the prose.</p>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Attrition by OverTime</h3>
-<p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? <em>Expected: Yes 0.1869 · No 0.1387 · gap ≈ 0.0482 (4.8 pp).</em></p>
-<p><strong>Follow-up:</strong> How many leavers is that in absolute terms? Check: 298.</p>
+<p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? </p>
+<p><strong>Follow-up:</strong> How many leavers is that in absolute terms?</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>.</p>
 </details>
 <h3>Exercise 2 — Income quartiles vs attrition</h3>
-<p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. <em>Expected: Q1 0.1440 · Q2 0.1238 · Q3 0.1503 · Q4 0.1780 · edges 1009, 5040.75, 6776, 9667.25, 28723.</em></p>
-<p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap? Check: 0.0542.</p>
+<p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. </p>
+<p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap?</p>
 <details><summary>Hint</summary>
 <p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas.</p>
 </details>
 <h3>Exercise 3 — Draft 3 hypotheses with numbers</h3>
-<p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. <em>Expected: free-form — e.g. OT pilot, R&amp;D career path, comp-ratio for Q4 leavers — each with rates/n from Sections 2–4.</em></p>
-<p><strong>Follow-up:</strong> How many R and D leavers? Check: 178.</p>
+<p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. </p>
+<p><strong>Follow-up:</strong> How many R and D leavers?</p>
 <details><summary>Hint</summary>
 <p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].”</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Worked answers for the three exercises and follow-ups. Try each exercise before revealing these; the asserts double-check your own counts.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-rates = df.groupby(&quot;OverTime&quot;)[&quot;Attrition&quot;].apply(lambda s: (s == &quot;Yes&quot;).mean())
-print(rates.round(4))
-gap = rates[&quot;Yes&quot;] - rates[&quot;No&quot;]
-print(f&quot;gap = {gap:.4f} ({gap*100:.1f} pp)&quot;)
-# Yes    0.1869
-# No     0.1387
-# gap = 0.0482 (4.8 pp)
-
-# --- Solution 2 ---
-df[&quot;IncomeQ&quot;] = pd.qcut(df[&quot;MonthlyIncome&quot;], 4, labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
-print(df.groupby(&quot;IncomeQ&quot;, observed=True)[&quot;Attrition&quot;]
-      .apply(lambda s: (s == &quot;Yes&quot;).mean()).round(4))
-print(df[&quot;MonthlyIncome&quot;].quantile([0, .25, .5, .75, 1]).tolist())
-# Q1 0.1440  Q2 0.1238  Q3 0.1503  Q4 0.1780
-# [1009.0, 5040.75, 6776.0, 9667.25, 28723.0]
-
-# --- Solution 3 ---
-# Template (fill with your own numbers from above):
-hypotheses = &quot;&quot;&quot;
-1. Reducing mandatory overtime in R&amp;D will cut attrition — OT yes 18.7% vs no 13.9%.
-2. Q4 earners need external-market comp review — Q4 attrition 17.8% vs Q2 12.4%.
-3. Promotion clarity in R&amp;D should be audited — dept rate 16.2% (n=1098).
-Validate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.
-&quot;&quot;&quot;
-print(hypotheses)
-# (Section 5 already writes attrition_report.md with this structure)
-
-# --- Follow-up 1 ---
-n_leavers = int((df[&quot;Attrition&quot;] == &quot;Yes&quot;).sum())
-print(n_leavers)  # 298
-assert n_leavers == 298
-
-# --- Follow-up 2 ---
-bq = df.groupby(&quot;IncomeQ&quot;, observed=True)[&quot;Attrition&quot;].apply(lambda s: (s == &quot;Yes&quot;).mean()).round(4)
-qgap = round(bq[&quot;Q4&quot;] - bq[&quot;Q2&quot;], 4)
-print(qgap)  # 0.0542
-assert qgap == 0.0542
-
-# --- Follow-up 3 ---
-n_rd = int(((df[&quot;Department&quot;] == &quot;Research &amp; Development&quot;) &amp; (df[&quot;Attrition&quot;] == &quot;Yes&quot;)).sum())
-print(n_rd)  # 178
-assert n_rd == 178</code></pre>
-<p><strong>What to notice:</strong> the three asserts pin the lab’s anchors — <strong>298</strong> total leavers, <strong>0.0542</strong> Q4-minus-Q2 gap, and <strong>178</strong> R&amp;D leavers (so R&amp;D contributes 178 of the 298 exits, matching its 16.2% rate on n=1098). If your Q4-minus-Q2 gap differs, re-check the quartile edges and <code>observed=True</code> from Section 3.</p>
 <h3>What to learn next</h3>
 <ul>
 <li>Logistic regression / SHAP for driver ranking (Course 2).</li>

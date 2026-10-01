@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/lab-02-sensor-time-series-pure-python.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>daily-min-temperatures.csv</code></li></ul>
@@ -237,9 +237,10 @@ print(&quot;sample:&quot;, anomalies[:5])</code></pre>
 <blockquote><strong>Pitfall:</strong> Section 6 uses <code>statistics.pstdev</code> (population SD), while the Exercise 3 solution recomputes with <code>statistics.stdev</code> (sample SD). With n = 3650 the two are nearly identical and both still report <code>170</code> flagged days here — but if you switch datasets or small samples, pick one SD definition and use it consistently, or your z-scores and thresholds will quietly disagree between cells.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Monthly mean temps dict</h3>
-<p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. <em>Expected: 1981-01 ≈ 17.713; 1990-12 ≈ 14.368 (3 s.f. may differ slightly by rounding).</em></p>
-<p><strong>Follow-up:</strong> What is the full temperature range over the decade? Check: 26.3 C.</p>
+<p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. </p>
+<p><strong>Follow-up:</strong> What is the full temperature range over the decade?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">by_month = defaultdict(list)
 for d, t in temps:
@@ -248,77 +249,18 @@ monthly_mean = {k: statistics.mean(v) for k, v in by_month.items()}
 print(monthly_mean[(1981, 1)], monthly_mean[(1990, 12)])</code></pre>
 </details>
 <h3>Exercise 2 — Count days Temp &gt; 25</h3>
-<p>How many days had <code>Temp &gt; 25</code>? Print the count and each <code>(date, temp)</code> pair. <em>Expected: 2 days — 1982-01-20 (25.2) and 1982-02-15 (26.3).</em></p>
-<p><strong>Follow-up:</strong> What fraction of 1982 (non-leap, 365 days) did the cold streak cover? Check: about 0.1945.</p>
+<p>How many days had <code>Temp &gt; 25</code>? Print the count and each <code>(date, temp)</code> pair. </p>
+<p><strong>Follow-up:</strong> What fraction of 1982 (non-leap, 365 days) did the cold streak cover?</p>
 <details><summary>Hint</summary>
 <p>List comprehension + <code>len()</code>: <code>hot = [(d,t) for d,t in temps if t &gt; 25]</code>.</p>
 </details>
 <h3>Exercise 3 — Longest run Temp &lt; 10</h3>
-<p>Find the longest <strong>consecutive-calendar-day</strong> run where <code>Temp &lt; 10</code>. Print length and start/end dates. <em>Expected: 71 days, 1982-05-31 → 1982-08-09.</em></p>
-<p><strong>Follow-up:</strong> What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Check: 170 days, about 0.0466.</p>
+<p>Find the longest <strong>consecutive-calendar-day</strong> run where <code>Temp &lt; 10</code>. Print length and start/end dates. </p>
+<p><strong>Follow-up:</strong> What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD?</p>
 <details><summary>Hint</summary>
 <p>Reuse the streak walker from Section 5; the gap check is <code>(d - prev_date).days == 1</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-from collections import defaultdict
-import statistics
-by_month = defaultdict(list)
-for d, t in temps:
-    by_month[(d.year, d.month)].append(t)
-monthly_mean = {k: statistics.mean(v) for k, v in by_month.items()}
-print(f&quot;1981-01: {monthly_mean[(1981, 1)]:.3f}&quot;)   # 17.713
-print(f&quot;1990-12: {monthly_mean[(1990, 12)]:.3f}&quot;)  # ~14.368
-
-# --- Solution 2 ---
-hot = [(d, t) for d, t in temps if t &gt; 25]
-print(&quot;count:&quot;, len(hot))  # 2
-for d, t in hot:
-    print(d, t)
-# 1982-01-20 25.2
-# 1982-02-15 26.3
-
-# --- Solution 3 ---
-best_len = cur_len = 0
-best_start = best_end = cur_start = prev_date = None
-prev_cold = False
-for d, t in temps:
-    if t &lt; 10:
-        if prev_cold and prev_date is not None and (d - prev_date).days == 1:
-            cur_len += 1
-        else:
-            cur_len, cur_start = 1, d
-        if cur_len &gt; best_len:
-            best_len = cur_len
-            best_start, best_end = cur_start, d
-        prev_cold = True
-    else:
-        cur_len, cur_start = 0, None
-        prev_cold = False
-    prev_date = d
-print(f&quot;{best_len} days: {best_start} → {best_end}&quot;)
-# 71 days: 1982-05-31 → 1982-08-09
-
-# --- Follow-up 1 ---
-tr = round(max(t for _, t in temps) - min(t for _, t in temps), 1)
-print(tr)  # 26.3
-assert tr == 26.3
-
-# --- Follow-up 2 ---
-cov = round(best_len / 365, 4)
-print(cov)  # ~0.1945
-assert cov == 0.1945
-
-# --- Follow-up 3 ---
-import statistics as _st
-_mu = _st.mean(t for _, t in temps)
-_sd = _st.stdev(t for _, t in temps)
-_out = [d for d, t in temps if abs((t - _mu) / _sd) &gt; 2]
-shr = round(len(_out) / len(temps), 4)
-print(len(_out), shr)  # 170 0.0466
-assert len(_out) == 170 and shr == 0.0466</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Rolling means: implement a 7-day window with <code>collections.deque(maxlen=7)</code>.</li>

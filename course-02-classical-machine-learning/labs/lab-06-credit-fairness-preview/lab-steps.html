@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-06-credit-fairness-preview/lab-06-credit-fairness-preview.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>german_credit_prepared.csv</code></li></ul>
@@ -221,203 +221,26 @@ for t_f in [0.5, 0.55, 0.6, 0.65]:
 <blockquote><strong>Pitfall:</strong> Per-group thresholds are a <em>post-hoc</em> fix. The deeper question is why the model scores women lower in the first place — often the training data itself reflects historical bias. Fixing the data beats patching the threshold.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — TPR by sex</h3>
-<p>Train the balanced logistic regression from section 1 and compute TPR separately for female and male applicants on the test set. Which group has the higher TPR? <em>Expected: female TPR ≈ 0.8500 (n=61), male TPR ≈ 0.7750 (n=139) — female is higher.</em></p>
-<p><strong>Follow-up:</strong> What are the false-positive rates? Check: female FPR ≈ 0.3415, male FPR ≈ 0.2525 — women are also falsely flagged more often.</p>
+<p>Train the balanced logistic regression from section 1 and compute TPR separately for female and male applicants on the test set. Which group has the higher TPR? </p>
+<p><strong>Follow-up:</strong> What are the false-positive rates?</p>
 <details><summary>Hint</summary>
 <p><code>confusion_matrix(g["y"], g["pred"]).ravel()</code> returns <code>(tn, fp, fn, tp)</code>; TPR = tp / (tp + fn).</p>
 </details>
 <h3>Exercise 2 — Disparate impact ratio</h3>
-<p>Compute the DI ratio (female approval rate / male approval rate) on the test set. Does it pass the four-fifths rule (DI ≥ 0.8)? <em>Expected: DI ≈ 0.8236 — just below 0.8, so it FAILS the four-fifths rule.</em></p>
-<p><strong>Follow-up:</strong> What are the actual default rates by sex? Check: female ≈ 0.3279, male ≈ 0.2878 — the approval gap is much larger than the base-rate gap.</p>
+<p>Compute the DI ratio (female approval rate / male approval rate) on the test set. Does it pass the four-fifths rule (DI ≥ 0.8)? </p>
+<p><strong>Follow-up:</strong> What are the actual default rates by sex?</p>
 <details><summary>Hint</summary>
 <p>DI = <code>(f["pred"] == 0).mean() / (m["pred"] == 0).mean()</code> where <code>f</code> and <code>m</code> are the per-group test frames.</p>
 </details>
 <h3>Exercise 3 — One mitigation idea</h3>
-<p>Using the per-group threshold sweep from section 3, find a female threshold that brings DI close to 1.0 while keeping overall accuracy near its original value. Report the threshold, DI, and accuracy. <em>Expected: t_female = 0.6 gives DI ≈ 0.9609 and accuracy ≈ 0.7500 (DI near parity, accuracy unchanged).</em></p>
-<p><strong>Follow-up:</strong> What happens to female TPR at t_female = 0.6? Check: it drops from ≈0.85 to ≈0.75 — the mitigation trades TPR parity for approval parity.</p>
+<p>Using the per-group threshold sweep from section 3, find a female threshold that brings DI close to 1.0 while keeping overall accuracy near its original value. Report the threshold, DI, and accuracy. </p>
+<p><strong>Follow-up:</strong> What happens to female TPR at t_female = 0.6?</p>
 <details><summary>Hint</summary>
 <p><code>np.where(sex_te == "female", proba &gt;= t_f, proba &gt;= 0.5)</code> applies different thresholds per group.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.metrics import accuracy_score, confusion_matrix
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-y_pred = clf.predict(X_te)
-res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
-for sex, g in res.groupby(&quot;sex&quot;):
-    tn, fp, fn, tp = confusion_matrix(g[&quot;y&quot;], g[&quot;pred&quot;]).ravel()
-    print(f&quot;{sex}: TPR={tp/(tp+fn):.4f}&quot;)
-
-# --- Solution 2 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-y_pred = clf.predict(X_te)
-res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
-f = res[res[&quot;sex&quot;] == &quot;female&quot;]
-m = res[res[&quot;sex&quot;] == &quot;male&quot;]
-di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
-print(f&quot;DI = {di:.4f}&quot;)
-
-# --- Solution 3 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-proba = clf.predict_proba(X_te)[:, 1]
-sex_te = X_te[&quot;sex&quot;].values
-yp = np.where(sex_te == &quot;female&quot;, proba &gt;= 0.6, proba &gt;= 0.5).astype(int)
-res = pd.DataFrame({&quot;sex&quot;: sex_te, &quot;y&quot;: y_te.values, &quot;pred&quot;: yp})
-f = res[res[&quot;sex&quot;] == &quot;female&quot;]
-m = res[res[&quot;sex&quot;] == &quot;male&quot;]
-di = (f[&quot;pred&quot;] == 0).mean() / (m[&quot;pred&quot;] == 0).mean()
-acc = (res[&quot;pred&quot;] == res[&quot;y&quot;]).mean()
-print(f&quot;t_female=0.6: DI={di:.4f}, accuracy={acc:.4f}&quot;)
-
-# --- Follow-up 1 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-from sklearn.metrics import confusion_matrix
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-y_pred = clf.predict(X_te)
-res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
-f = res[res[&quot;sex&quot;] == &quot;female&quot;]
-m = res[res[&quot;sex&quot;] == &quot;male&quot;]
-tn, fp, fn, tp = confusion_matrix(f[&quot;y&quot;], f[&quot;pred&quot;]).ravel()
-fpr_f = fp / (fp + tn)
-tn, fp, fn, tp = confusion_matrix(m[&quot;y&quot;], m[&quot;pred&quot;]).ravel()
-fpr_m = fp / (fp + tn)
-assert abs(fpr_f - 0.3415) &lt; 0.01 and abs(fpr_m - 0.2525) &lt; 0.01
-print(f&quot;FPR female={fpr_f:.4f}, male={fpr_m:.4f}&quot;)
-
-# --- Follow-up 2 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-y_pred = clf.predict(X_te)
-res = pd.DataFrame({&quot;sex&quot;: X_te[&quot;sex&quot;].values, &quot;y&quot;: y_te.values, &quot;pred&quot;: y_pred})
-rates = res.groupby(&quot;sex&quot;)[&quot;y&quot;].mean()
-assert abs(rates[&quot;female&quot;] - 0.3279) &lt; 0.01 and abs(rates[&quot;male&quot;] - 0.2878) &lt; 0.01
-print(&quot;default rates:&quot;, rates.round(4).to_dict())
-
-# --- Follow-up 3 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;german_credit_prepared.csv&quot;)
-y = (df[&quot;default&quot;] == &quot;Default&quot;).astype(int)
-X = df.drop(columns=[&quot;default&quot;])
-cat_cols = X.select_dtypes(&quot;object&quot;).columns.tolist()
-num_cols = X.select_dtypes(&quot;number&quot;).columns.tolist()
-X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-pre = ColumnTransformer([
-    (&quot;cat&quot;, OneHotEncoder(handle_unknown=&quot;ignore&quot;), cat_cols),
-    (&quot;num&quot;, StandardScaler(), num_cols),
-])
-clf = make_pipeline(pre, LogisticRegression(max_iter=1000, class_weight=&quot;balanced&quot;, random_state=42))
-clf.fit(X_tr, y_tr)
-proba = clf.predict_proba(X_te)[:, 1]
-sex_te = X_te[&quot;sex&quot;].values
-yp = np.where(sex_te == &quot;female&quot;, proba &gt;= 0.6, proba &gt;= 0.5).astype(int)
-res = pd.DataFrame({&quot;sex&quot;: sex_te, &quot;y&quot;: y_te.values, &quot;pred&quot;: yp})
-f = res[res[&quot;sex&quot;] == &quot;female&quot;]
-tpr_f = ((f[&quot;pred&quot;] == 1) &amp; (f[&quot;y&quot;] == 1)).sum() / (f[&quot;y&quot;] == 1).sum()
-assert abs(tpr_f - 0.75) &lt; 0.05, tpr_f
-print(f&quot;female TPR at t=0.6: {tpr_f:.4f}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Other fairness metrics: equalized odds, demographic parity, calibration by group.</li>

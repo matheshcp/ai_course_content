@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-07-neural-net-mnist/lab-07-neural-net-mnist.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>mnist_train.csv</code></li></ul>
@@ -199,134 +199,20 @@ print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Using a learning rate that is too large (e.g., 1.0) causes the loss to oscillate or diverge to NaN. Too small (e.g., 0.001) and 200 epochs won't be enough. 0.1 is a sweet spot for this setup.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — 200-Epoch Training Curve</h3>
-<p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. <em>Expected: final accuracy ≈ 0.937; accuracy first exceeds 0.90 around epoch 128.</em></p>
-<p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30? Check: loss[0] ≈ 2.376.</p>
+<p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. </p>
+<p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30?</p>
 <h3>Exercise 2 — Learning Rate Showdown</h3>
-<p>Train two identical networks (same seed) with <code>lr=0.1</code> and <code>lr=0.01</code> for 200 epochs each. Plot both accuracy curves on the same axes. Report the final accuracy for each. <em>Expected: lr=0.1 → ≈ 0.937; lr=0.01 → ≈ 0.651.</em></p>
-<p><strong>Follow-up:</strong> At epoch 50, what is the accuracy gap between the two? Check: lr=0.1 ≈ 0.812 vs lr=0.01 ≈ 0.271.</p>
+<p>Train two identical networks (same seed) with <code>lr=0.1</code> and <code>lr=0.01</code> for 200 epochs each. Plot both accuracy curves on the same axes. Report the final accuracy for each. </p>
+<p><strong>Follow-up:</strong> At epoch 50, what is the accuracy gap between the two?</p>
 <h3>Exercise 3 — Confusion Matrix: 3 vs 8</h3>
-<p>Digits 3 and 8 are the most commonly confused pair. Train the network, then build a 2×2 confusion matrix using only the test rows whose true label is 3 or 8. Report the matrix and the accuracy on this subset. <em>Expected: matrix [[90, 0], [8, 85]] (rows = true [3, 8], cols = predicted [3, 8]); subset accuracy ≈ 0.956.</em></p>
-<p><strong>Follow-up:</strong> How many true 8s were misclassified as 3? Check: 8.</p>
+<p>Digits 3 and 8 are the most commonly confused pair. Train the network, then build a 2×2 confusion matrix using only the test rows whose true label is 3 or 8. Report the matrix and the accuracy on this subset. </p>
+<p><strong>Follow-up:</strong> How many true 8s were misclassified as 3?</p>
 <details><summary>Hint</summary>
 <p>For Exercise 3, filter with <code>mask = (y == 3) | (y == 8)</code>, then loop over <code>(true, pred)</code> pairs and increment <code>cm[int(true==8), int(pred==8)]</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-import matplotlib
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-
-df = pd.read_csv(&quot;mnist_train.csv&quot;, nrows=1000)
-X = df.iloc[:, 1:].to_numpy(dtype=float) / 255.0
-y = df[&quot;label&quot;].to_numpy()
-Y = np.eye(10)[y]
-
-rng = np.random.default_rng(42)
-W1 = rng.normal(0, 0.1, size=(784, 64)); b1 = np.zeros(64)
-W2 = rng.normal(0, 0.1, size=(64, 10)); b2 = np.zeros(10)
-
-def relu(z): return np.maximum(z, 0)
-def softmax(z):
-    z = z - z.max(axis=1, keepdims=True)
-    e = np.exp(z)
-    return e / e.sum(axis=1, keepdims=True)
-
-losses, accuracies = [], []
-for epoch in range(200):
-    z1 = X @ W1 + b1; a1 = relu(z1)
-    probs = softmax(a1 @ W2 + b2)
-    N = len(X)
-    loss = -np.log(probs[np.arange(N), y] + 1e-12).mean()
-    dz2 = (probs - Y) / N
-    dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
-    dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
-    W2 -= 0.1 * dW2; b2 -= 0.1 * db2
-    W1 -= 0.1 * (X.T @ dz1); b1 -= 0.1 * dz1.sum(axis=0)
-    losses.append(loss)
-    accuracies.append((probs.argmax(axis=1) == y).mean())
-
-first_90 = next(i for i, a in enumerate(accuracies) if a &gt; 0.90)
-print(f&quot;Final accuracy: {accuracies[-1]:.4f}&quot;)
-print(f&quot;First epoch &gt; 0.90: {first_90}&quot;)
-
-plt.figure(figsize=(10, 4))
-plt.subplot(1, 2, 1); plt.plot(losses); plt.title(&quot;Loss&quot;); plt.xlabel(&quot;Epoch&quot;)
-plt.subplot(1, 2, 2); plt.plot(accuracies); plt.title(&quot;Accuracy&quot;); plt.xlabel(&quot;Epoch&quot;)
-plt.tight_layout(); plt.savefig(&quot;mnist_training_curve.png&quot;, dpi=100)
-from IPython.display import display
-display(plt.gcf())
-
-# --- Solution 2 ---
-def train(lr, epochs=200):
-    rng = np.random.default_rng(42)
-    W1 = rng.normal(0, 0.1, (784, 64)); b1 = np.zeros(64)
-    W2 = rng.normal(0, 0.1, (64, 10)); b2 = np.zeros(10)
-    accs = []
-    for ep in range(epochs):
-        z1 = X @ W1 + b1; a1 = relu(z1)
-        probs = softmax(a1 @ W2 + b2)
-        N = len(X)
-        dz2 = (probs - Y) / N
-        dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
-        dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
-        W2 -= lr * dW2; b2 -= lr * db2
-        W1 -= lr * (X.T @ dz1); b1 -= lr * dz1.sum(axis=0)
-        accs.append((probs.argmax(axis=1) == y).mean())
-    return accs
-
-acc_01 = train(0.1)
-acc_001 = train(0.01)
-print(f&quot;lr=0.1  final: {acc_01[-1]:.4f}&quot;)
-print(f&quot;lr=0.01 final: {acc_001[-1]:.4f}&quot;)
-
-plt.figure(figsize=(7, 4))
-plt.plot(acc_01, label=&quot;lr=0.1&quot;)
-plt.plot(acc_001, label=&quot;lr=0.01&quot;)
-plt.xlabel(&quot;Epoch&quot;); plt.ylabel(&quot;Accuracy&quot;); plt.legend()
-plt.title(&quot;Learning Rate Comparison&quot;)
-plt.savefig(&quot;lr_comparison.png&quot;, dpi=100)
-from IPython.display import display
-display(plt.gcf())
-
-# --- Solution 3 ---
-rng = np.random.default_rng(42)
-W1 = rng.normal(0, 0.1, (784, 64)); b1 = np.zeros(64)
-W2 = rng.normal(0, 0.1, (64, 10)); b2 = np.zeros(10)
-for ep in range(200):
-    z1 = X @ W1 + b1; a1 = relu(z1)
-    probs = softmax(a1 @ W2 + b2)
-    N = len(X)
-    dz2 = (probs - Y) / N
-    dW2 = a1.T @ dz2; db2 = dz2.sum(axis=0)
-    dz1 = (dz2 @ W2.T) * (z1 &gt; 0)
-    W2 -= 0.1 * dW2; b2 -= 0.1 * db2
-    W1 -= 0.1 * (X.T @ dz1); b1 -= 0.1 * dz1.sum(axis=0)
-
-pred = probs.argmax(axis=1)
-mask = (y == 3) | (y == 8)
-sub_y, sub_p = y[mask], pred[mask]
-cm = np.zeros((2, 2), dtype=int)
-for t, p in zip(sub_y, sub_p):
-    cm[int(t == 8), int(p == 8)] += 1
-print(&quot;Confusion matrix (rows=true [3,8], cols=pred [3,8]):&quot;)
-print(cm)
-print(f&quot;Subset accuracy: {np.trace(cm) / cm.sum():.4f}&quot;)
-
-# --- Follow-up 1 ---
-assert abs(losses[0] - 2.376) &lt; 0.01, f&quot;loss[0]={losses[0]}&quot;
-print(f&quot;PASS: loss[0] = {losses[0]:.4f} ≈ -log(0.1) = 2.303 (random-guess loss)&quot;)
-
-# --- Follow-up 2 ---
-assert abs(acc_01[49] - acc_001[49]) &gt; 0.5
-print(f&quot;PASS: epoch-50 gap = {acc_01[49]:.3f} vs {acc_001[49]:.3f}&quot;)
-
-# --- Follow-up 3 ---
-assert cm[1, 0] == 8
-print(f&quot;PASS: {cm[1, 0]} true 8s misclassified as 3&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Add a validation split and implement early stopping to prevent overfitting.</li>

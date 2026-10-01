@@ -1,7 +1,8 @@
 {
-  "variables": {
+  "exercises": {
     "calibration_headroom": {
-      "gte": 0
+      "question": "calibration headroom.",
+      "reference": "# --- Solution 1 ---\nbase_acc = accuracy_score(y_test, np.zeros_like(y_test))\nprint(f\"majority baseline accuracy: {base_acc:.4f}\")\nprint(f\"test default rate: {y_test.mean():.4f}\")\n\n# --- Solution 2 ---\nfor name, p in probs.items():\n    print(f\"{name:16s} PR-AUC: {average_precision_score(y_test, p):.4f}  \"\n          f\"ROC-AUC: {roc_auc_score(y_test, p):.4f}\")\n\n# --- Solution 3 ---\nfrac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nprint(\"logistic reliability (mean_pred vs frac_pos):\")\nfor mp, fp in zip(mean_pred, frac_pos):\n    print(f\"  {mp:.3f} vs {fp:.3f}\")\n\n# --- Follow-up 1 ---\nprint(\"baseline == 1 - default rate: OK\")\n\n# --- Follow-up 2 ---\npa = {n: average_precision_score(y_test, p) for n, p in probs.items()}\nbest_pa = max(pa, key=pa.get)\nprint(f\"best PR-AUC: {best_pa} ({pa[best_pa]:.4f})\")\n\n# --- Follow-up 3 ---\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\nprint(f\"max |calibration deviation| above 0.5: {dev.max():.3f}\")\n"
     }
   }
 }

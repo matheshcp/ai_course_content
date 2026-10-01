@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-06-naive-bayes-sms-spam/lab-06-naive-bayes-sms-spam.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sms.tsv</code></li></ul>
@@ -254,77 +254,28 @@ for row in top:
 <blockquote><strong>Pitfall:</strong> High lift ≠ causal importance, and lift ignores position, phrases, and sender context. A token like <code>free</code> can also appear in genuine ham (see Exercise 3) — single-token evidence is strong but not decisive, which is why the model still makes 15 false-positive calls on the holdout.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Top-10 spam-indicative tokens</h3>
 <p>Using training counts only, rank tokens by <code>log P(w|spam) − log P(w|ham)</code> (support ≥ 10). Print the top 10. <em>Expected (approx): claim, prize, won, 150p, tone, 18, www, guaranteed, 1000, 500.</em></p>
-<p><strong>Follow-up:</strong> What is spam recall on the holdout? Check: about 0.9489.</p>
+<p><strong>Follow-up:</strong> What is spam recall on the holdout?</p>
 <details><summary>Hint</summary>
 <p>Same computation as Section 6; filter <code>s + h &gt;= 10</code> before sorting.</p>
 </details>
 <h3>Exercise 2 — Accuracy on 20% holdout (seed 42)</h3>
-<p>Report accuracy to 4 d.p. and the 4 confusion counts. <em>Expected: accuracy ≈ 0.9803 · TP_spam=130, FN_spam=7, FP_spam=15, TN=962.</em></p>
-<p><strong>Follow-up:</strong> What is ham precision? Check: about 0.9928.</p>
+<p>Report accuracy to 4 d.p. and the 4 confusion counts. </p>
+<p><strong>Follow-up:</strong> What is ham precision?</p>
 <details><summary>Hint</summary>
 <p><code>random.seed(42); random.shuffle(...)</code> <strong>before</strong> slicing — order of operations matters.</p>
 </details>
 <h3>Exercise 3 — Why “free” alone misclassifies marketing ham</h3>
-<p>How many holdout messages contain <code>"free"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. <em>Expected: 48 test messages contain “free”; 14 are ham (e.g. “When you get free, call me”). Naive Bayes multiplies independent token evidence — a rare spammy co-occurrence pattern can tip borderline ham over the decision boundary.</em></p>
-<p><strong>Follow-up:</strong> Compare P free given spam vs P free given ham in test — why is free so spammy? Check: about 0.2482 vs 0.0143.</p>
+<p>How many holdout messages contain <code>"free"</code>? How many of those are <strong>ham</strong>? Give one example of a ham message with “free” that the bag-of-words model might over-weight. </p>
+<p><strong>Follow-up:</strong> Compare P free given spam vs P free given ham in test — why is free so spammy?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
 print(len(free_test), sum(1 for _, g in free_test if g == &quot;ham&quot;))</code></pre>
 <p>Single tokens cannot capture context; that’s the “naive” independence assumption.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<pre><code class="language-python"># --- Solution 1 ---
-lift = []
-for w in vocab:
-    ps = (word_counts[&quot;spam&quot;][w] + ALPHA) / totals[&quot;spam&quot;]
-    ph = (word_counts[&quot;ham&quot;][w] + ALPHA) / totals[&quot;ham&quot;]
-    s = word_counts[&quot;spam&quot;][w]; h = word_counts[&quot;ham&quot;][w]
-    if s + h &gt;= 10:
-        lift.append((w, math.log(ps/ph), s, h))
-lift.sort(key=lambda x: -x[1])
-print([w for w, *_ in lift[:10]])
-# [&#x27;claim&#x27;, &#x27;prize&#x27;, &#x27;won&#x27;, &#x27;150p&#x27;, &#x27;tone&#x27;, &#x27;18&#x27;, &#x27;www&#x27;, &#x27;guaranteed&#x27;, &#x27;1000&#x27;, &#x27;500&#x27;]
-
-# --- Solution 2 ---
-preds = [classify(t) for _, t in test]
-gold  = [l for l, _ in test]
-acc = sum(p == g for p, g in zip(preds, gold)) / len(gold)
-print(f&quot;{acc:.4f}&quot;)  # 0.9803
-print(Counter(zip(gold, preds)))
-# 962 ham-&gt;ham, 15 ham-&gt;spam, 7 spam-&gt;ham, 130 spam-&gt;spam
-
-# --- Solution 3 ---
-free_test = [(t, g) for (g, t) in test if &quot;free&quot; in t.lower()]
-n_free = len(free_test)
-n_ham = sum(1 for _, g in free_test if g == &quot;ham&quot;)
-example = next(t for t, g in free_test if g == &quot;ham&quot;)
-print(n_free, n_ham)
-print(example[:80])
-# 48 14
-# e.g. &quot;When you get free, call me&quot; / &quot;Now am free call me pa.&quot;
-
-# --- Follow-up 1 ---
-rec = sum(1 for g, p in zip(gold, preds) if g == &quot;spam&quot; and p == &quot;spam&quot;) / sum(1 for g in gold if g == &quot;spam&quot;)
-rec = round(rec, 4)
-print(rec)  # ~0.9489
-assert rec == 0.9489
-
-# --- Follow-up 2 ---
-hp = sum(1 for g, p in zip(gold, preds) if g == &quot;ham&quot; and p == &quot;ham&quot;) / sum(1 for p in preds if p == &quot;ham&quot;)
-hp = round(hp, 4)
-print(hp)  # ~0.9928
-assert hp == 0.9928
-
-# --- Follow-up 3 ---
-n_spam = sum(1 for g in gold if g == &quot;spam&quot;)
-n_ham = sum(1 for g in gold if g == &quot;ham&quot;)
-p_fs = round(sum(1 for _, g in free_test if g == &quot;spam&quot;) / n_spam, 4)
-p_fh = round(n_ham and sum(1 for _, g in free_test if g == &quot;ham&quot;) / n_ham, 4)
-print(p_fs, p_fh)  # ~0.2482 0.0143
-assert p_fs == 0.2482 and p_fh == 0.0143</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Add bigrams (<code>"free entry"</code>) — reduces “free” false positives.</li>

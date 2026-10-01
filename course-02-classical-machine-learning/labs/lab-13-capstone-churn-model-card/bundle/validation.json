@@ -1,10 +1,12 @@
 {
-  "variables": {
+  "exercises": {
     "pr_auc_gap": {
-      "gte": 0
+      "question": "pr auc gap.",
+      "reference": "# --- Solution 1 ---\nfor name, pipe in [(\"Logistic\", log_pipe), (\"GBM\", gbm_pipe)]:\n    p = pipe.predict_proba(X_test)[:, 1]\n    print(f\"{name:9s} ROC-AUC: {roc_auc_score(y_test, p):.4f}  \"\n          f\"PR-AUC: {average_precision_score(y_test, p):.4f}\")\n\n# --- Solution 2 ---\nfor col in [\"Contract\", \"gender\"]:\n    print(f\"--- {col} ---\")\n    print(slice_table(col))\n\n# --- Solution 3 ---\nwith open(\"churn_model_card.md\", encoding=\"utf-8\") as f:\n    card_text = f.read()\nfor section in [\"Intended Use\", \"Training Data\", \"Performance Metrics\", \"Fairness\", \"Limitations\"]:\nprint(\"all 5 sections present\")\n\n# --- Follow-up 1 ---\np_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nprint(\"GBM wins on PR-AUC\")\n\n# --- Follow-up 2 ---\nct = slice_table(\"Contract\")\nprint(f\"highest churn slice: Month-to-month ({ct['churn_rate'].max():.4f})\")\n\n# --- Follow-up 3 ---\nprint(f\"F1-optimal threshold: {thr[best_i]:.4f}\")\n"
     },
     "f1_threshold": {
-      "gte": 0.3
+      "question": "f1 threshold.",
+      "reference": "# --- Solution 1 ---\nfor name, pipe in [(\"Logistic\", log_pipe), (\"GBM\", gbm_pipe)]:\n    p = pipe.predict_proba(X_test)[:, 1]\n    print(f\"{name:9s} ROC-AUC: {roc_auc_score(y_test, p):.4f}  \"\n          f\"PR-AUC: {average_precision_score(y_test, p):.4f}\")\n\n# --- Solution 2 ---\nfor col in [\"Contract\", \"gender\"]:\n    print(f\"--- {col} ---\")\n    print(slice_table(col))\n\n# --- Solution 3 ---\nwith open(\"churn_model_card.md\", encoding=\"utf-8\") as f:\n    card_text = f.read()\nfor section in [\"Intended Use\", \"Training Data\", \"Performance Metrics\", \"Fairness\", \"Limitations\"]:\nprint(\"all 5 sections present\")\n\n# --- Follow-up 1 ---\np_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nprint(\"GBM wins on PR-AUC\")\n\n# --- Follow-up 2 ---\nct = slice_table(\"Contract\")\nprint(f\"highest churn slice: Month-to-month ({ct['churn_rate'].max():.4f})\")\n\n# --- Follow-up 3 ---\nprint(f\"F1-optimal threshold: {thr[best_i]:.4f}\")\n"
     }
   }
 }

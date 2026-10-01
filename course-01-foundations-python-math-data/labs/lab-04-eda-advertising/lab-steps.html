@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-04-eda-advertising/lab-04-eda-advertising.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Advertising.csv</code></li></ul>
@@ -211,61 +211,28 @@ print(&quot;wrote eda_findings.md&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> A memo that only ranks channels invites “TV causes sales” reading. Keep the association/causation wording and the n = 200 caveat in the same document as the ranking, or the caveat will be dropped in the slide deck.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Full correlation matrix</h3>
-<p>Print <code>df[["TV","Radio","Newspaper","Sales"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? <em>Expected: Radio–Newspaper ≈ 0.3541 is the strongest feature–feature pair (TV pairs are ≈ 0.05).</em></p>
-<p><strong>Follow-up:</strong> What fraction of Sales variance does TV alone explain (R squared)? Check: about 0.6118.</p>
+<p>Print <code>df[["TV","Radio","Newspaper","Sales"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? </p>
+<p><strong>Follow-up:</strong> What fraction of Sales variance does TV alone explain (R squared)?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">c = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]].corr()
 print(c)
 # upper triangle only to avoid duplicates</code></pre>
 </details>
 <h3>Exercise 2 — Highest single-feature R vs Sales</h3>
-<p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? <em>Expected: TV, r ≈ 0.7822.</em></p>
-<p><strong>Follow-up:</strong> How large is the Q4 minus Q1 mean-sales lift? Check: 10.076.</p>
+<p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? </p>
+<p><strong>Follow-up:</strong> How large is the Q4 minus Q1 mean-sales lift?</p>
 <details><summary>Hint</summary>
 <p><code>df.corr()["Sales"].drop("Sales").abs().idxmax()</code> / <code>.max()</code>.</p>
 </details>
 <h3>Exercise 3 — TV quartiles → mean Sales</h3>
-<p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. <em>Expected: Q1 8.39 · Q2 12.686 · Q3 16.548 · Q4 18.466 (50 rows each).</em></p>
-<p><strong>Follow-up:</strong> How much variance do Radio and Newspaper share (r squared)? Check: about 0.1254.</p>
+<p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. </p>
+<p><strong>Follow-up:</strong> How much variance do Radio and Newspaper share (r squared)?</p>
 <details><summary>Hint</summary>
 <p><code>pd.qcut(df["TV"], 4, labels=["Q1","Q2","Q3","Q4"])</code> then <code>groupby(...).mean()</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<pre><code class="language-python"># --- Solution 1 ---
-print(df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;, &quot;Sales&quot;]].corr().round(4))
-# Radio-Newspaper ≈ 0.3541 is the strongest non-Sales pair.
-
-# --- Solution 2 ---
-s = df.corr(numeric_only=True)[&quot;Sales&quot;].drop(&quot;Sales&quot;)
-top = s.abs().idxmax()
-print(top, round(s[top], 4))  # TV 0.7822
-
-# --- Solution 3 ---
-df[&quot;TV_bin&quot;] = pd.qcut(df[&quot;TV&quot;], 4, labels=[&quot;Q1&quot;, &quot;Q2&quot;, &quot;Q3&quot;, &quot;Q4&quot;])
-print(df.groupby(&quot;TV_bin&quot;, observed=True)[&quot;Sales&quot;].mean().round(3))
-# Q1  8.390
-# Q2 12.686
-# Q3 16.548
-# Q4 18.466
-
-# --- Follow-up 1 ---
-r = round(float(corr.loc[&quot;TV&quot;, &quot;Sales&quot;]), 4)
-r2 = round(r ** 2, 4)
-print(r2)  # ~0.6118
-assert r2 == 0.6118
-
-# --- Follow-up 2 ---
-lift = round(tv_bins[&quot;mean&quot;][&quot;Q4&quot;] - tv_bins[&quot;mean&quot;][&quot;Q1&quot;], 3)
-print(lift)  # 10.076
-assert lift == 10.076
-
-# --- Follow-up 3 ---
-r_rn = round(float(corr.loc[&quot;Radio&quot;, &quot;Newspaper&quot;]), 4)
-shared = round(r_rn ** 2, 4)
-print(shared)  # ~0.1254
-assert shared == 0.1254</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Simple OLS: <code>sm.OLS(Sales, add_constant(df[["TV","Radio"]])).fit()</code> — does Newspaper add anything?</li>

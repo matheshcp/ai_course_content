@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-08-live-public-api/lab-08-live-public-api.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>offline_fixture.json</code></li></ul>
@@ -202,9 +202,10 @@ if os.path.exists(CACHE):
 </ul>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Retry with exponential backoff</h3>
 <p>Simulate three 429 responses then success: write a loop that sleeps <code>2**attempt</code> seconds (use <code>0.01</code> as a stand-in sleep in tests) and returns a payload after the 4th try. Print the sleep schedule. <em>Expected sleeps: 1, 2, 4 (then success on attempt 3 → return). With <code>max_retries=4</code>: sequence of waits 1,2,4,8 if all fail.</em></p>
-<p><strong>Follow-up:</strong> What total seconds did the demo backoff wait? Check: 3.</p>
+<p><strong>Follow-up:</strong> What total seconds did the demo backoff wait?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-text">max_retries = 4
 for attempt in range(max_retries):
@@ -215,69 +216,18 @@ for attempt in range(max_retries):
         time.sleep(2 ** attempt)</code></pre>
 </details>
 <h3>Exercise 2 — Flatten nested JSON to columns</h3>
-<p>Given <code>payload["daily"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. <em>Expected: 3 rows (forecast_days=3); first row keys <code>date, tmax, tmin, precip_prob</code>.</em></p>
-<p><strong>Follow-up:</strong> Prove rows match the API day count. Check: 3 equals 3.</p>
+<p>Given <code>payload["daily"]</code> with parallel arrays, build a list of row dicts (date, tmax, tmin, precip_prob). Print <code>len</code> and the first row. </p>
+<p><strong>Follow-up:</strong> Prove rows match the API day count.</p>
 <details><summary>Hint</summary>
 <p><code>for i, day in enumerate(times)</code> then index each list with <code>i</code>.</p>
 </details>
 <h3>Exercise 3 — Save <code>api_snapshot.csv</code></h3>
-<p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. <em>Expected: <code>api_snapshot.csv</code> with 1 header + 3 data rows.</em></p>
-<p><strong>Follow-up:</strong> Prove every row carries the required keys. Check: date, tmax, tmin, precip_prob all present.</p>
+<p>Write the flattened records to CSV (pandas or <code>csv</code> module). Confirm the file exists and row count == number of days. </p>
+<p><strong>Follow-up:</strong> Prove every row carries the required keys.</p>
 <details><summary>Hint</summary>
 <p><code>df.to_csv("api_snapshot.csv", index=False)</code> or <code>csv.DictWriter</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<pre><code class="language-python"># --- Solution 1 ---
-import time
-def retry_demo(max_retries=4, sleep=time.sleep):
-    sleeps = []
-    for attempt in range(max_retries):
-        # pretend attempt &lt; 2 raises 429
-        if attempt &lt; 2:
-            w = 2 ** attempt
-            sleeps.append(w)
-            sleep(w)
-            continue
-        return {&quot;ok&quot;: True, &quot;attempt&quot;: attempt}, sleeps
-    return None, sleeps
-# Use real time.sleep in production; in tests inject sleep=lambda s: None.
-data, schedule = retry_demo(sleep=lambda s: None)
-print(&quot;sleeps:&quot;, schedule, &quot;-&gt; success at&quot;, data[&quot;attempt&quot;])
-# sleeps: [1, 2] -&gt; success at 2
-
-# --- Solution 2 ---
-daily = payload[&quot;daily&quot;]
-rows = [
-    {&quot;date&quot;: t,
-     &quot;tmax&quot;: daily[&quot;temperature_2m_max&quot;][i],
-     &quot;tmin&quot;: daily[&quot;temperature_2m_min&quot;][i],
-     &quot;precip_prob&quot;: daily[&quot;precipitation_probability_max&quot;][i]}
-    for i, t in enumerate(daily[&quot;time&quot;])
-]
-print(len(rows), rows[0])  # 3 {date: ..., tmax: ..., ...}
-
-# --- Solution 3 ---
-# (from Section 3) after writing:
-import os
-assert os.path.exists(&quot;api_snapshot.csv&quot;)
-with open(&quot;api_snapshot.csv&quot;, encoding=&quot;utf-8&quot;) as f:
-    n_lines = sum(1 for _ in f)
-print(&quot;lines including header:&quot;, n_lines)  # 4
-
-# --- Follow-up 1 ---
-waited = sum(schedule)
-print(waited, &quot;-&gt; success at&quot;, data[&quot;attempt&quot;])  # 3 -&gt; success at 2
-assert waited == 3 and data[&quot;attempt&quot;] == 2
-
-# --- Follow-up 2 ---
-print(len(rows), len(daily[&quot;time&quot;]))
-assert len(rows) == len(daily[&quot;time&quot;]) == 3
-
-# --- Follow-up 3 ---
-need = {&quot;date&quot;, &quot;tmax&quot;, &quot;tmin&quot;, &quot;precip_prob&quot;}
-print(sorted(rows[0].keys()))
-assert all(need &lt;= set(r.keys()) for r in rows)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li><code>requests</code> library (<code>response.raise_for_status()</code>, sessions).</li>

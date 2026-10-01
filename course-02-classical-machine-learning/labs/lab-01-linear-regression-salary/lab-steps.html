@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-01-linear-regression-salary/lab-01-linear-regression-salary.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Salary_Data.csv</code></li></ul>
@@ -214,15 +214,16 @@ print(f&quot;Residual std:  {residuals.std():.2f}&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> A funnel-shaped residual plot (heteroscedasticity) suggests the error variance changes with the prediction — a sign the model may need transformation.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Predict Salary at 5.5 Years</h3>
-<p>Use the fitted model to predict the salary for a candidate with 5.5 years of experience. <em>Expected: $77,283.39</em></p>
-<p><strong>Follow-up:</strong> What is the predicted salary at 0 years? Why might this be unrealistic? Check: intercept value.</p>
+<p>Use the fitted model to predict the salary for a candidate with 5.5 years of experience. </p>
+<p><strong>Follow-up:</strong> What is the predicted salary at 0 years? Why might this be unrealistic?</p>
 <h3>Exercise 2 — Compute Test MSE</h3>
-<p>Calculate the Mean Squared Error on the held-out test set. <em>Expected: MSE = 37,784,662.47 (RMSE = $6,146.92)</em></p>
-<p><strong>Follow-up:</strong> Why is RMSE more interpretable than MSE? Check: RMSE value.</p>
+<p>Calculate the Mean Squared Error on the held-out test set. </p>
+<p><strong>Follow-up:</strong> Why is RMSE more interpretable than MSE?</p>
 <h3>Exercise 3 — Interpret R²</h3>
-<p>The test R² is approximately 0.95. What does this mean in plain language? <em>Expected: The model explains 94.1% of the variance in salary using years of experience.</em></p>
-<p><strong>Follow-up:</strong> What would R² = 0 mean? What would R² = 1 mean? Check: R² on train vs test.</p>
+<p>The test R² is approximately 0.95. What does this mean in plain language? </p>
+<p><strong>Follow-up:</strong> What would R² = 0 mean? What would R² = 1 mean?</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -248,47 +249,6 @@ print(mse)
 print(model.score(X_test, y_test))</code></pre>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python">import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-
-df = pd.read_csv(r&quot;Salary_Data.csv&quot;)
-X = df[[&quot;YearsExperience&quot;]]
-y = df[&quot;Salary&quot;]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-model = LinearRegression()
-model.fit(X_train, y_train)
-
-# --- Solution 1 ---
-pred_5_5 = model.predict([[5.5]])
-print(f&quot;Predicted salary at 5.5 years: ${pred_5_5[0]:,.2f}&quot;)
-
-# --- Solution 2 ---
-y_pred = model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-print(f&quot;Test MSE:  {mse:,.2f}&quot;)
-print(f&quot;Test RMSE: {np.sqrt(mse):,.2f}&quot;)
-
-# --- Solution 3 ---
-r2_train = model.score(X_train, y_train)
-r2_test = model.score(X_test, y_test)
-print(f&quot;R² train: {r2_train:.4f}&quot;)
-print(f&quot;R² test:  {r2_test:.4f}&quot;)
-print(f&quot;The model explains {r2_test*100:.1f}% of salary variance.&quot;)
-
-# --- Follow-up 1 ---
-print(f&quot;Intercept (salary at 0 years): ${model.intercept_:,.2f}&quot;)
-
-# --- Follow-up 2 ---
-print(f&quot;RMSE: ${np.sqrt(mse):,.2f} — in salary dollars, unlike MSE.&quot;)
-
-# --- Follow-up 3 ---
-assert r2_test &gt; 0.90, &quot;R² should be above 0.90&quot;
-print(f&quot;R² test = {r2_test:.4f} — strong fit confirmed.&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Multiple linear regression with more features</li>

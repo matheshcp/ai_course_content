@@ -1,16 +1,16 @@
 {
-  "variables": {
+  "exercises": {
     "r2": {
-      "close": 0.6118,
-      "tol": 0.001
+      "question": "What fraction of Sales variance does TV alone explain (R squared)?",
+      "reference": "print(df[[\"TV\", \"Radio\", \"Newspaper\", \"Sales\"]].corr().round(4))\n\n\ns = df.corr(numeric_only=True)[\"Sales\"].drop(\"Sales\")\ntop = s.abs().idxmax()\nprint(top, round(s[top], 4))\n\n\ndf[\"TV_bin\"] = pd.qcut(df[\"TV\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\nprint(df.groupby(\"TV_bin\", observed=True)[\"Sales\"].mean().round(3))\n\n\nr = round(float(corr.loc[\"TV\", \"Sales\"]), 4)\nr2 = round(r ** 2, 4)\nprint(r2)\n"
     },
     "tv_lift": {
-      "close": 10.076,
-      "tol": 0.01
+      "question": "How large is the Q4 minus Q1 mean-sales lift?",
+      "reference": "print(df[[\"TV\", \"Radio\", \"Newspaper\", \"Sales\"]].corr().round(4))\n\n\ns = df.corr(numeric_only=True)[\"Sales\"].drop(\"Sales\")\ntop = s.abs().idxmax()\nprint(top, round(s[top], 4))\n\n\ndf[\"TV_bin\"] = pd.qcut(df[\"TV\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\nprint(df.groupby(\"TV_bin\", observed=True)[\"Sales\"].mean().round(3))\n\n\nr = round(float(corr.loc[\"TV\", \"Sales\"]), 4)\nr2 = round(r ** 2, 4)\nprint(r2)\n\n\nlift = round(tv_bins[\"mean\"][\"Q4\"] - tv_bins[\"mean\"][\"Q1\"], 3)\nprint(lift)\n"
     },
     "shared": {
-      "close": 0.1254,
-      "tol": 0.001
+      "question": "How much variance do Radio and Newspaper share (r squared)?",
+      "reference": "print(df[[\"TV\", \"Radio\", \"Newspaper\", \"Sales\"]].corr().round(4))\n\n\ns = df.corr(numeric_only=True)[\"Sales\"].drop(\"Sales\")\ntop = s.abs().idxmax()\nprint(top, round(s[top], 4))\n\n\ndf[\"TV_bin\"] = pd.qcut(df[\"TV\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\nprint(df.groupby(\"TV_bin\", observed=True)[\"Sales\"].mean().round(3))\n\n\nr = round(float(corr.loc[\"TV\", \"Sales\"]), 4)\nr2 = round(r ** 2, 4)\nprint(r2)\n\n\nlift = round(tv_bins[\"mean\"][\"Q4\"] - tv_bins[\"mean\"][\"Q1\"], 3)\nprint(lift)\n\n\nr_rn = round(float(corr.loc[\"Radio\", \"Newspaper\"]), 4)\nshared = round(r_rn ** 2, 4)\nprint(shared)\n"
     }
   }
 }

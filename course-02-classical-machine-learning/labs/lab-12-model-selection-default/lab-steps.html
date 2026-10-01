@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-12-model-selection-default/lab-12-model-selection-default.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Default.csv</code></li></ul>
@@ -198,48 +198,17 @@ print(&quot;saved lab12_reliability.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> calibration and discrimination are different axes. A model can rank well (high AUC) and still be miscalibrated.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Majority-class baseline</h3>
-<p>Compute the accuracy of always predicting "no default" on the test set. <em>Expected: ≈ 0.9668.</em></p>
-<p><strong>Follow-up:</strong> What is the test-set default rate? Check: ≈ 0.0332.</p>
+<p>Compute the accuracy of always predicting "no default" on the test set. </p>
+<p><strong>Follow-up:</strong> What is the test-set default rate?</p>
 <h3>Exercise 2 — PR-AUC for all three models</h3>
-<p>Report PR-AUC for Logistic, RandomForest, and GradientBoosting on the test set. <em>Expected: Logistic ≈ 0.509, RandomForest ≈ 0.386, GradientBoosting ≈ 0.354.</em></p>
-<p><strong>Follow-up:</strong> Which model wins on ROC-AUC? Check: Logistic (≈ 0.945).</p>
+<p>Report PR-AUC for Logistic, RandomForest, and GradientBoosting on the test set. </p>
+<p><strong>Follow-up:</strong> Which model wins on ROC-AUC?</p>
 <h3>Exercise 3 — Reliability diagram</h3>
-<p>Sketch the reliability diagram and report the logistic model's mean predicted probability vs actual fraction of positives in the highest bin. <em>Expected: mean predicted ≈ 0.95, fraction ≈ 1.00.</em></p>
-<p><strong>Follow-up:</strong> Is logistic regression close to the diagonal in the high bins? Check: yes — max deviation ≈ 0.05 for bins above 0.5.</p>
+<p>Sketch the reliability diagram and report the logistic model's mean predicted probability vs actual fraction of positives in the highest bin. </p>
+<p><strong>Follow-up:</strong> Is logistic regression close to the diagonal in the high bins?</p>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-base_acc = accuracy_score(y_test, np.zeros_like(y_test))
-print(f&quot;majority baseline accuracy: {base_acc:.4f}&quot;)
-print(f&quot;test default rate: {y_test.mean():.4f}&quot;)
-
-# --- Solution 2 ---
-for name, p in probs.items():
-    print(f&quot;{name:16s} PR-AUC: {average_precision_score(y_test, p):.4f}  &quot;
-          f&quot;ROC-AUC: {roc_auc_score(y_test, p):.4f}&quot;)
-
-# --- Solution 3 ---
-frac_pos, mean_pred = calibration_curve(y_test, probs[&quot;Logistic&quot;], n_bins=10)
-print(&quot;logistic reliability (mean_pred vs frac_pos):&quot;)
-for mp, fp in zip(mean_pred, frac_pos):
-    print(f&quot;  {mp:.3f} vs {fp:.3f}&quot;)
-
-# --- Follow-up 1 ---
-assert abs(base_acc - (1 - y_test.mean())) &lt; 1e-9
-print(&quot;baseline == 1 - default rate: OK&quot;)
-
-# --- Follow-up 2 ---
-pa = {n: average_precision_score(y_test, p) for n, p in probs.items()}
-best_pa = max(pa, key=pa.get)
-print(f&quot;best PR-AUC: {best_pa} ({pa[best_pa]:.4f})&quot;)
-
-# --- Follow-up 3 ---
-high = mean_pred &gt; 0.5
-dev = np.abs(frac_pos[high] - mean_pred[high])
-print(f&quot;max |calibration deviation| above 0.5: {dev.max():.3f}&quot;)
-assert dev.max() &lt; 0.1, &quot;logistic should be well calibrated in the high bins&quot;</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Try <code>class_weight="balanced"</code> on the logistic model and watch recall rise while precision falls.</li>

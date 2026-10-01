@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-08-kmeans-mall-segments/lab-08-kmeans-mall-segments.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Mall_Customers.csv</code></li></ul>
@@ -195,86 +195,20 @@ print(&quot;Saved mall_segments.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Reading cluster profiles from the scaled centroids directly. A scaled income of 1.5 means nothing to a marketing team — always inverse-transform to original units before interpreting.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Elbow Method</h3>
-<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. <em>Expected: elbow at k=5; inertia at k=5 ≈ 168.25.</em></p>
-<p><strong>Follow-up:</strong> What is the inertia at k=1? Check: 600.00 (equals 200 rows × 3 features, since each feature has variance 1 after scaling).</p>
+<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. </p>
+<p><strong>Follow-up:</strong> What is the inertia at k=1?</p>
 <h3>Exercise 2 — Best k by Silhouette</h3>
-<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? <em>Expected: k=6 with silhouette ≈ 0.4284.</em></p>
-<p><strong>Follow-up:</strong> What is the silhouette score at k=5? Check: ≈ 0.4166.</p>
+<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? </p>
+<p><strong>Follow-up:</strong> What is the silhouette score at k=5?</p>
 <h3>Exercise 3 — Name the Segments</h3>
-<p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., "Young Enthusiasts: age ~25, high spend"). Report the cluster sizes. <em>Expected: sizes 20, 54, 40, 39, 47 for clusters 0–4.</em></p>
-<p><strong>Follow-up:</strong> Which cluster has the highest average income? Check: clusters 2 and 3 both ≈ 86.1k.</p>
+<p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., "Young Enthusiasts: age ~25, high spend"). Report the cluster sizes. </p>
+<p><strong>Follow-up:</strong> Which cluster has the highest average income?</p>
 <details><summary>Hint</summary>
 <p>For Exercise 3, use <code>scaler.inverse_transform(km.cluster_centers_)</code> to get centroids in original units, then loop over clusters and print <code>mall[labels == c].mean()</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-import matplotlib
-import matplotlib.pyplot as plt
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.cluster import KMeans
-
-mall = pd.read_csv(&quot;Mall_Customers.csv&quot;)
-features = [&quot;Age&quot;, &quot;Annual Income (k$)&quot;, &quot;Spending Score (1-100)&quot;]
-X_scaled = StandardScaler().fit_transform(mall[features].to_numpy())
-
-inertias = []
-for k in range(1, 11):
-    km = KMeans(n_clusters=k, random_state=42, n_init=10).fit(X_scaled)
-    inertias.append(km.inertia_)
-
-plt.figure(figsize=(7, 4))
-plt.plot(range(1, 11), inertias, &quot;bo-&quot;)
-plt.title(&quot;Elbow Method&quot;)
-plt.xlabel(&quot;k&quot;); plt.ylabel(&quot;Inertia&quot;)
-plt.savefig(&quot;elbow.png&quot;, dpi=100)
-from IPython.display import display
-display(plt.gcf())
-print(f&quot;Inertia at k=5: {inertias[4]:.2f}&quot;)
-
-# --- Solution 2 ---
-from sklearn.metrics import silhouette_score
-
-silhouettes = {}
-for k in range(2, 11):
-    km = KMeans(n_clusters=k, random_state=42, n_init=10).fit(X_scaled)
-    silhouettes[k] = silhouette_score(X_scaled, km.labels_)
-
-best_k = max(silhouettes, key=silhouettes.get)
-print(f&quot;Best k: {best_k} with silhouette {silhouettes[best_k]:.4f}&quot;)
-for k, s in silhouettes.items():
-    print(f&quot;  k={k}: {s:.4f}&quot;)
-
-# --- Solution 3 ---
-K = 5
-scaler = StandardScaler().fit(mall[features].to_numpy())
-X_scaled = scaler.transform(mall[features].to_numpy())
-km = KMeans(n_clusters=K, random_state=42, n_init=10)
-labels = km.fit_predict(X_scaled)
-
-centroids = scaler.inverse_transform(km.cluster_centers_)
-for c in range(K):
-    sub = mall[labels == c]
-    print(f&quot;Cluster {c} (n={len(sub)}): &quot;
-          f&quot;age={sub[&#x27;Age&#x27;].mean():.1f}, &quot;
-          f&quot;income={sub[&#x27;Annual Income (k$)&#x27;].mean():.1f}k, &quot;
-          f&quot;spend={sub[&#x27;Spending Score (1-100)&#x27;].mean():.1f}&quot;)
-
-# --- Follow-up 1 ---
-assert abs(inertias[0] - 600.0) &lt; 0.01
-print(f&quot;PASS: inertia at k=1 = {inertias[0]:.2f}&quot;)
-
-# --- Follow-up 2 ---
-assert abs(silhouettes[5] - 0.4166) &lt; 0.001
-print(f&quot;PASS: silhouette at k=5 = {silhouettes[5]:.4f}&quot;)
-
-# --- Follow-up 3 ---
-sizes = [int((labels == c).sum()) for c in range(K)]
-assert sizes == [20, 54, 40, 39, 47]
-print(f&quot;PASS: cluster sizes = {sizes}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Try DBSCAN, which finds clusters of arbitrary shape and doesn't require choosing k.</li>

@@ -1,7 +1,8 @@
 {
-  "variables": {
+  "exercises": {
     "leak_bonus": {
-      "gte": 0
+      "question": "leak bonus.",
+      "reference": "# --- Solution 1 ---\nq13, q23 = df[\"lifeExp\"].quantile([1/3, 2/3])\nprint(f\"tercile cut points: {q13:.4f}, {q23:.4f}\")\nprint(df[\"life_band\"].value_counts().sort_index())\n\n# --- Solution 2 ---\nX_honest = df[[\"gdpPercap\", \"pop\"]]\nX_tr, X_te, y_tr, y_te = train_test_split(X_honest, y, test_size=0.25, random_state=42, stratify=y)\ngbm_honest = GradientBoostingClassifier(random_state=42).fit(X_tr, y_tr)\nacc_honest = accuracy_score(y_te, gbm_honest.predict(X_te))\nprint(f\"honest test accuracy (no year): {acc_honest:.4f}\")\nprint(f\"leak bought: {test_acc - acc_honest:+.4f}\")\n\n# --- Solution 3 ---\nhigh_idx = list(gbm.classes_).index(\"High\")\nprint(f\"PD High @ min grid: {probs[high_idx, 0]:.4f}\")\nprint(f\"PD High @ max grid: {probs[high_idx, -1]:.4f}\")\n\n# --- Follow-up 1 ---\ncounts = df[\"life_band\"].value_counts().sort_index()\nprint(\"band counts:\", counts.to_dict())\n\n# --- Follow-up 2 ---\nprint(f\"leak bonus: {test_acc - acc_honest:.4f}\")\n\n# --- Follow-up 3 ---\nprint(f\"High-band PD rises from {probs[high_idx, 0]:.4f} to {probs[high_idx, -1]:.4f}\")\n"
     }
   }
 }

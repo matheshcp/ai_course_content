@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-11-regularisation-ridge-lasso/lab-11-regularisation-ridge-lasso.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>housing.csv</code></li></ul>
@@ -195,55 +195,17 @@ print(nonzero.head(8).round(0))</code></pre>
 <blockquote><strong>Pitfall:</strong> lasso with correlated features picks one arbitrarily. If two features are near-duplicates, don't read too much into which one survives.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Locate the overfitting knee</h3>
-<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000. <em>Expected: best degree = 5; gap first exceeds $10k at degree 7.</em></p>
-<p><strong>Follow-up:</strong> How many features does degree 10 create? Check: 1000.</p>
+<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000. </p>
+<p><strong>Follow-up:</strong> How many features does degree 10 create?</p>
 <h3>Exercise 2 — Best ridge alpha</h3>
-<p>Run the ridge grid search and report the best alpha and its CV MAE. <em>Expected: alpha = 100, CV MAE ≈ $56,593.</em></p>
-<p><strong>Follow-up:</strong> Does ridge beat unregularised degree-10 OLS on test MAE? Check: yes — $57,194 vs $262,600.</p>
+<p>Run the ridge grid search and report the best alpha and its CV MAE. </p>
+<p><strong>Follow-up:</strong> Does ridge beat unregularised degree-10 OLS on test MAE?</p>
 <h3>Exercise 3 — Lasso sparsity</h3>
-<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature. <em>Expected: 32 / 34 non-zero; top feature <code>median_income</code>.</em></p>
-<p><strong>Follow-up:</strong> Refit lasso with <code>alpha=10000</code> — how many survive? Check: 7.</p>
+<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature. </p>
+<p><strong>Follow-up:</strong> Refit lasso with <code>alpha=10000</code> — how many survive?</p>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-best_deg = res.loc[res[&quot;test_MAE&quot;].idxmin(), &quot;degree&quot;]
-first_big_gap = res.loc[res[&quot;overfit_gap&quot;] &gt; 10000, &quot;degree&quot;].min()
-print(f&quot;best degree: {best_deg}, first gap&gt;10k at degree: {first_big_gap}&quot;)
-print(&quot;degree-10 feature count:&quot;, int(res.loc[res.degree == 10, &quot;n_features&quot;].iloc[0]))
-
-# --- Solution 2 ---
-print(&quot;best ridge alpha:&quot;, grid.best_params_[&quot;ridge__alpha&quot;])
-print(&quot;best ridge CV MAE:&quot;, round(-grid.best_score_, 1))
-ols3 = Pipeline([(&quot;scaler&quot;, StandardScaler()),
-                 (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
-                 (&quot;lr&quot;, LinearRegression())]).fit(X_train, y_train)
-ols3_test = mean_absolute_error(y_test, ols3.predict(X_test))
-ridge_test = mean_absolute_error(y_test, grid.best_estimator_.predict(X_test))
-print(f&quot;OLS deg-3 test MAE: {ols3_test:.1f}&quot;)
-print(f&quot;ridge test MAE: {ridge_test:.1f}&quot;)
-print(f&quot;OLS deg-10 test MAE: {res.loc[res.degree == 10, &#x27;test_MAE&#x27;].iloc[0]:.1f}&quot;)
-
-# --- Solution 3 ---
-print(&quot;non-zero lasso coefs:&quot;, len(nonzero), &quot;/&quot;, len(coefs))
-print(&quot;top feature:&quot;, nonzero.abs().idxmax())
-lasso_hard = Pipeline([(&quot;scaler&quot;, StandardScaler()),
-                       (&quot;poly&quot;, PolynomialFeatures(degree=3, include_bias=False)),
-                       (&quot;lasso&quot;, Lasso(alpha=10000, max_iter=10000))]).fit(X_train, y_train)
-nz_hard = int((lasso_hard.named_steps[&quot;lasso&quot;].coef_ != 0).sum())
-print(f&quot;non-zero at alpha=10000: {nz_hard} / {len(coefs)}&quot;)
-
-# --- Follow-up 1 ---
-assert int(res.loc[res.degree == 10, &quot;n_features&quot;].iloc[0]) == 1000
-
-# --- Follow-up 2 ---
-assert ridge_test &lt; res.loc[res.degree == 10, &quot;test_MAE&quot;].iloc[0]
-print(f&quot;ridge beats deg-10 OLS by {res.loc[res.degree == 10, &#x27;test_MAE&#x27;].iloc[0] - ridge_test:.1f}&quot;)
-
-# --- Follow-up 3 ---
-assert nz_hard &lt; len(coefs), &quot;lasso should zero out some coefficients&quot;
-print(f&quot;at alpha=10000, {nz_hard} of {len(coefs)} coefficients survive&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>ElasticNet blends L1 and L2 — try <code>ElasticNet(l1_ratio=0.5)</code>.</li>

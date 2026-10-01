@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-04-knn-iris/lab-04-knn-iris.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>iris.csv</code></li></ul>
@@ -248,130 +248,26 @@ display(plt.gcf())</code></pre>
 <blockquote><strong>Pitfall:</strong> A 2D boundary plot is a <em>visualization</em> of a model that may use more features. Here we deliberately trained on only the two plotted features so the picture matches the model.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — The k-curve</h3>
-<p>Using the code from section 3, record the scaled CV accuracy for every k from 1 to 15. Which k gives the best scaled accuracy, and what is that accuracy? Also note the best unscaled accuracy. <em>Expected: best scaled k = 6 or 8 at CV accuracy ≈ 0.9667; best unscaled ≈ 0.9800 (k = 6, 7, 10, 11, or 12).</em></p>
-<p><strong>Follow-up:</strong> Why does accuracy dip at k=1 and again for large k? Check: k=1 scaled ≈ 0.9467, k=15 scaled ≈ 0.9400.</p>
+<p>Using the code from section 3, record the scaled CV accuracy for every k from 1 to 15. Which k gives the best scaled accuracy, and what is that accuracy? Also note the best unscaled accuracy. </p>
+<p><strong>Follow-up:</strong> Why does accuracy dip at k=1 and again for large k?</p>
 <details><summary>Hint</summary>
 <p><code>np.argmax(scaled_acc)</code> gives the index of the best k; add 1 because k starts at 1.</p>
 </details>
 <h3>Exercise 2 — The scale trap</h3>
-<p>Compute each feature's share of total squared distance (section 2). Which feature dominates? Then multiply <code>sepal_length</code> by 100 and re-run 5-fold CV with k=5 unscaled. How much accuracy do you lose? <em>Expected: petal_length dominates with ≈ 0.68 of squared distance; the x100 experiment drops CV accuracy to ≈ 0.7333 (from ≈ 0.96).</em></p>
-<p><strong>Follow-up:</strong> What does <code>StandardScaler</code> do to each feature's mean and std? Check: after scaling, every feature has mean ≈ 0 and std ≈ 1.</p>
+<p>Compute each feature's share of total squared distance (section 2). Which feature dominates? Then multiply <code>sepal_length</code> by 100 and re-run 5-fold CV with k=5 unscaled. How much accuracy do you lose? </p>
+<p><strong>Follow-up:</strong> What does <code>StandardScaler</code> do to each feature's mean and std?</p>
 <details><summary>Hint</summary>
 <p><code>StandardScaler().fit(X).transform(X)</code> returns a numpy array; wrap it in a DataFrame to inspect <code>.mean()</code> and <code>.std()</code>.</p>
 </details>
 <h3>Exercise 3 — Classify a hand-entered flower</h3>
-<p>Train a scaled KNN (k=5) on all four features. Predict the species of a flower with sepal_length=6.0, sepal_width=2.9, petal_length=4.5, petal_width=1.5. What is the predicted species and the class probabilities? <em>Expected: predicted species = versicolor, probabilities ≈ [0.0, 1.0, 0.0] (setosa, versicolor, virginica).</em></p>
-<p><strong>Follow-up:</strong> Move petal_length to 5.5 and keep everything else. What changes? Check: the prediction flips to virginica.</p>
+<p>Train a scaled KNN (k=5) on all four features. Predict the species of a flower with sepal_length=6.0, sepal_width=2.9, petal_length=4.5, petal_width=1.5. What is the predicted species and the class probabilities? </p>
+<p><strong>Follow-up:</strong> Move petal_length to 5.5 and keep everything else. What changes?</p>
 <details><summary>Hint</summary>
 <p>Build a DataFrame with the same column names as X, then call <code>pipe.predict_proba(flower)</code>. The columns of <code>pipe.classes_</code> give the probability order.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-y = df[&quot;species&quot;]
-
-ks = list(range(1, 16))
-scaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]
-unscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]
-best_k = ks[int(np.argmax(scaled_acc))]
-print(f&quot;best scaled k={best_k}, acc={max(scaled_acc):.4f}&quot;)
-print(f&quot;best unscaled acc={max(unscaled_acc):.4f}&quot;)
-
-# --- Solution 2 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-y = df[&quot;species&quot;]
-
-sq = ((X - X.mean()) ** 2).mean()
-print(&quot;distance shares:&quot;)
-print((sq / sq.sum()).round(4))
-
-X_bad = X.copy()
-X_bad[&quot;sepal_length&quot;] = X_bad[&quot;sepal_length&quot;] * 100
-acc_bad = cross_val_score(KNeighborsClassifier(n_neighbors=5), X_bad, y, cv=5).mean()
-print(f&quot;x100 unscaled k=5 CV acc: {acc_bad:.4f}&quot;)
-
-# --- Solution 3 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-y = df[&quot;species&quot;]
-
-pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
-pipe.fit(X, y)
-flower = pd.DataFrame({&quot;sepal_length&quot;: [6.0], &quot;sepal_width&quot;: [2.9], &quot;petal_length&quot;: [4.5], &quot;petal_width&quot;: [1.5]})
-print(&quot;prediction:&quot;, pipe.predict(flower)[0])
-print(&quot;probabilities:&quot;, pipe.predict_proba(flower).round(3))
-print(&quot;classes:&quot;, pipe.classes_)
-
-# --- Follow-up 1 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import cross_val_score
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-y = df[&quot;species&quot;]
-acc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()
-acc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()
-assert abs(acc1 - 0.9467) &lt; 0.01, acc1
-assert abs(acc15 - 0.9400) &lt; 0.01, acc15
-print(f&quot;k=1: {acc1:.4f}, k=15: {acc15:.4f} — both worse than the middle&quot;)
-
-# --- Follow-up 2 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.preprocessing import StandardScaler
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-Xs = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
-assert np.allclose(Xs.mean(), 0, atol=1e-9)
-assert np.allclose(Xs.std(ddof=0), 1, atol=1e-9)
-print(&quot;scaled means ~ 0, scaled stds ~ 1: OK&quot;)
-
-# --- Follow-up 3 ---
-import matplotlib
-import pandas as pd, numpy as np
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-
-df = pd.read_csv(r&quot;iris.csv&quot;)
-X = df[[&quot;sepal_length&quot;, &quot;sepal_width&quot;, &quot;petal_length&quot;, &quot;petal_width&quot;]]
-y = df[&quot;species&quot;]
-pipe = make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=5))
-pipe.fit(X, y)
-flower2 = pd.DataFrame({&quot;sepal_length&quot;: [6.0], &quot;sepal_width&quot;: [2.9], &quot;petal_length&quot;: [5.5], &quot;petal_width&quot;: [1.5]})
-pred2 = pipe.predict(flower2)[0]
-assert pred2 == &quot;virginica&quot;, pred2
-print(&quot;petal_length=5.5 -&gt;&quot;, pred2)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>KNN regression (predict a number, not a label, by averaging neighbors).</li>

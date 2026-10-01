@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-10-web-scraping-static-page/lab-10-web-scraping-static-page.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>fixture.html</code></li></ul>
@@ -235,63 +235,26 @@ print(&quot;offline mode: skipping live fetch (set AILAB_ALLOW_NET=1 to enable)&
 <blockquote><strong>Pitfall:</strong> obey robots.txt and the site’s ToS on every live target — including “practice” domains. If the file disallows your path, stop; if the terms forbid automated collection, use the official API or a provided dataset. Politeness (honest User-Agent, delays, caching) is the minimum, not the ceiling.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Parse table rows to dicts</h3>
-<p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. <em>Expected: 5 rows · names: Widget A, Widget B, Gadget C, Gadget D, Doohickey E.</em></p>
-<p><strong>Follow-up:</strong> How many units are in stock across all products? Check: 472.</p>
+<p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. </p>
+<p><strong>Follow-up:</strong> How many units are in stock across all products?</p>
 <details><summary>Hint</summary>
 <p><code>header, body = parse_table(html)</code> then <code>rows_to_dicts(header, body)</code>; collect <code>r["Name"]</code>.</p>
 </details>
 <h3>Exercise 2 — Handle missing cells</h3>
-<p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? <em>Expected: Gadget C · 1 missing · store <code>None</code> (not <code>0</code> — zero price is a real value).</em></p>
-<p><strong>Follow-up:</strong> What is the mean price over priced products? Check: about 12.685.</p>
+<p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? </p>
+<p><strong>Follow-up:</strong> What is the mean price over priced products?</p>
 <details><summary>Hint</summary>
 <p><code>[r for r in records if r["Price"] is None]</code>.</p>
 </details>
 <h3>Exercise 3 — Write CSV + row-count assert</h3>
-<p>Write <code>scraped.csv</code> and assert <code>lines == 1 + len(records)</code>. Print the assertion message. <em>Expected: 5 data rows → 6 lines; assert passes.</em></p>
-<p><strong>Follow-up:</strong> Prove the CSV header. Check: ID,Name,Price,Stock.</p>
+<p>Write <code>scraped.csv</code> and assert <code>lines == 1 + len(records)</code>. Print the assertion message. </p>
+<p><strong>Follow-up:</strong> Prove the CSV header.</p>
 <details><summary>Hint</summary>
 <p><code>sum(1 for _ in open(path))</code> includes the header.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Worked answers for all three exercises and follow-ups. Run them only after attempting the exercises — the asserts here are the same ones your own code should satisfy.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-header, body = parse_table(read_local())
-records = rows_to_dicts(header, body)
-print(len(records), [r[&quot;Name&quot;] for r in records])
-# 5 [&#x27;Widget A&#x27;, &#x27;Widget B&#x27;, &#x27;Gadget C&#x27;, &#x27;Gadget D&#x27;, &#x27;Doohickey E&#x27;]
-
-# --- Solution 2 ---
-missing = [r[&quot;Name&quot;] for r in records if r[&quot;Price&quot;] is None]
-print(missing, len(missing), &quot;-&gt; Price stored as None&quot;)
-# [&#x27;Gadget C&#x27;] 1 -&gt; Price stored as None
-
-# --- Solution 3 ---
-# (Section 4 already writes scraped.csv)
-with open(&quot;scraped.csv&quot;, encoding=&quot;utf-8&quot;) as f:
-    lines = sum(1 for _ in f)
-assert lines == 1 + len(records)
-print(&quot;OK&quot;, lines, &quot;lines for&quot;, len(records), &quot;records&quot;)
-# OK 6 lines for 5 records
-
-# --- Follow-up 1 ---
-units = sum(r[&quot;Stock&quot;] for r in records)
-print(units)  # 472
-assert units == 472
-
-# --- Follow-up 2 ---
-priced = [r[&quot;Price&quot;] for r in records if r[&quot;Price&quot;] is not None]
-mp = sum(priced) / len(priced)
-print(round(mp, 3))  # ~12.685
-assert abs(mp - 12.685) &lt; 1e-9
-
-# --- Follow-up 3 ---
-with open(&quot;scraped.csv&quot;, encoding=&quot;utf-8&quot;) as f:
-    header_line = f.readline().strip()
-print(header_line)
-assert header_line == &quot;ID,Name,Price,Stock&quot;</code></pre>
-<p><strong>What to notice:</strong> the stock total asserts to exactly <strong>472</strong> units, the mean priced product lands at about <strong>12.685</strong> (Gadget C’s <code>None</code> correctly excluded from both sum and divisor), and the CSV header line is the exact string <code>ID,Name,Price,Stock</code>. If any of the three differs, the bug is upstream: re-check padding in <code>rows_to_dicts</code>, <code>None</code> handling, or the <code>fieldnames</code> order in Section 4.</p>
 <h3>What to learn next</h3>
 <ul>
 <li>CSS selectors with BeautifulSoup: <code>soup.select_one("td.price")</code>.</li>

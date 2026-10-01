@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-11-visualisation-studio/lab-11-visualisation-studio.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>tips.csv</code></li><li><code>tickets.csv</code></li></ul>
@@ -212,69 +212,26 @@ print(&quot;saved chart4_tip_vs_bill.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> a ~0.9 pp gap between group means on 244 observational rows is a weak signal, not a finding. Report it with the numbers, avoid causal language, and remember day/time/party-size confounders weren’t controlled here — spurious correlation is one <code>groupby</code> away.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Tip % distribution by day</h3>
-<p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? <em>Expected: highest Fri 0.1699 · lowest Sat 0.1532 (overall 0.1608).</em></p>
-<p><strong>Follow-up:</strong> How large is the Fri minus Sat tip gap in points? Check: about 0.0167 (1.67pp).</p>
+<p>Compute mean <code>tip_pct</code> by <code>day</code> (4 d.p.). Which day is highest? Lowest? </p>
+<p><strong>Follow-up:</strong> How large is the Fri minus Sat tip gap in points?</p>
 <details><summary>Hint</summary>
 <p><code>tips["tip_pct"] = tips["tip"]/tips["total_bill"]</code> then <code>groupby("day")["tip_pct"].mean()</code>.</p>
 </details>
 <h3>Exercise 2 — Stacked status bar for tickets</h3>
 <p>Build <code>pd.crosstab(priority, status)</code> on <strong>redacted</strong> tickets and plot stacked bars. Print the table. <em>Expected columns sum: open 42, in-progress 34, closed 31; priority rows low 41, medium 34, high 32.</em></p>
-<p><strong>Follow-up:</strong> What share of tickets are open? Check: about 0.3925.</p>
+<p><strong>Follow-up:</strong> What share of tickets are open?</p>
 <details><summary>Hint</summary>
 <p>Redact first (Section 2), then <code>crosstab</code>, then <code>.plot(kind="bar", stacked=True)</code>.</p>
 </details>
 <h3>Exercise 3 — Annotate insight on each chart</h3>
-<p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. <em>Expected: any four insights citing computed stats — e.g. “Fri mean tip 17.0%”, “42 open tickets”, “overall tip 16.1%”, “max bill $50.81”.</em></p>
-<p><strong>Follow-up:</strong> What share are closed? Check: about 0.2897.</p>
+<p>For each of the 4 saved PNGs, add at least one <code>ax.annotate(...)</code> or title subtitle stating the key insight (numbers included). List the four insight strings you used. </p>
+<p><strong>Follow-up:</strong> What share are closed?</p>
 <details><summary>Hint</summary>
 <p><code>ax.annotate("text", xy=(x,y), fontsize=9)</code> or include numbers in <code>set_title</code>.</p>
 </details>
 <hr/>
-<h2>Solutions</h2>
-<p>Worked answers for the three exercises and follow-ups. Attempt the exercises first; then compare your numbers against these, especially the 4-d.p. rates and the checked targets.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-tips[&quot;tip_pct&quot;] = tips[&quot;tip&quot;] / tips[&quot;total_bill&quot;]
-by_day = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().sort_values(ascending=False)
-print(by_day.round(4))
-# Fri    0.1699  (highest)
-# Sun    0.1669
-# Thur   0.1613
-# Sat    0.1532  (lowest)
-
-# --- Solution 2 ---
-# tickets_clean already redacted in Section 2
-ct = pd.crosstab(tickets_clean[&quot;priority&quot;], tickets_clean[&quot;status&quot;])
-print(ct)
-print(&quot;col sums:&quot;, ct.sum().to_dict())
-# expect open=42, in-progress=34, closed=31
-
-# --- Solution 3 --- (example annotations used above)
-insights = [
-    &quot;Overall mean tip ≈ 16.1% across 244 bills&quot;,
-    &quot;Lunch mean tip% 16.4% slightly above Dinner 16.0%&quot;,
-    &quot;42 open / 34 in-progress / 31 closed (PII redacted)&quot;,
-    f&quot;Max bill ${tips[&#x27;total_bill&#x27;].max():.2f} still ~15–20% tip band&quot;,
-]
-for s in insights:
-    print(&quot;-&quot;, s)
-
-# --- Follow-up 1 ---
-bd = tips.groupby(&quot;day&quot;)[&quot;tip_pct&quot;].mean().round(4)
-gap = round(bd[&quot;Fri&quot;] - bd[&quot;Sat&quot;], 4)
-print(gap)  # ~0.0167
-assert gap == 0.0167
-
-# --- Follow-up 2 ---
-osh = round((tickets_clean[&quot;status&quot;] == &quot;open&quot;).mean(), 4)
-print(osh)  # ~0.3925
-assert osh == 0.3925
-
-# --- Follow-up 3 ---
-csh = round((tickets_clean[&quot;status&quot;] == &quot;closed&quot;).mean(), 4)
-print(csh)  # ~0.2897
-assert csh == 0.2897</code></pre>
-<p><strong>What to notice:</strong> the Fri–Sat gap asserts to <strong>0.0167</strong> (1.67 pp), the open share to <strong>0.3925</strong> (42/107), and the closed share to <strong>0.2897</strong> (31/107) — all three computed on <code>tickets_clean</code>, so the PII guarantee carries into the exercises. If a share differs, check that you redacted <em>before</em> counting and that no rows were dropped.</p>
 <h3>What to learn next</h3>
 <ul>
 <li>seaborn <code>boxplot</code> / <code>violinplot</code> for group distributions.</li>

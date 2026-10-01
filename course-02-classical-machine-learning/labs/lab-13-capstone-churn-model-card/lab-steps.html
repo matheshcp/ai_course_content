@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-13-capstone-churn-model-card/lab-13-capstone-churn-model-card.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Telco-Customer-Churn.csv</code></li></ul>
@@ -274,50 +274,17 @@ print(card[:600])</code></pre>
 <blockquote><strong>Pitfall:</strong> a model card with hardcoded metrics rots the moment the model is retrained. Generate it from the pipeline, as above.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Reproduce the metrics with the new encoding</h3>
-<p>Using the pipeline encoding from section 2, report test ROC-AUC and PR-AUC for both models. <em>Expected: Logistic ROC-AUC ≈ 0.840 / PR-AUC ≈ 0.624; GBM ROC-AUC ≈ 0.843 / PR-AUC ≈ 0.662.</em></p>
-<p><strong>Follow-up:</strong> Which model has higher PR-AUC? Check: GBM (0.662 vs 0.624).</p>
+<p>Using the pipeline encoding from section 2, report test ROC-AUC and PR-AUC for both models. </p>
+<p><strong>Follow-up:</strong> Which model has higher PR-AUC?</p>
 <h3>Exercise 2 — Fairness slice table</h3>
-<p>Build a table of churn rate by <code>Contract</code> and by <code>gender</code>. <em>Expected: Month-to-month ≈ 0.427, One year ≈ 0.113, Two year ≈ 0.028; Female ≈ 0.270, Male ≈ 0.262.</em></p>
-<p><strong>Follow-up:</strong> Which slice has the highest churn rate? Check: Month-to-month (0.427).</p>
+<p>Build a table of churn rate by <code>Contract</code> and by <code>gender</code>. </p>
+<p><strong>Follow-up:</strong> Which slice has the highest churn rate?</p>
 <h3>Exercise 3 — Fill the model card</h3>
-<p>Run the model-card writer and verify the file exists with all five required sections. <em>Expected: <code>churn_model_card.md</code> contains "Intended Use", "Training Data", "Performance Metrics", "Fairness", "Limitations".</em></p>
-<p><strong>Follow-up:</strong> What is the F1-optimal threshold? Check: ≈ 0.395.</p>
+<p>Run the model-card writer and verify the file exists with all five required sections. </p>
+<p><strong>Follow-up:</strong> What is the F1-optimal threshold?</p>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-for name, pipe in [(&quot;Logistic&quot;, log_pipe), (&quot;GBM&quot;, gbm_pipe)]:
-    p = pipe.predict_proba(X_test)[:, 1]
-    print(f&quot;{name:9s} ROC-AUC: {roc_auc_score(y_test, p):.4f}  &quot;
-          f&quot;PR-AUC: {average_precision_score(y_test, p):.4f}&quot;)
-
-# --- Solution 2 ---
-for col in [&quot;Contract&quot;, &quot;gender&quot;]:
-    print(f&quot;--- {col} ---&quot;)
-    print(slice_table(col))
-
-# --- Solution 3 ---
-with open(&quot;churn_model_card.md&quot;, encoding=&quot;utf-8&quot;) as f:
-    card_text = f.read()
-for section in [&quot;Intended Use&quot;, &quot;Training Data&quot;, &quot;Performance Metrics&quot;, &quot;Fairness&quot;, &quot;Limitations&quot;]:
-    assert section in card_text, f&quot;missing section: {section}&quot;
-print(&quot;all 5 sections present&quot;)
-
-# --- Follow-up 1 ---
-p_log = log_pipe.predict_proba(X_test)[:, 1]
-p_gb = gbm_pipe.predict_proba(X_test)[:, 1]
-assert average_precision_score(y_test, p_gb) &gt; average_precision_score(y_test, p_log)
-print(&quot;GBM wins on PR-AUC&quot;)
-
-# --- Follow-up 2 ---
-ct = slice_table(&quot;Contract&quot;)
-assert ct[&quot;churn_rate&quot;].idxmax() == &quot;Month-to-month&quot;
-print(f&quot;highest churn slice: Month-to-month ({ct[&#x27;churn_rate&#x27;].max():.4f})&quot;)
-
-# --- Follow-up 3 ---
-assert 0.3 &lt; thr[best_i] &lt; 0.5
-print(f&quot;F1-optimal threshold: {thr[best_i]:.4f}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Add slice-wise precision/recall to the fairness table for a sharper bias audit.</li>

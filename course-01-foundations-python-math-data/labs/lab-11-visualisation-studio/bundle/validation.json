@@ -1,16 +1,16 @@
 {
-  "variables": {
+  "exercises": {
     "weekday_gap": {
-      "close": 0.0167,
-      "tol": 0.0001
+      "question": "How large is the Fri minus Sat tip gap in points?",
+      "reference": "tips[\"tip_pct\"] = tips[\"tip\"] / tips[\"total_bill\"]\nby_day = tips.groupby(\"day\")[\"tip_pct\"].mean().sort_values(ascending=False)\nprint(by_day.round(4))\n\n\nct = pd.crosstab(tickets_clean[\"priority\"], tickets_clean[\"status\"])\nprint(ct)\nprint(\"col sums:\", ct.sum().to_dict())\n\n# --- Solution 3 --- (example annotations used above)\ninsights = [\n    \"Overall mean tip ≈ 16.1% across 244 bills\",\n    \"Lunch mean tip% 16.4% slightly above Dinner 16.0%\",\n    \"42 open / 34 in-progress / 31 closed (PII redacted)\",\n    f\"Max bill ${tips['total_bill'].max():.2f} still ~15–20% tip band\",\n]\nfor s in insights:\n    print(\"-\", s)\n\n\nbd = tips.groupby(\"day\")[\"tip_pct\"].mean().round(4)\ngap = round(bd[\"Fri\"] - bd[\"Sat\"], 4)\nprint(gap)\n"
     },
     "online_share": {
-      "close": 0.3925,
-      "tol": 0.001
+      "question": "What share of tickets are open?",
+      "reference": "tips[\"tip_pct\"] = tips[\"tip\"] / tips[\"total_bill\"]\nby_day = tips.groupby(\"day\")[\"tip_pct\"].mean().sort_values(ascending=False)\nprint(by_day.round(4))\n\n\nct = pd.crosstab(tickets_clean[\"priority\"], tickets_clean[\"status\"])\nprint(ct)\nprint(\"col sums:\", ct.sum().to_dict())\n\n# --- Solution 3 --- (example annotations used above)\ninsights = [\n    \"Overall mean tip ≈ 16.1% across 244 bills\",\n    \"Lunch mean tip% 16.4% slightly above Dinner 16.0%\",\n    \"42 open / 34 in-progress / 31 closed (PII redacted)\",\n    f\"Max bill ${tips['total_bill'].max():.2f} still ~15–20% tip band\",\n]\nfor s in insights:\n    print(\"-\", s)\n\n\nbd = tips.groupby(\"day\")[\"tip_pct\"].mean().round(4)\ngap = round(bd[\"Fri\"] - bd[\"Sat\"], 4)\nprint(gap)\n\n\nosh = round((tickets_clean[\"status\"] == \"open\").mean(), 4)\nprint(osh)\n"
     },
     "customer_share": {
-      "close": 0.2897,
-      "tol": 0.001
+      "question": "What share are closed?",
+      "reference": "tips[\"tip_pct\"] = tips[\"tip\"] / tips[\"total_bill\"]\nby_day = tips.groupby(\"day\")[\"tip_pct\"].mean().sort_values(ascending=False)\nprint(by_day.round(4))\n\n\nct = pd.crosstab(tickets_clean[\"priority\"], tickets_clean[\"status\"])\nprint(ct)\nprint(\"col sums:\", ct.sum().to_dict())\n\n# --- Solution 3 --- (example annotations used above)\ninsights = [\n    \"Overall mean tip ≈ 16.1% across 244 bills\",\n    \"Lunch mean tip% 16.4% slightly above Dinner 16.0%\",\n    \"42 open / 34 in-progress / 31 closed (PII redacted)\",\n    f\"Max bill ${tips['total_bill'].max():.2f} still ~15–20% tip band\",\n]\nfor s in insights:\n    print(\"-\", s)\n\n\nbd = tips.groupby(\"day\")[\"tip_pct\"].mean().round(4)\ngap = round(bd[\"Fri\"] - bd[\"Sat\"], 4)\nprint(gap)\n\n\nosh = round((tickets_clean[\"status\"] == \"open\").mean(), 4)\nprint(osh)\n\n\ncsh = round((tickets_clean[\"status\"] == \"closed\").mean(), 4)\nprint(csh)\n"
     }
   }
 }

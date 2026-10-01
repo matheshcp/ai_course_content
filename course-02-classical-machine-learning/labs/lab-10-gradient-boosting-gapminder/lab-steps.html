@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-10-gradient-boosting-gapminder/lab-10-gradient-boosting-gapminder.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Complete the <strong>Exercises</strong> before opening <strong>Solutions</strong>.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>gapminderDataFiveYear.csv</code></li></ul>
@@ -172,48 +172,17 @@ print(&quot;saved lab10_partial_dependence.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> never read a PD curve as causation. GDP per capita is entangled with continent, era, and institutions.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell.</p>
 <h3>Exercise 1 — Find the tercile cut points</h3>
-<p>Compute the exact <code>lifeExp</code> values at the 1/3 and 2/3 quantiles that <code>pd.qcut</code> used. <em>Expected: q(1/3) ≈ 52.10, q(2/3) ≈ 68.91.</em></p>
-<p><strong>Follow-up:</strong> How many rows fall in each band? Check: 568 / 568 / 568.</p>
+<p>Compute the exact <code>lifeExp</code> values at the 1/3 and 2/3 quantiles that <code>pd.qcut</code> used. </p>
+<p><strong>Follow-up:</strong> How many rows fall in each band?</p>
 <h3>Exercise 2 — Honest test accuracy</h3>
-<p>Refit the GBM <strong>without</strong> <code>year</code> (features: <code>gdpPercap</code>, <code>pop</code>) and report test accuracy. <em>Expected: ≈ 0.6925.</em></p>
-<p><strong>Follow-up:</strong> How much accuracy did the year leak buy you? Check: ≈ +0.054.</p>
+<p>Refit the GBM <strong>without</strong> <code>year</code> (features: <code>gdpPercap</code>, <code>pop</code>) and report test accuracy. </p>
+<p><strong>Follow-up:</strong> How much accuracy did the year leak buy you?</p>
 <h3>Exercise 3 — Partial dependence endpoints</h3>
-<p>Using the PD array from section 4, print the softmax probability for the <strong>High</strong> band at the smallest and largest <code>gdpPercap</code> grid points. <em>Expected: ≈ 0.004 at the low end, ≈ 0.934 at the high end.</em></p>
-<p><strong>Follow-up:</strong> Does the High-band curve rise overall? Check: yes — from 0.004 to 0.934.</p>
+<p>Using the PD array from section 4, print the softmax probability for the <strong>High</strong> band at the smallest and largest <code>gdpPercap</code> grid points. </p>
+<p><strong>Follow-up:</strong> Does the High-band curve rise overall?</p>
 <hr/>
-<h2>Solutions</h2>
-<p>Try for 15 min each before peeking.</p>
-<pre><code class="language-python"># --- Solution 1 ---
-q13, q23 = df[&quot;lifeExp&quot;].quantile([1/3, 2/3])
-print(f&quot;tercile cut points: {q13:.4f}, {q23:.4f}&quot;)
-print(df[&quot;life_band&quot;].value_counts().sort_index())
-
-# --- Solution 2 ---
-X_honest = df[[&quot;gdpPercap&quot;, &quot;pop&quot;]]
-X_tr, X_te, y_tr, y_te = train_test_split(X_honest, y, test_size=0.25, random_state=42, stratify=y)
-gbm_honest = GradientBoostingClassifier(random_state=42).fit(X_tr, y_tr)
-acc_honest = accuracy_score(y_te, gbm_honest.predict(X_te))
-print(f&quot;honest test accuracy (no year): {acc_honest:.4f}&quot;)
-print(f&quot;leak bought: {test_acc - acc_honest:+.4f}&quot;)
-
-# --- Solution 3 ---
-high_idx = list(gbm.classes_).index(&quot;High&quot;)
-print(f&quot;PD High @ min grid: {probs[high_idx, 0]:.4f}&quot;)
-print(f&quot;PD High @ max grid: {probs[high_idx, -1]:.4f}&quot;)
-
-# --- Follow-up 1 ---
-counts = df[&quot;life_band&quot;].value_counts().sort_index()
-assert abs(counts.min() - counts.max()) &lt;= 1, &quot;bands should be near-equal&quot;
-print(&quot;band counts:&quot;, counts.to_dict())
-
-# --- Follow-up 2 ---
-assert acc_honest &lt; test_acc, &quot;year leak should inflate accuracy&quot;
-print(f&quot;leak bonus: {test_acc - acc_honest:.4f}&quot;)
-
-# --- Follow-up 3 ---
-assert probs[high_idx, -1] &gt; probs[high_idx, 0], &quot;High PD should rise with GDP&quot;
-print(f&quot;High-band PD rises from {probs[high_idx, 0]:.4f} to {probs[high_idx, -1]:.4f}&quot;)</code></pre>
 <h3>What to learn next</h3>
 <ul>
 <li>Tune GBM with <code>GridSearchCV</code> over <code>learning_rate</code> × <code>n_estimators</code> (the classic trade-off).</li>
