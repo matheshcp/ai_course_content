@@ -2,11 +2,11 @@
   "exercises": {
     "churn_rate": {
       "question": "What fraction of customers churn?",
-      "reference": "churn_rate = y.mean()\nchurn_count = y.sum()\nprint(f\"Churn rate: {churn_rate:.4f} ({churn_count}/{len(y)})\")\n"
+      "reference": "churn_rate = y.mean()\nchurn_count = y.sum()\n"
     },
     "recall_at_best": {
-      "question": "What happens to precision at this threshold?",
-      "reference": "thresholds = np.arange(0.1, 0.9, 0.05)\nbest_t = None\nfor t in thresholds:\n    y_pred_t = (y_proba >= t).astype(int)\n    if recall_score(y_test, y_pred_t) >= 0.80:\n        best_t = t\nprint(f\"Best threshold for recall >= 0.80: {best_t:.2f}\")\n\n\n\ny_pred_best = (y_proba >= best_t).astype(int)\nprec_at_best = precision_score(y_test, y_pred_best)\nrec_at_best = recall_score(y_test, y_pred_best)\nprint(f\"At threshold {best_t:.2f}: precision = {prec_at_best:.4f}, recall = {rec_at_best:.4f}\")\n"
+      "question": "What is the recall at the lowest threshold whose recall is still at least 0.80?",
+      "reference": "thresholds = np.arange(0.1, 0.9, 0.05)\nbest_t = None\nfor t in thresholds:\n    y_pred_t = (y_proba >= t).astype(int)\n    if recall_score(y_test, y_pred_t) >= 0.80:\n        best_t = t\n\ny_pred_best = (y_proba >= best_t).astype(int)\nprec_at_best = precision_score(y_test, y_pred_best)\nrec_at_best = recall_score(y_test, y_pred_best)\n"
     }
   }
 }

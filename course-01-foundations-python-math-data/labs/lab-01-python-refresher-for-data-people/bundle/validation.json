@@ -2,15 +2,15 @@
   "exercises": {
     "high_value_share": {
       "question": "What share of valid revenue comes from those high-value orders?",
-      "reference": "big = []\nfor r in sales:\n    qty, price = r[\"Quantity\"], r[\"Price\"]\n    if qty is None or price is None:\n        continue\n    total = qty * price\n    if total > 500:\n        big.append((r[\"OrderID\"], round(total, 2)))\n        print(r[\"OrderID\"], round(total, 2))\nprint(\"count:\", len(big))\n\n\n\nvalid = [r for r in sales if str(r[\"Product\"]).strip()\n         and r[\"Quantity\"] is not None and r[\"Price\"] is not None]\nvalid_rev = sum(r[\"Quantity\"] * r[\"Price\"] for r in valid)\nshare = round(sum(t for _, t in big) / valid_rev, 4)\nprint(share)\n"
+      "reference": "big = []\nfor r in sales:\n    qty, price = r[\"Quantity\"], r[\"Price\"]\n    if qty is None or price is None:\n        continue\n    total = qty * price\n    if total > 500:\n        big.append((r[\"OrderID\"], round(total, 2)))\n\nvalid = [r for r in sales if str(r[\"Product\"]).strip()\n         and r[\"Quantity\"] is not None and r[\"Price\"] is not None]\nvalid_rev = sum(r[\"Quantity\"] * r[\"Price\"] for r in valid)\nshare = round(sum(t for _, t in big) / valid_rev, 4)\n"
     },
     "computer_share": {
       "question": "What share of the 12 orders are Computers?",
-      "reference": "def category(product):\n    p = clean_text(product)\n    if p == \"\":\n        return \"Unknown\"\n    if p in (\"Laptop\", \"Monitor\", \"Keyboard\", \"Mouse\"):\n        return \"Computer\"\n    if p == \"Headset\":\n        return \"Audio\"\n    return \"Other\"\n\ncounts = {}\nfor r in sales:\n    cat = category(r[\"Product\"])\n    counts[cat] = counts.get(cat, 0) + 1\nprint(counts)\n\n\n\ncshare = round(counts[\"Computer\"] / len(sales), 4)\nprint(cshare)\n"
+      "reference": "def category(product):\n    p = clean_text(product)\n    if p == \"\":\n        return \"Unknown\"\n    if p in (\"Laptop\", \"Monitor\", \"Keyboard\", \"Mouse\"):\n        return \"Computer\"\n    if p == \"Headset\":\n        return \"Audio\"\n    return \"Other\"\n\ncounts = {}\nfor r in sales:\n    cat = category(r[\"Product\"])\n    counts[cat] = counts.get(cat, 0) + 1\n\ncshare = round(counts[\"Computer\"] / len(sales), 4)\n"
     },
     "east_total": {
-      "question": "Confirm east_big sums to East's regional total.",
-      "reference": "cleaned = [clean_row(r) for r in sales]\neast_big = [r for r in cleaned if r[\"Region\"] == \"East\" and r[\"Total\"] >= 100]\neast_map = {r[\"OrderID\"]: r[\"Total\"] for r in east_big}\nprint(east_big)\nprint(east_map)\n\n\n\netot = round(sum(east_map.values()), 2)\nprint(etot)\n"
+      "question": "What is the sum of cleaned East orders whose Total is at least 100?",
+      "reference": "cleaned = [clean_row(r) for r in sales]\neast_big = [r for r in cleaned if r[\"Region\"] == \"East\" and r[\"Total\"] >= 100]\neast_map = {r[\"OrderID\"]: r[\"Total\"] for r in east_big}\n\netot = round(sum(east_map.values()), 2)\n"
     }
   }
 }

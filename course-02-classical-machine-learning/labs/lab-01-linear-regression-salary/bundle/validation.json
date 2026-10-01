@@ -2,7 +2,7 @@
   "exercises": {
     "r2_test": {
       "question": "What is the test-set R squared for salary predicted from years of experience?",
-      "reference": "r2_train = model.score(X_train, y_train)\nr2_test = model.score(X_test, y_test)\nprint(f\"R² train: {r2_train:.4f}\")\nprint(f\"R² test:  {r2_test:.4f}\")\nprint(f\"The model explains {r2_test*100:.1f}% of salary variance.\")\n"
+      "reference": "r2_train = model.score(X_train, y_train)\nr2_test = model.score(X_test, y_test)\n"
     }
   }
 }

@@ -2,19 +2,19 @@
   "exercises": {
     "temp_range": {
       "question": "What is the full temperature range over the decade?",
-      "reference": "from collections import defaultdict\nimport statistics\nby_month = defaultdict(list)\nfor d, t in temps:\n    by_month[(d.year, d.month)].append(t)\nmonthly_mean = {k: statistics.mean(v) for k, v in by_month.items()}\nprint(f\"1981-01: {monthly_mean[(1981, 1)]:.3f}\")\nprint(f\"1990-12: {monthly_mean[(1990, 12)]:.3f}\")\n\n\n\ntr = round(max(t for _, t in temps) - min(t for _, t in temps), 1)\nprint(tr)\n"
+      "reference": "readings = [t for _, t in temps]\ntemp_range = max(readings) - min(readings)\n"
     },
     "coverage": {
-      "question": "What fraction of 1982 (non-leap, 365 days) did the cold streak cover?",
-      "reference": "hot = [(d, t) for d, t in temps if t > 25]\nprint(\"count:\", len(hot))\nfor d, t in hot:\n    print(d, t)\n\n\n\ncov = round(best_len / 365, 4)\nprint(cov)\n"
+      "question": "What fraction of the 365 days in 1982 does the longest run of days below 10 degrees cover?",
+      "reference": "best = current = 0\nprevious = None\nfor day, temp in temps:\n    if temp < 10 and previous is not None and (day - previous).days == 1:\n        current += 1\n    elif temp < 10:\n        current = 1\n    else:\n        current = 0\n    if current > best:\n        best = current\n    previous = day\ncoverage = best / 365\n"
     },
     "hot_run_days": {
-      "question": "What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Compute hot run days.",
-      "reference": "best_len = cur_len = 0\nbest_start = best_end = cur_start = prev_date = None\nprev_cold = False\nfor d, t in temps:\n    if t < 10:\n        if prev_cold and prev_date is not None and (d - prev_date).days == 1:\n            cur_len += 1\n        else:\n            cur_len, cur_start = 1, d\n        if cur_len > best_len:\n            best_len = cur_len\n            best_start, best_end = cur_start, d\n        prev_cold = True\n    else:\n        cur_len, cur_start = 0, None\n        prev_cold = False\n    prev_date = d\nprint(f\"{best_len} days: {best_start} → {best_end}\")\n\n\n\nimport statistics as _st\n_mu = _st.mean(t for _, t in temps)\n_sd = _st.stdev(t for _, t in temps)\n_out = [d for d, t in temps if abs((t - _mu) / _sd) > 2]\nshr = round(len(_out) / len(temps), 4)\nprint(len(_out), shr)\n"
+      "question": "How many days have a temperature more than 2 standard deviations from the mean?",
+      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\nhot_run_days = sum(1 for t in readings if abs((t - mean) / spread) > 2)\n"
     },
     "hot_share": {
-      "question": "What share of days are anomalies, and how does that compare with the roughly 4.6 percent a normal distribution predicts beyond 2 SD? Compute hot share.",
-      "reference": "best_len = cur_len = 0\nbest_start = best_end = cur_start = prev_date = None\nprev_cold = False\nfor d, t in temps:\n    if t < 10:\n        if prev_cold and prev_date is not None and (d - prev_date).days == 1:\n            cur_len += 1\n        else:\n            cur_len, cur_start = 1, d\n        if cur_len > best_len:\n            best_len = cur_len\n            best_start, best_end = cur_start, d\n        prev_cold = True\n    else:\n        cur_len, cur_start = 0, None\n        prev_cold = False\n    prev_date = d\nprint(f\"{best_len} days: {best_start} → {best_end}\")\n\n\n\nimport statistics as _st\n_mu = _st.mean(t for _, t in temps)\n_sd = _st.stdev(t for _, t in temps)\n_out = [d for d, t in temps if abs((t - _mu) / _sd) > 2]\nshr = round(len(_out) / len(temps), 4)\nprint(len(_out), shr)\n"
+      "question": "What share of days have a temperature more than 2 standard deviations from the mean?",
+      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\noutliers = sum(1 for t in readings if abs((t - mean) / spread) > 2)\nhot_share = outliers / len(readings)\n"
     }
   }
 }

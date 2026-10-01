@@ -2,11 +2,11 @@
   "exercises": {
     "parseable_share": {
       "question": "What fraction of rows have parseable quantities?",
-      "reference": "from collections import Counter\nc = Counter(r[\"Quantity\"] for r in rows)\nprint(\"two hundred:\", c[\"two hundred\"], \"NaN:\", c[\"NaN\"])\nparseable = [parse_qty(r[\"Quantity\"]) for r in rows]\nprint(\"parseable:\", sum(1 for q in parseable if q is not None))\nprint(\"sum qty:\", sum(q for q in parseable if q is not None))\n\n\n\npshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)\nprint(pshr)\n"
+      "reference": "from collections import Counter\nc = Counter(r[\"Quantity\"] for r in rows)\nparseable = [parse_qty(r[\"Quantity\"]) for r in rows]\n\npshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)\n"
     },
     "per_row": {
       "question": "What is the average stock value per usable row?",
-      "reference": "ALLOWED = {\"In Stock\", \"Out of Stock\"}\nbad = [r for r in rows if str(r[\"Status\"]).strip() not in ALLOWED]\nprint(len(bad), Counter(str(r[\"Status\"]).strip() for r in bad))\n\n\n\nper_row = round(sum(by_cat.values()) / usable, 2)\nprint(per_row)\n"
+      "reference": "ALLOWED = {\"In Stock\", \"Out of Stock\"}\nbad = [r for r in rows if str(r[\"Status\"]).strip() not in ALLOWED]\n\nper_row = round(sum(by_cat.values()) / usable, 2)\n"
     }
   }
 }

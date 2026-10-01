@@ -2,11 +2,11 @@
   "exercises": {
     "pr_auc_gap": {
       "question": "How much higher is the better model's PR-AUC than the other model?",
-      "reference": "for name, pipe in [(\"Logistic\", log_pipe), (\"GBM\", gbm_pipe)]:\n    p = pipe.predict_proba(X_test)[:, 1]\n    print(f\"{name:9s} ROC-AUC: {roc_auc_score(y_test, p):.4f}  \"\n          f\"PR-AUC: {average_precision_score(y_test, p):.4f}\")\n\n\n\np_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nprint(\"GBM wins on PR-AUC\")\n"
+      "reference": "p_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nlog_pr = average_precision_score(y_test, p_log)\ngbm_pr = average_precision_score(y_test, p_gb)\npr_auc_gap = gbm_pr - log_pr\n"
     },
     "f1_threshold": {
       "question": "What decision threshold maximizes F1?",
-      "reference": "from sklearn.metrics import precision_recall_curve\n\np_gbm = gbm_pipe.predict_proba(X_test)[:, 1]\nprec, rec, thr = precision_recall_curve(y_test, p_gbm)\nf1 = 2 * prec * rec / (prec + rec + 1e-12)\nbest_i = np.argmax(f1)\nprint(f\"best threshold: {thr[best_i]:.4f}  precision: {prec[best_i]:.4f}  \"\n      f\"recall: {rec[best_i]:.4f}  F1: {f1[best_i]:.4f}\")\n\nfig, ax = plt.subplots(figsize=(7, 4))\nax.plot(thr, prec[:-1], label=\"precision\")\nax.plot(thr, rec[:-1], label=\"recall\")\nax.axvline(thr[best_i], color=\"k\", ls=\"--\", lw=1, label=f\"best F1 @ {thr[best_i]:.2f}\")\nax.set_xlabel(\"threshold\"); ax.set_ylabel(\"score\"); ax.legend()\nfig.tight_layout()\nfig.savefig(\"lab13_threshold.png\", dpi=120)\nfrom IPython.display import display\ndisplay(fig)\nprint(\"saved lab13_threshold.png\")\n"
+      "reference": "from sklearn.metrics import precision_recall_curve\n\np_gbm = gbm_pipe.predict_proba(X_test)[:, 1]\nprec, rec, thr = precision_recall_curve(y_test, p_gbm)\nf1 = 2 * prec * rec / (prec + rec + 1e-12)\nbest_i = np.argmax(f1)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nax.plot(thr, prec[:-1], label=\"precision\")\nax.plot(thr, rec[:-1], label=\"recall\")\nax.axvline(thr[best_i], color=\"k\", ls=\"--\", lw=1, label=f\"best F1 @ {thr[best_i]:.2f}\")\nax.set_xlabel(\"threshold\"); ax.set_ylabel(\"score\"); ax.legend()\nfig.tight_layout()\nfig.savefig(\"lab13_threshold.png\", dpi=120)\nfrom IPython.display import display\ndisplay(fig)\n"
     }
   }
 }

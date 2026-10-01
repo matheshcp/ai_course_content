@@ -2,7 +2,7 @@
   "exercises": {
     "calibration_headroom": {
       "question": "How far is the chosen model's accuracy from a better-calibrated score?",
-      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nprint(\"logistic reliability (mean_pred vs frac_pos):\")\nfor mp, fp in zip(mean_pred, frac_pos):\n    print(f\"  {mp:.3f} vs {fp:.3f}\")\n\n\n\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\nprint(f\"max |calibration deviation| above 0.5: {dev.max():.3f}\")\n"
+      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nfor mp, fp in zip(mean_pred, frac_pos):\n\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\n"
     }
   }
 }

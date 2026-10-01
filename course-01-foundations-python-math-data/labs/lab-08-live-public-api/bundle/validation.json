@@ -1,16 +1,16 @@
 {
   "exercises": {
     "sleeps": {
-      "question": "What total seconds did the demo backoff wait? Compute sleeps.",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\nprint(\"sleeps:\", schedule, \"-> success at\", data[\"attempt\"])\n\n\n\nwaited = sum(schedule)\nprint(waited, \"-> success at\", data[\"attempt\"])\n"
+      "question": "How many seconds did the demo backoff sleep in total?",
+      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n"
     },
     "success_attempt": {
-      "question": "What total seconds did the demo backoff wait? Compute success attempt.",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\nprint(\"sleeps:\", schedule, \"-> success at\", data[\"attempt\"])\n\n\n\nwaited = sum(schedule)\nprint(waited, \"-> success at\", data[\"attempt\"])\n"
+      "question": "On which attempt did the demo backoff succeed?",
+      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n"
     },
     "n_days": {
-      "question": "Prove rows match the API day count.",
-      "reference": "daily = payload[\"daily\"]\nrows = [\n    {\"date\": t,\n     \"tmax\": daily[\"temperature_2m_max\"][i],\n     \"tmin\": daily[\"temperature_2m_min\"][i],\n     \"precip_prob\": daily[\"precipitation_probability_max\"][i]}\n    for i, t in enumerate(daily[\"time\"])\n]\nprint(len(rows), rows[0])\n\n\n\nprint(len(rows), len(daily[\"time\"]))\n"
+      "question": "Does the number of parsed rows equal the number of days in the API response?",
+      "reference": "daily = payload[\"daily\"]\nrows = [\n    {\"date\": t,\n     \"tmax\": daily[\"temperature_2m_max\"][i],\n     \"tmin\": daily[\"temperature_2m_min\"][i],\n     \"precip_prob\": daily[\"precipitation_probability_max\"][i]}\n    for i, t in enumerate(daily[\"time\"])\n]\nn_days = len(rows) == len(daily[\"time\"])\n"
     }
   }
 }
