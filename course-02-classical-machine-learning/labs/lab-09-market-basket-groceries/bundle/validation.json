@@ -1,16 +1,46 @@
 {
   "exercises": {
     "freq_pairs": {
-      "question": "How many frequent 2-itemsets survive a 1% support threshold?",
-      "reference": "import csv\nfrom collections import Counter\nfrom itertools import combinations\n\ntransactions = []\nwith open(\"groceries.csv\", newline=\"\", encoding=\"utf-8\") as f:\n    for row in csv.reader(f):\n        transactions.append(frozenset(item.strip() for item in row if item.strip()))\nN = len(transactions)\n\nitem_counts = Counter(item for t in transactions for item in t)\nMIN_SUPPORT = 0.01\n\nfor item, c in item_counts.most_common(10):\n\nfreq_1 = {frozenset([i]) for i, c in item_counts.items() if c / N >= MIN_SUPPORT}\ncandidate_2 = Counter()\nfor t in transactions:\n    for a, b in combinations(sorted(t), 2):\n        if frozenset([a]) in freq_1 and frozenset([b]) in freq_1:\n            candidate_2[frozenset([a, b])] += 1\nfreq_2 = {s for s, c in candidate_2.items() if c / N >= MIN_SUPPORT}\n\nfor s, c in candidate_2.most_common(10):\n    if s in freq_2:\n"
+      "question": "An itemset is frequent when its support is at least 1 percent. Return how many 2-itemsets meet that threshold. Do not count single items.",
+      "reference": "import csv\nfrom collections import Counter\nfrom itertools import combinations\n\ntransactions = []\nwith open(\"groceries.csv\", newline=\"\", encoding=\"utf-8\") as f:\n    for row in csv.reader(f):\n        transactions.append(frozenset(item.strip() for item in row if item.strip()))\nN = len(transactions)\n\nitem_counts = Counter(item for t in transactions for item in t)\nMIN_SUPPORT = 0.01\n\nfor item, c in item_counts.most_common(10):\n\nfreq_1 = {frozenset([i]) for i, c in item_counts.items() if c / N >= MIN_SUPPORT}\ncandidate_2 = Counter()\nfor t in transactions:\n    for a, b in combinations(sorted(t), 2):\n        if frozenset([a]) in freq_1 and frozenset([b]) in freq_1:\n            candidate_2[frozenset([a, b])] += 1\nfreq_2 = {s for s, c in candidate_2.items() if c / N >= MIN_SUPPORT}\n\nfor s, c in candidate_2.most_common(10):\n    if s in freq_2:\n",
+      "cases": [
+        {
+          "input": "Several pairs meet a 1 percent support threshold and single items do too.",
+          "expect": "The count is the frequent 2-itemsets, not the 1-itemsets."
+        },
+        {
+          "input": "No pair reaches 1 percent support.",
+          "expect": "The count is zero."
+        }
+      ]
     },
     "rv_confidence": {
-      "question": "What is the confidence of `root vegetables → whole milk`?",
-      "reference": "wm_rules = []\nfor s in freq_2:\n    if \"whole milk\" in s:\n        a = next(iter(s - frozenset([\"whole milk\"])))\n        sup = candidate_2[s] / N\n        conf = candidate_2[s] / item_counts[a]\n        lift = conf / (item_counts[\"whole milk\"] / N)\n        if conf >= 0.10:\n            wm_rules.append((a, sup, conf, lift))\nwm_rules.sort(key=lambda r: -r[2])\nfor a, sup, conf, lift in wm_rules[:5]:\n\nrv_conf = next(conf for a, sup, conf, lift in wm_rules if a == \"root vegetables\")\n"
+      "question": "Among baskets that contain root vegetables, what fraction also contain whole milk? Return the confidence of root vegetables to whole milk, not the lift and not the reverse rule.",
+      "reference": "wm_rules = []\nfor s in freq_2:\n    if \"whole milk\" in s:\n        a = next(iter(s - frozenset([\"whole milk\"])))\n        sup = candidate_2[s] / N\n        conf = candidate_2[s] / item_counts[a]\n        lift = conf / (item_counts[\"whole milk\"] / N)\n        if conf >= 0.10:\n            wm_rules.append((a, sup, conf, lift))\nwm_rules.sort(key=lambda r: -r[2])\nfor a, sup, conf, lift in wm_rules[:5]:\n\nrv_conf = next(conf for a, sup, conf, lift in wm_rules if a == \"root vegetables\")\n",
+      "cases": [
+        {
+          "input": "Seven of ten baskets with root vegetables also have whole milk.",
+          "expect": "The result is the confidence of root vegetables to whole milk, not the lift and not the reverse rule."
+        },
+        {
+          "input": "Root vegetables never appear with whole milk.",
+          "expect": "The confidence is zero."
+        }
+      ]
     },
     "tf_lift": {
-      "question": "What is the lift of `tropical fruit → pip fruit`?",
-      "reference": "high_lift = []\nfor s in freq_2:\n    for a in s:\n        rest = s - frozenset([a])\n        if len(rest) != 1:\n            continue\n        b = next(iter(rest))\n        sup = candidate_2[s] / N\n        conf = candidate_2[s] / item_counts[a]\n        lift = conf / (item_counts[b] / N)\n        if lift > 2.0:\n            high_lift.append((a, b, sup, conf, lift))\nhigh_lift.sort(key=lambda r: -r[4])\nfor a, b, sup, conf, lift in high_lift[:5]:\n\ntf_lift = next(lift for a, b, sup, conf, lift in high_lift\n               if a == \"tropical fruit\" and b == \"pip fruit\")\n"
+      "question": "Compare how often tropical fruit and pip fruit appear together with how often they would if they were independent. Return the lift of tropical fruit to pip fruit.",
+      "reference": "high_lift = []\nfor s in freq_2:\n    for a in s:\n        rest = s - frozenset([a])\n        if len(rest) != 1:\n            continue\n        b = next(iter(rest))\n        sup = candidate_2[s] / N\n        conf = candidate_2[s] / item_counts[a]\n        lift = conf / (item_counts[b] / N)\n        if lift > 2.0:\n            high_lift.append((a, b, sup, conf, lift))\nhigh_lift.sort(key=lambda r: -r[4])\nfor a, b, sup, conf, lift in high_lift[:5]:\n\ntf_lift = next(lift for a, b, sup, conf, lift in high_lift\n               if a == \"tropical fruit\" and b == \"pip fruit\")\n",
+      "cases": [
+        {
+          "input": "Tropical fruit and pip fruit occur together more often than if they were independent.",
+          "expect": "The result is the lift of that rule, and it is above 1."
+        },
+        {
+          "input": "The pair is independent.",
+          "expect": "The lift is about 1, not 0."
+        }
+      ]
     }
   }
 }

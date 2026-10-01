@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-10-web-scraping-static-page/lab-10-web-scraping-static-page.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>fixture.html</code></li></ul>
@@ -235,16 +235,16 @@ print(&quot;offline mode: skipping live fetch (set AILAB_ALLOW_NET=1 to enable)&
 <blockquote><strong>Pitfall:</strong> obey robots.txt and the site’s ToS on every live target — including “practice” domains. If the file disallows your path, stop; if the terms forbid automated collection, use the official API or a provided dataset. Politeness (honest User-Agent, delays, caching) is the minimum, not the ceiling.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Parse table rows to dicts</h3>
 <p>Using <code>TableParser</code> + <code>rows_to_dicts</code>, print the number of rows and the full list of <code>Name</code> values. </p>
-<p><strong>Follow-up:</strong> How many units are in stock across all products?</p>
+<p><strong>Follow-up:</strong> Add the stock count of every product. Return the total number of units in stock, not the average price.</p>
 <details><summary>Hint</summary>
 <p><code>header, body = parse_table(html)</code> then <code>rows_to_dicts(header, body)</code>; collect <code>r["Name"]</code>.</p>
 </details>
 <h3>Exercise 2 — Handle missing cells</h3>
 <p>Which product has an empty <code>Price</code>? How many missing prices? What Python value do you store? </p>
-<p><strong>Follow-up:</strong> What is the mean price over priced products?</p>
+<p><strong>Follow-up:</strong> Ignore products that have no price. Return the mean of the prices that are present. Do not treat a missing price as zero.</p>
 <details><summary>Hint</summary>
 <p><code>[r for r in records if r["Price"] is None]</code>.</p>
 </details>

@@ -1,8 +1,18 @@
 {
   "exercises": {
     "leak_bonus": {
-      "question": "How much does a leaked feature improve the score over the honest model?",
-      "reference": "X_honest = df[[\"gdpPercap\", \"pop\"]]\nX_tr, X_te, y_tr, y_te = train_test_split(X_honest, y, test_size=0.25, random_state=42, stratify=y)\ngbm_honest = GradientBoostingClassifier(random_state=42).fit(X_tr, y_tr)\nacc_honest = accuracy_score(y_te, gbm_honest.predict(X_te))\n"
+      "question": "Score the honest model, then score the model that uses the leaked feature. Return how much the leaked score improves on the honest score, not the leaked score by itself.",
+      "reference": "X_honest = df[[\"gdpPercap\", \"pop\"]]\nX_tr, X_te, y_tr, y_te = train_test_split(X_honest, y, test_size=0.25, random_state=42, stratify=y)\ngbm_honest = GradientBoostingClassifier(random_state=42).fit(X_tr, y_tr)\nacc_honest = accuracy_score(y_te, gbm_honest.predict(X_te))\n",
+      "cases": [
+        {
+          "input": "The honest score is 0.70 and the leaked score is 0.85.",
+          "expect": "The result is how much the leaked feature improves the score, not the leaked score itself."
+        },
+        {
+          "input": "Both scores are equal.",
+          "expect": "The improvement is zero."
+        }
+      ]
     }
   }
 }

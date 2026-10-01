@@ -1,12 +1,32 @@
 {
   "exercises": {
     "parseable_share": {
-      "question": "What fraction of rows have parseable quantities?",
-      "reference": "from collections import Counter\nc = Counter(r[\"Quantity\"] for r in rows)\nparseable = [parse_qty(r[\"Quantity\"]) for r in rows]\n\npshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)\n"
+      "question": "A quantity is parseable when it can be read as a number. What fraction of the rows have a parseable quantity? Return that fraction, not the sum of the quantities.",
+      "reference": "from collections import Counter\nc = Counter(r[\"Quantity\"] for r in rows)\nparseable = [parse_qty(r[\"Quantity\"]) for r in rows]\n\npshr = round(sum(1 for q in parseable if q is not None) / len(rows), 4)\n",
+      "cases": [
+        {
+          "input": "Four rows and three have quantities that parse as numbers.",
+          "expect": "The result is the fraction of rows, not the sum of quantities."
+        },
+        {
+          "input": "No quantity parses.",
+          "expect": "The fraction is zero."
+        }
+      ]
     },
     "per_row": {
-      "question": "What is the average stock value per usable row?",
-      "reference": "ALLOWED = {\"In Stock\", \"Out of Stock\"}\nbad = [r for r in rows if str(r[\"Status\"]).strip() not in ALLOWED]\n\nper_row = round(sum(by_cat.values()) / usable, 2)\n"
+      "question": "A usable row is one you can turn into a stock value. What is the average stock value across those usable rows only? Return that average.",
+      "reference": "ALLOWED = {\"In Stock\", \"Out of Stock\"}\nbad = [r for r in rows if str(r[\"Status\"]).strip() not in ALLOWED]\n\nper_row = round(sum(by_cat.values()) / usable, 2)\n",
+      "cases": [
+        {
+          "input": "Two usable rows with stock values 10 and 30, plus one unusable row.",
+          "expect": "The result is the average of the usable rows only."
+        },
+        {
+          "input": "No usable row.",
+          "expect": "Do not divide by all rows; there is no usable average."
+        }
+      ]
     }
   }
 }

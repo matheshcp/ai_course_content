@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-07-neural-net-mnist/lab-07-neural-net-mnist.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>mnist_train.csv</code></li></ul>
@@ -199,7 +199,7 @@ print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Using a learning rate that is too large (e.g., 1.0) causes the loss to oscillate or diverge to NaN. Too small (e.g., 0.001) and 200 epochs won't be enough. 0.1 is a sweet spot for this setup.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — 200-Epoch Training Curve</h3>
 <p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. </p>
 <p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30?</p>

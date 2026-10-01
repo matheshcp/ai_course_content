@@ -1,8 +1,18 @@
 {
   "exercises": {
     "rf_mae_gap": {
-      "question": "How much lower is the random forest test MAE than the linear regression test MAE?",
-      "reference": "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.ensemble import RandomForestRegressor\nfrom sklearn.metrics import mean_absolute_error\n\ndf = pd.read_csv(r\"housing.csv\")\nX = df.drop(columns=[\"median_house_value\"])\ny = df[\"median_house_value\"]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nimputer = SimpleImputer(strategy=\"median\")\nX_train_num = pd.DataFrame(\n    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),\n    columns=X_train.select_dtypes(include=[np.number]).columns,\n    index=X_train.index,\n)\nX_test_num = pd.DataFrame(\n    imputer.transform(X_test.select_dtypes(include=[np.number])),\n    columns=X_test.select_dtypes(include=[np.number]).columns,\n    index=X_test.index,\n)\nX_train_cat = pd.get_dummies(X_train[[\"ocean_proximity\"]], drop_first=True)\nX_test_cat = pd.get_dummies(X_test[[\"ocean_proximity\"]], drop_first=True)\nX_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)\nX_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)\nX_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)\n\nlr = LinearRegression()\nlr.fit(X_train_proc, y_train)\nlr_mae = mean_absolute_error(y_test, lr.predict(X_test_proc))\n\nrf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)\nrf.fit(X_train_proc, y_train)\nrf_mae = mean_absolute_error(y_test, rf.predict(X_test_proc))\n"
+      "question": "Subtract the random forest test MAE from the linear regression test MAE. Return how much lower the forest error is. If the forest is not lower, the result is zero or negative.",
+      "reference": "import pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.impute import SimpleImputer\nfrom sklearn.linear_model import LinearRegression\nfrom sklearn.ensemble import RandomForestRegressor\nfrom sklearn.metrics import mean_absolute_error\n\ndf = pd.read_csv(r\"housing.csv\")\nX = df.drop(columns=[\"median_house_value\"])\ny = df[\"median_house_value\"]\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\nimputer = SimpleImputer(strategy=\"median\")\nX_train_num = pd.DataFrame(\n    imputer.fit_transform(X_train.select_dtypes(include=[np.number])),\n    columns=X_train.select_dtypes(include=[np.number]).columns,\n    index=X_train.index,\n)\nX_test_num = pd.DataFrame(\n    imputer.transform(X_test.select_dtypes(include=[np.number])),\n    columns=X_test.select_dtypes(include=[np.number]).columns,\n    index=X_test.index,\n)\nX_train_cat = pd.get_dummies(X_train[[\"ocean_proximity\"]], drop_first=True)\nX_test_cat = pd.get_dummies(X_test[[\"ocean_proximity\"]], drop_first=True)\nX_test_cat = X_test_cat.reindex(columns=X_train_cat.columns, fill_value=0)\nX_train_proc = pd.concat([X_train_num, X_train_cat], axis=1)\nX_test_proc = pd.concat([X_test_num, X_test_cat], axis=1)\n\nlr = LinearRegression()\nlr.fit(X_train_proc, y_train)\nlr_mae = mean_absolute_error(y_test, lr.predict(X_test_proc))\n\nrf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)\nrf.fit(X_train_proc, y_train)\nrf_mae = mean_absolute_error(y_test, rf.predict(X_test_proc))\n",
+      "cases": [
+        {
+          "input": "Random forest test MAE 8 and linear regression test MAE 12.",
+          "expect": "The gap is how much lower the forest is, 4, not the reverse."
+        },
+        {
+          "input": "The forest error is not lower.",
+          "expect": "The gap is zero or negative."
+        }
+      ]
     }
   }
 }

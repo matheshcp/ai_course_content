@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-04-eda-advertising/lab-04-eda-advertising.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Advertising.csv</code></li></ul>
@@ -211,10 +211,10 @@ print(&quot;wrote eda_findings.md&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> A memo that only ranks channels invites “TV causes sales” reading. Keep the association/causation wording and the n = 200 caveat in the same document as the ranking, or the caveat will be dropped in the slide deck.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Full correlation matrix</h3>
 <p>Print <code>df[["TV","Radio","Newspaper","Sales"]].corr()</code> rounded to 4 d.p. Which pair of <em>features</em> (not Sales) is most correlated? </p>
-<p><strong>Follow-up:</strong> What fraction of Sales variance does TV alone explain (R squared)?</p>
+<p><strong>Follow-up:</strong> Using TV spend alone, what fraction of the variation in Sales does TV explain? Return that R squared. Do not return the slope.</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">c = df[[&quot;TV&quot;, &quot;Radio&quot;, &quot;Newspaper&quot;]].corr()
 print(c)
@@ -222,13 +222,13 @@ print(c)
 </details>
 <h3>Exercise 2 — Highest single-feature R vs Sales</h3>
 <p>Using absolute correlation with <code>Sales</code>, which feature wins and what is r? </p>
-<p><strong>Follow-up:</strong> How large is the Q4 minus Q1 mean-sales lift?</p>
+<p><strong>Follow-up:</strong> Compare mean Sales when TV spend is in Q4 with mean Sales when TV spend is in Q1. Return the Q4 mean minus the Q1 mean.</p>
 <details><summary>Hint</summary>
 <p><code>df.corr()["Sales"].drop("Sales").abs().idxmax()</code> / <code>.max()</code>.</p>
 </details>
 <h3>Exercise 3 — TV quartiles → mean Sales</h3>
 <p>Bin <code>TV</code> into 4 equal-count bins (<code>pd.qcut(..., 4)</code>), print mean <code>Sales</code> per bin. </p>
-<p><strong>Follow-up:</strong> How much variance do Radio and Newspaper share (r squared)?</p>
+<p><strong>Follow-up:</strong> Compute the correlation of Radio and Newspaper, then square it. That r squared is the variance those two columns share. Return that shared variance, not a TV effect.</p>
 <details><summary>Hint</summary>
 <p><code>pd.qcut(df["TV"], 4, labels=["Q1","Q2","Q3","Q4"])</code> then <code>groupby(...).mean()</code>.</p>
 </details>

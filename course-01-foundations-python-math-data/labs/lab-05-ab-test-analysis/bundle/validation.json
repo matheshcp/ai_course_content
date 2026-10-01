@@ -1,16 +1,46 @@
 {
   "exercises": {
     "relative_lift": {
-      "question": "Express the lift relative to control.",
-      "reference": "rates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\n\nrel = round((p1 - p0) / p0, 4)\n"
+      "question": "The lift is the treatment rate minus the control rate. Divide that lift by the control rate. Return that relative lift, not the raw difference by itself.",
+      "reference": "rates = df.groupby(\"con_treat\")[\"converted\"].agg([\"sum\", \"count\", \"mean\"])\n\nrel = round((p1 - p0) / p0, 4)\n",
+      "cases": [
+        {
+          "input": "Treatment mean 12 and control mean 10.",
+          "expect": "The lift is relative to control, not the raw difference alone."
+        },
+        {
+          "input": "Treatment equals control.",
+          "expect": "The relative lift is zero."
+        }
+      ]
     },
     "ci_low": {
-      "question": "What is the lower end of the 95 percent confidence interval for the observed difference?",
-      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\n"
+      "question": "The 95 percent confidence interval for the observed difference has two ends. Return the lower end only: the observed difference minus the margin. Do not return the upper end.",
+      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nci_low = lo\n",
+      "cases": [
+        {
+          "input": "An observed difference of 4 with a margin of 1.",
+          "expect": "The result is the lower end, difference minus margin, not the upper end."
+        },
+        {
+          "input": "The same interval.",
+          "expect": "The lower end is below the observed difference."
+        }
+      ]
     },
     "ci_high": {
-      "question": "What is the upper end of the 95 percent confidence interval for the observed difference?",
-      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\n"
+      "question": "The 95 percent confidence interval for the observed difference has two ends. Return the upper end only: the observed difference plus the margin. Do not return the lower end.",
+      "reference": "c0, n0 = 17723, 147202\nc1, n1 = 17514, 147276\np0, p1 = c0/n0, c1/n1\np = (c0+c1)/(n0+n1)\nse = math.sqrt(p*(1-p)*(1/n0 + 1/n1))\nz = (p1-p0)/se\npv = 2*(1 - stats.norm.cdf(abs(z)))\n\nse_u = math.sqrt(p0 * (1 - p0) / n0 + p1 * (1 - p1) / n1)\nlo, hi = (p1 - p0) - 1.96 * se_u, (p1 - p0) + 1.96 * se_u\nci_high = hi\n",
+      "cases": [
+        {
+          "input": "An observed difference of 4 with a margin of 1.",
+          "expect": "The result is the upper end, difference plus margin, not the lower end."
+        },
+        {
+          "input": "The same interval.",
+          "expect": "The upper end is above the observed difference."
+        }
+      ]
     }
   }
 }

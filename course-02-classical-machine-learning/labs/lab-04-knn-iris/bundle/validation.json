@@ -1,12 +1,32 @@
 {
   "exercises": {
     "acc_k1": {
-      "question": "What is the test accuracy at k=1?",
-      "reference": "import matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\n\nks = list(range(1, 16))\nscaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]\nunscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]\nbest_k = ks[int(np.argmax(scaled_acc))]\n\nimport matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\nacc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()\nacc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()\n"
+      "question": "Score k-nearest neighbors on the test set with k set to 1. Return that test accuracy. Do not return the accuracy at k=15.",
+      "reference": "import matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\n\nks = list(range(1, 16))\nscaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]\nunscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]\nbest_k = ks[int(np.argmax(scaled_acc))]\n\nimport matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\nacc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()\nacc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()\n",
+      "cases": [
+        {
+          "input": "At k=1, four of five test rows are correct, and k=15 is worse.",
+          "expect": "The result is the accuracy at k=1, not at k=15."
+        },
+        {
+          "input": "k=1 misses every test row.",
+          "expect": "The accuracy is zero."
+        }
+      ]
     },
     "acc_k15": {
-      "question": "What is the test accuracy at k=15?",
-      "reference": "import matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\n\nks = list(range(1, 16))\nscaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]\nunscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]\nbest_k = ks[int(np.argmax(scaled_acc))]\n\nimport matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\nacc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()\nacc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()\n"
+      "question": "Score k-nearest neighbors on the test set with k set to 15. Return that test accuracy. Do not return the accuracy at k=1.",
+      "reference": "import matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\n\nks = list(range(1, 16))\nscaled_acc = [cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=k)), X, y, cv=5).mean() for k in ks]\nunscaled_acc = [cross_val_score(KNeighborsClassifier(n_neighbors=k), X, y, cv=5).mean() for k in ks]\nbest_k = ks[int(np.argmax(scaled_acc))]\n\nimport matplotlib\nimport pandas as pd, numpy as np\nfrom sklearn.neighbors import KNeighborsClassifier\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.model_selection import cross_val_score\n\ndf = pd.read_csv(r\"iris.csv\")\nX = df[[\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]]\ny = df[\"species\"]\nacc1 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=1)), X, y, cv=5).mean()\nacc15 = cross_val_score(make_pipeline(StandardScaler(), KNeighborsClassifier(n_neighbors=15)), X, y, cv=5).mean()\n",
+      "cases": [
+        {
+          "input": "At k=15, three of five test rows are correct, and k=1 is different.",
+          "expect": "The result is the accuracy at k=15, not at k=1."
+        },
+        {
+          "input": "k=15 misses every test row.",
+          "expect": "The accuracy is zero."
+        }
+      ]
     }
   }
 }

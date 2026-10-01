@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-05-credit-risk-german/lab-05-credit-risk-german.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>german_credit_data.csv</code></li></ul>
@@ -222,16 +222,16 @@ display(plt.gcf())</code></pre>
 <blockquote><strong>Pitfall:</strong> The "best" threshold depends on business costs. If missing a default costs 5× a false alarm, pick a lower threshold than Youden's J suggests. There is no universally correct cutoff.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Risk rate by checking status</h3>
 <p>Group the full dataset by <code>CheckingStatus</code> and compute the risk rate (fraction with <code>Risk == "Risk"</code>) for each group. Which group is riskiest, and which is safest? </p>
-<p><strong>Follow-up:</strong> What is the overall risk rate across all 5,000 applicants?</p>
+<p><strong>Follow-up:</strong> Across all 5,000 applicants, divide the number who are risky by 5,000. Return that overall risk rate, not the rate of one subgroup.</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("CheckingStatus")["Risk"].apply(lambda s: (s == "Risk").mean())</code> gives the per-group rate.</p>
 </details>
 <h3>Exercise 2 — ROC-AUC of the pipeline</h3>
 <p>Train the balanced logistic regression from section 3 and compute ROC-AUC on the held-out test set. Then retrain without <code>class_weight</code> and compare. </p>
-<p><strong>Follow-up:</strong> At the default 0.5 threshold, what is the balanced model's TPR?</p>
+<p><strong>Follow-up:</strong> Use the balanced model at a threshold of 0.5. Return its true-positive rate: the fraction of actually risky applicants it catches. Do not return the false-positive rate.</p>
 <details><summary>Hint</summary>
 <p><code>roc_auc_score(y_te, proba)</code> where <code>proba = clf.predict_proba(X_te)[:, 1]</code>.</p>
 </details>

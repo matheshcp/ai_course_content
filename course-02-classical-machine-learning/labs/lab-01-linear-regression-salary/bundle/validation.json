@@ -1,8 +1,18 @@
 {
   "exercises": {
     "r2_test": {
-      "question": "What is the test-set R squared for salary predicted from years of experience?",
-      "reference": "r2_train = model.score(X_train, y_train)\nr2_test = model.score(X_test, y_test)\n"
+      "question": "Predict salary from years of experience and score the model on the test set. Return the test-set R squared, the fraction of test salary variance explained. Do not return the training score.",
+      "reference": "r2_train = model.score(X_train, y_train)\nr2_test = model.score(X_test, y_test)\n",
+      "cases": [
+        {
+          "input": "Test salaries predicted from years of experience.",
+          "expect": "The result is the test-set fraction of variance explained, not the training score."
+        },
+        {
+          "input": "Predictions ignore years and miss the test salaries.",
+          "expect": "The test fraction is near zero."
+        }
+      ]
     }
   }
 }

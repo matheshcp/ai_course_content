@@ -1,16 +1,46 @@
 {
   "exercises": {
     "high_value_share": {
-      "question": "What share of valid revenue comes from those high-value orders?",
-      "reference": "big = []\nfor r in sales:\n    qty, price = r[\"Quantity\"], r[\"Price\"]\n    if qty is None or price is None:\n        continue\n    total = qty * price\n    if total > 500:\n        big.append((r[\"OrderID\"], round(total, 2)))\n\nvalid = [r for r in sales if str(r[\"Product\"]).strip()\n         and r[\"Quantity\"] is not None and r[\"Price\"] is not None]\nvalid_rev = sum(r[\"Quantity\"] * r[\"Price\"] for r in valid)\nshare = round(sum(t for _, t in big) / valid_rev, 4)\n"
+      "question": "An order is high-value when quantity times price is greater than 500, even if the product name is blank. Valid revenue includes only orders that have a product name, a quantity, and a price. What share of that valid revenue comes from the high-value orders? Return that share.",
+      "reference": "big = []\nfor r in sales:\n    qty, price = r[\"Quantity\"], r[\"Price\"]\n    if qty is None or price is None:\n        continue\n    total = qty * price\n    if total > 500:\n        big.append((r[\"OrderID\"], round(total, 2)))\n\nvalid = [r for r in sales if str(r[\"Product\"]).strip()\n         and r[\"Quantity\"] is not None and r[\"Price\"] is not None]\nvalid_rev = sum(r[\"Quantity\"] * r[\"Price\"] for r in valid)\nshare = round(sum(t for _, t in big) / valid_rev, 4)\n",
+      "cases": [
+        {
+          "input": "Two valid orders of 600 and 100, plus a blank-product order of 800.",
+          "expect": "The share uses 600 over valid revenue only. The blank-product order is outside the denominator. The result is a share, not a count."
+        },
+        {
+          "input": "One valid order of 200.",
+          "expect": "Nothing is above 500, so the share is zero."
+        }
+      ]
     },
     "computer_share": {
-      "question": "What share of the 12 orders are Computers?",
-      "reference": "def category(product):\n    p = clean_text(product)\n    if p == \"\":\n        return \"Unknown\"\n    if p in (\"Laptop\", \"Monitor\", \"Keyboard\", \"Mouse\"):\n        return \"Computer\"\n    if p == \"Headset\":\n        return \"Audio\"\n    return \"Other\"\n\ncounts = {}\nfor r in sales:\n    cat = category(r[\"Product\"])\n    counts[cat] = counts.get(cat, 0) + 1\n\ncshare = round(counts[\"Computer\"] / len(sales), 4)\n"
+      "question": "A Computer order is a Laptop, Monitor, Keyboard, or Mouse. Of all 12 orders, what share are Computers? Return that share of orders, not a share of revenue.",
+      "reference": "def category(product):\n    p = clean_text(product)\n    if p == \"\":\n        return \"Unknown\"\n    if p in (\"Laptop\", \"Monitor\", \"Keyboard\", \"Mouse\"):\n        return \"Computer\"\n    if p == \"Headset\":\n        return \"Audio\"\n    return \"Other\"\n\ncounts = {}\nfor r in sales:\n    cat = category(r[\"Product\"])\n    counts[cat] = counts.get(cat, 0) + 1\n\ncshare = round(counts[\"Computer\"] / len(sales), 4)\n",
+      "cases": [
+        {
+          "input": "Twelve orders and three are in the computer category.",
+          "expect": "The result is the share of orders in that category, not their revenue."
+        },
+        {
+          "input": "No product is in the computer category.",
+          "expect": "The share is zero."
+        }
+      ]
     },
     "east_total": {
-      "question": "What is the sum of cleaned East orders whose Total is at least 100?",
-      "reference": "cleaned = [clean_row(r) for r in sales]\neast_big = [r for r in cleaned if r[\"Region\"] == \"East\" and r[\"Total\"] >= 100]\neast_map = {r[\"OrderID\"]: r[\"Total\"] for r in east_big}\n\netot = round(sum(east_map.values()), 2)\n"
+      "question": "Clean each order, then add the Total of orders whose region is East and whose Total is at least 100. Return that sum. Leave out other regions and any East order under 100.",
+      "reference": "cleaned = [clean_row(r) for r in sales]\neast_big = [r for r in cleaned if r[\"Region\"] == \"East\" and r[\"Total\"] >= 100]\neast_map = {r[\"OrderID\"]: r[\"Total\"] for r in east_big}\n\netot = round(sum(east_map.values()), 2)\n",
+      "cases": [
+        {
+          "input": "An East order of 150, an East order of 40, and a West order of 500.",
+          "expect": "The sum includes only the East order of at least 100."
+        },
+        {
+          "input": "One East order of 80.",
+          "expect": "Nothing qualifies, so the sum is zero."
+        }
+      ]
     }
   }
 }

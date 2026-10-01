@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-12-hr-attrition-capstone/lab-12-hr-attrition-capstone.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>HR-Employee-Attrition-synth.csv</code></li></ul>
@@ -222,22 +222,22 @@ print(report[:400])</code></pre>
 <p>A report missing any of these reads as a vibe, not an analysis — fix the gap rather than dressing the prose.</p>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Attrition by OverTime</h3>
 <p>Print attrition rate for <code>OverTime == "Yes"</code> and <code>"No"</code> (4 d.p.). What is the percentage-point gap? </p>
-<p><strong>Follow-up:</strong> How many leavers is that in absolute terms?</p>
+<p><strong>Follow-up:</strong> Count the employees whose Attrition is Yes. Return that number of leavers, not the attrition rate.</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("OverTime")["Attrition"].apply(lambda s: (s=="Yes").mean())</code>.</p>
 </details>
 <h3>Exercise 2 — Income quartiles vs attrition</h3>
 <p><code>pd.qcut(MonthlyIncome, 4)</code> → attrition rate per quartile. Print the 4 rates and the quartile edges. </p>
-<p><strong>Follow-up:</strong> How large is the Q4 minus Q2 attrition gap?</p>
+<p><strong>Follow-up:</strong> Compare attrition in income quartile Q4 with attrition in Q2. Return the Q4 rate minus the Q2 rate.</p>
 <details><summary>Hint</summary>
 <p><code>observed=True</code> on groupby avoids empty-group warnings in newer pandas.</p>
 </details>
 <h3>Exercise 3 — Draft 3 hypotheses with numbers</h3>
 <p>Write three hypotheses; each must cite at least one number from this lab and one validation step. Save under <code>attrition_report.md</code>. </p>
-<p><strong>Follow-up:</strong> How many R and D leavers?</p>
+<p><strong>Follow-up:</strong> Count only leavers in Research and Development. Return that count. Do not include leavers from other departments.</p>
 <details><summary>Hint</summary>
 <p>Template: “If we [intervention], then [metric] changes, because [evidence: X% vs Y%]; validate via [design].”</p>
 </details>

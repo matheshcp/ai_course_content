@@ -1,20 +1,60 @@
 {
   "exercises": {
     "avg_invoice": {
-      "question": "What is mean monthly revenue?",
-      "reference": "import sqlite3, os, pandas as pd\nconn = sqlite3.connect(\"chinook.sqlite\")\nq1 = \"\"\"\nSELECT t.Name AS track, al.Title AS album, ar.Name AS artist,\n       ROUND(SUM(il.Quantity*il.UnitPrice),2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId=il.TrackId\nJOIN Album al ON al.AlbumId=t.AlbumId\nJOIN Artist ar ON ar.ArtistId=al.ArtistId\nGROUP BY t.TrackId ORDER BY revenue DESC LIMIT 5\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_tot = pd.read_sql(\"SELECT ROUND(SUM(Total),2) AS t FROM Invoice\", _c2).iloc[0, 0]\navg = round(_tot / 60, 2)\n_c2.close()\n"
+      "question": "Divide total invoice revenue by the number of months. Return that mean monthly revenue, not the revenue of one invoice.",
+      "reference": "import sqlite3, os, pandas as pd\nconn = sqlite3.connect(\"chinook.sqlite\")\nq1 = \"\"\"\nSELECT t.Name AS track, al.Title AS album, ar.Name AS artist,\n       ROUND(SUM(il.Quantity*il.UnitPrice),2) AS revenue\nFROM InvoiceLine il\nJOIN Track t ON t.TrackId=il.TrackId\nJOIN Album al ON al.AlbumId=t.AlbumId\nJOIN Artist ar ON ar.ArtistId=al.ArtistId\nGROUP BY t.TrackId ORDER BY revenue DESC LIMIT 5\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_tot = pd.read_sql(\"SELECT ROUND(SUM(Total),2) AS t FROM Invoice\", _c2).iloc[0, 0]\navg = round(_tot / 60, 2)\n_c2.close()\n",
+      "cases": [
+        {
+          "input": "Monthly totals of 100, 200, and 300.",
+          "expect": "The result is the mean of the monthly totals, not the grand total."
+        },
+        {
+          "input": "One month with total 100.",
+          "expect": "The mean equals that month."
+        }
+      ]
     },
     "rock_revenue": {
-      "question": "How much revenue came from Rock?",
-      "reference": "q2 = \"\"\"\nSELECT COUNT(*) AS n FROM Customer c\nLEFT JOIN Invoice i ON i.CustomerId=c.CustomerId\nWHERE i.InvoiceId IS NULL\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_rk = pd.read_sql(\"SELECT ROUND(SUM(il.Quantity*il.UnitPrice),2) AS r FROM InvoiceLine il JOIN Track t ON t.TrackId=il.TrackId JOIN Genre g ON g.GenreId=t.GenreId WHERE g.Name='Rock'\", _c2).iloc[0, 0]\nsh = round(_rk / 2328.6, 4)\n_c2.close()\n"
+      "question": "Add only the revenue from tracks in the Rock genre. Return that Rock revenue amount, not Rock's share of all revenue.",
+      "reference": "q2 = \"\"\"\nSELECT COUNT(*) AS n FROM Customer c\nLEFT JOIN Invoice i ON i.CustomerId=c.CustomerId\nWHERE i.InvoiceId IS NULL\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_rk = pd.read_sql(\"SELECT ROUND(SUM(il.Quantity*il.UnitPrice),2) AS r FROM InvoiceLine il JOIN Track t ON t.TrackId=il.TrackId JOIN Genre g ON g.GenreId=t.GenreId WHERE g.Name='Rock'\", _c2).iloc[0, 0]\n_c2.close()\nrock_revenue = _rk\n",
+      "cases": [
+        {
+          "input": "Rock amounts of 10 and 15, plus jazz of 50.",
+          "expect": "The result is Rock revenue only, 25, not the Rock share."
+        },
+        {
+          "input": "No Rock line.",
+          "expect": "The revenue is zero."
+        }
+      ]
     },
     "rock_share": {
-      "question": "What share of revenue is Rock?",
-      "reference": "q2 = \"\"\"\nSELECT COUNT(*) AS n FROM Customer c\nLEFT JOIN Invoice i ON i.CustomerId=c.CustomerId\nWHERE i.InvoiceId IS NULL\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_rk = pd.read_sql(\"SELECT ROUND(SUM(il.Quantity*il.UnitPrice),2) AS r FROM InvoiceLine il JOIN Track t ON t.TrackId=il.TrackId JOIN Genre g ON g.GenreId=t.GenreId WHERE g.Name='Rock'\", _c2).iloc[0, 0]\nsh = round(_rk / 2328.6, 4)\n_c2.close()\n"
+      "question": "Divide Rock revenue by total revenue. Return Rock's share of revenue, not the Rock revenue amount.",
+      "reference": "q2 = \"\"\"\nSELECT COUNT(*) AS n FROM Customer c\nLEFT JOIN Invoice i ON i.CustomerId=c.CustomerId\nWHERE i.InvoiceId IS NULL\n\"\"\"\n\nimport sqlite3 as _sq3\n_c2 = _sq3.connect(\"chinook.sqlite\")\n_rk = pd.read_sql(\"SELECT ROUND(SUM(il.Quantity*il.UnitPrice),2) AS r FROM InvoiceLine il JOIN Track t ON t.TrackId=il.TrackId JOIN Genre g ON g.GenreId=t.GenreId WHERE g.Name='Rock'\", _c2).iloc[0, 0]\nsh = round(_rk / 2328.6, 4)\n_c2.close()\n",
+      "cases": [
+        {
+          "input": "Rock revenue 25 and total revenue 100.",
+          "expect": "The result is the share 0.25, not the Rock revenue amount."
+        },
+        {
+          "input": "No Rock revenue.",
+          "expect": "The share is zero."
+        }
+      ]
     },
     "mean_spend": {
-      "question": "What is the mean spend per customer?",
-      "reference": "total = pd.read_sql(\"SELECT SUM(Total) AS t FROM Invoice\", conn).iloc[0, 0]\ncustomers = pd.read_sql(\"SELECT COUNT(*) AS n FROM Customer\", conn).iloc[0, 0]\nmean_spend = total / customers\n"
+      "question": "Divide total invoice revenue by the number of customers. Return that mean spend per customer, not the mean of single invoice lines.",
+      "reference": "total = pd.read_sql(\"SELECT SUM(Total) AS t FROM Invoice\", conn).iloc[0, 0]\ncustomers = pd.read_sql(\"SELECT COUNT(*) AS n FROM Customer\", conn).iloc[0, 0]\nmean_spend = total / customers\n",
+      "cases": [
+        {
+          "input": "Three customers spent 10, 20, and 30 in total.",
+          "expect": "The result is the mean spend per customer, not per invoice line."
+        },
+        {
+          "input": "One customer spent 40.",
+          "expect": "The mean equals that customer's spend."
+        }
+      ]
     }
   }
 }

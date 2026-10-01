@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-05-ab-test-analysis/lab-05-ab-test-analysis.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>ab_test.csv</code></li></ul>
@@ -189,10 +189,10 @@ print(f&quot;MDE absolute: {mde:.6f}  (~{mde/p0*100:.2f}% relative to control)&q
 <blockquote><strong>Pitfall:</strong> Checking the z-test every hour and stopping when p &lt; 0.05 inflates false positives — each peek is another chance to cross the threshold by noise, so your real α is far above 0.05. Pre-register sample size / duration from the MDE; use sequential methods (e.g. mSPRT, group-sequential boundaries) if you must peek. Peeking is the fastest way to “discover” effects that do not replicate.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Conversion by group</h3>
 <p>Print <code>conversions</code>, <code>n</code>, and <code>rate</code> for control and treatment (6 d.p.). </p>
-<p><strong>Follow-up:</strong> Express the lift relative to control.</p>
+<p><strong>Follow-up:</strong> The lift is the treatment rate minus the control rate. Divide that lift by the control rate. Return that relative lift, not the raw difference by itself.</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("con_treat")["converted"].agg(["sum","count","mean"])</code>.</p>
 </details>

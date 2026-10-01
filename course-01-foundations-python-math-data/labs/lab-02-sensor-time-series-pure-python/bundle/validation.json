@@ -1,20 +1,60 @@
 {
   "exercises": {
     "temp_range": {
-      "question": "What is the full temperature range over the decade?",
-      "reference": "readings = [t for _, t in temps]\ntemp_range = max(readings) - min(readings)\n"
+      "question": "From the daily temperature readings, subtract the lowest temperature from the highest temperature. That difference is the full range over the decade. Return that range.",
+      "reference": "readings = [t for _, t in temps]\ntemp_range = max(readings) - min(readings)\n",
+      "cases": [
+        {
+          "input": "Readings of 10 and 30.",
+          "expect": "The range is the highest minus the lowest."
+        },
+        {
+          "input": "Every reading is the same.",
+          "expect": "The range is zero."
+        }
+      ]
     },
     "coverage": {
-      "question": "What fraction of the 365 days in 1982 does the longest run of days below 10 degrees cover?",
-      "reference": "best = current = 0\nprevious = None\nfor day, temp in temps:\n    if temp < 10 and previous is not None and (day - previous).days == 1:\n        current += 1\n    elif temp < 10:\n        current = 1\n    else:\n        current = 0\n    if current > best:\n        best = current\n    previous = day\ncoverage = best / 365\n"
+      "question": "Find the longest run of consecutive calendar days in 1982 where the temperature is below 10 degrees. What fraction of the 365 days does that run cover? Return that fraction, not the number of cold days.",
+      "reference": "best = current = 0\nprevious = None\nfor day, temp in temps:\n    if temp < 10 and previous is not None and (day - previous).days == 1:\n        current += 1\n    elif temp < 10:\n        current = 1\n    else:\n        current = 0\n    if current > best:\n        best = current\n    previous = day\ncoverage = best / 365\n",
+      "cases": [
+        {
+          "input": "A year of 365 days with one run of 10 consecutive days below 10, then a gap.",
+          "expect": "The result is that longest run divided by 365, not the count of cold days."
+        },
+        {
+          "input": "No day is below 10.",
+          "expect": "The fraction is zero."
+        }
+      ]
     },
     "hot_run_days": {
-      "question": "How many days have a temperature more than 2 standard deviations from the mean?",
-      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\nhot_run_days = sum(1 for t in readings if abs((t - mean) / spread) > 2)\n"
+      "question": "A day is extreme when its temperature is more than 2 standard deviations above or below the mean. How many days are extreme? Return that count, not the share of days.",
+      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\nhot_run_days = sum(1 for t in readings if abs((t - mean) / spread) > 2)\n",
+      "cases": [
+        {
+          "input": "Three readings and one is more than 2 standard deviations from the mean.",
+          "expect": "The result is the count 1, not a fraction."
+        },
+        {
+          "input": "No reading is more than 2 standard deviations from the mean.",
+          "expect": "The count is zero."
+        }
+      ]
     },
     "hot_share": {
-      "question": "What share of days have a temperature more than 2 standard deviations from the mean?",
-      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\noutliers = sum(1 for t in readings if abs((t - mean) / spread) > 2)\nhot_share = outliers / len(readings)\n"
+      "question": "A day is extreme when its temperature is more than 2 standard deviations above or below the mean. What share of the days are extreme? Return that share, not the count.",
+      "reference": "import statistics\nreadings = [t for _, t in temps]\nmean = statistics.mean(readings)\nspread = statistics.stdev(readings)\noutliers = sum(1 for t in readings if abs((t - mean) / spread) > 2)\nhot_share = outliers / len(readings)\n",
+      "cases": [
+        {
+          "input": "Three readings and one is more than 2 standard deviations from the mean.",
+          "expect": "The result is that count divided by the number of days, a share, not the count."
+        },
+        {
+          "input": "No reading is more than 2 standard deviations from the mean.",
+          "expect": "The share is zero."
+        }
+      ]
     }
   }
 }

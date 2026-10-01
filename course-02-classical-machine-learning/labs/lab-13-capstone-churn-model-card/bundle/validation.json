@@ -1,12 +1,32 @@
 {
   "exercises": {
     "pr_auc_gap": {
-      "question": "How much higher is the better model's PR-AUC than the other model?",
-      "reference": "p_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nlog_pr = average_precision_score(y_test, p_log)\ngbm_pr = average_precision_score(y_test, p_gb)\npr_auc_gap = gbm_pr - log_pr\n"
+      "question": "Compare the two models on PR-AUC. Return how much higher the better score is than the other score, not either score by itself.",
+      "reference": "p_log = log_pipe.predict_proba(X_test)[:, 1]\np_gb = gbm_pipe.predict_proba(X_test)[:, 1]\nlog_pr = average_precision_score(y_test, p_log)\ngbm_pr = average_precision_score(y_test, p_gb)\npr_auc_gap = gbm_pr - log_pr\n",
+      "cases": [
+        {
+          "input": "The better model's PR-AUC is 0.6 and the other is 0.4.",
+          "expect": "The result is how much higher the better model is, not either score alone."
+        },
+        {
+          "input": "Both PR-AUC scores are equal.",
+          "expect": "The gap is zero."
+        }
+      ]
     },
     "f1_threshold": {
-      "question": "What decision threshold maximizes F1?",
-      "reference": "from sklearn.metrics import precision_recall_curve\n\np_gbm = gbm_pipe.predict_proba(X_test)[:, 1]\nprec, rec, thr = precision_recall_curve(y_test, p_gbm)\nf1 = 2 * prec * rec / (prec + rec + 1e-12)\nbest_i = np.argmax(f1)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nax.plot(thr, prec[:-1], label=\"precision\")\nax.plot(thr, rec[:-1], label=\"recall\")\nax.axvline(thr[best_i], color=\"k\", ls=\"--\", lw=1, label=f\"best F1 @ {thr[best_i]:.2f}\")\nax.set_xlabel(\"threshold\"); ax.set_ylabel(\"score\"); ax.legend()\nfig.tight_layout()\nfig.savefig(\"lab13_threshold.png\", dpi=120)\nfrom IPython.display import display\ndisplay(fig)\n"
+      "question": "Compute F1 at each decision threshold. Return the threshold where F1 is highest, not the F1 number itself.",
+      "reference": "from sklearn.metrics import precision_recall_curve\n\np_gbm = gbm_pipe.predict_proba(X_test)[:, 1]\nprec, rec, thr = precision_recall_curve(y_test, p_gbm)\nf1 = 2 * prec * rec / (prec + rec + 1e-12)\nbest_i = np.argmax(f1)\n\nfig, ax = plt.subplots(figsize=(7, 4))\nax.plot(thr, prec[:-1], label=\"precision\")\nax.plot(thr, rec[:-1], label=\"recall\")\nax.axvline(thr[best_i], color=\"k\", ls=\"--\", lw=1, label=f\"best F1 @ {thr[best_i]:.2f}\")\nax.set_xlabel(\"threshold\"); ax.set_ylabel(\"score\"); ax.legend()\nfig.tight_layout()\nfig.savefig(\"lab13_threshold.png\", dpi=120)\nfrom IPython.display import display\ndisplay(fig)\n",
+      "cases": [
+        {
+          "input": "F1 is highest at threshold 0.3 and lower at 0.5.",
+          "expect": "The result is the threshold, not the F1 value."
+        },
+        {
+          "input": "F1 is highest at the top of the threshold grid.",
+          "expect": "Return that threshold, not a fixed 0.5."
+        }
+      ]
     }
   }
 }

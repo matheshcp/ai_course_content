@@ -1,12 +1,32 @@
 {
   "exercises": {
     "units": {
-      "question": "How many units are in stock across all products?",
-      "reference": "header, body = parse_table(read_local())\nrecords = rows_to_dicts(header, body)\n\nunits = sum(r[\"Stock\"] for r in records)\n"
+      "question": "Add the stock count of every product. Return the total number of units in stock, not the average price.",
+      "reference": "header, body = parse_table(read_local())\nrecords = rows_to_dicts(header, body)\n\nunits = sum(r[\"Stock\"] for r in records)\n",
+      "cases": [
+        {
+          "input": "Stock counts of 2, 0, and 5.",
+          "expect": "The result is the sum of units, not the mean price."
+        },
+        {
+          "input": "Every stock count is zero.",
+          "expect": "The total is zero."
+        }
+      ]
     },
     "mean_price": {
-      "question": "What is the mean price over priced products?",
-      "reference": "missing = [r[\"Name\"] for r in records if r[\"Price\"] is None]\n\npriced = [r[\"Price\"] for r in records if r[\"Price\"] is not None]\nmp = sum(priced) / len(priced)\n"
+      "question": "Ignore products that have no price. Return the mean of the prices that are present. Do not treat a missing price as zero.",
+      "reference": "missing = [r[\"Name\"] for r in records if r[\"Price\"] is None]\n\npriced = [r[\"Price\"] for r in records if r[\"Price\"] is not None]\nmp = sum(priced) / len(priced)\n",
+      "cases": [
+        {
+          "input": "Prices of 10, a missing price, and 20.",
+          "expect": "The mean uses priced products only and does not treat the missing price as zero."
+        },
+        {
+          "input": "One priced product at 8.",
+          "expect": "The mean equals that price."
+        }
+      ]
     }
   }
 }

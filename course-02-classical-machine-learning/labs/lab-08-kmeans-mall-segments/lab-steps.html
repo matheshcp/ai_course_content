@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-02-classical-machine-learning/labs/lab-08-kmeans-mall-segments/lab-08-kmeans-mall-segments.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 2).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>Mall_Customers.csv</code></li></ul>
@@ -195,13 +195,13 @@ print(&quot;Saved mall_segments.png&quot;)</code></pre>
 <blockquote><strong>Pitfall:</strong> Reading cluster profiles from the scaled centroids directly. A scaled income of 1.5 means nothing to a marketing team — always inverse-transform to original units before interpreting.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Elbow Method</h3>
 <p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. </p>
-<p><strong>Follow-up:</strong> What is the inertia at k=1?</p>
+<p><strong>Follow-up:</strong> Fit k-means with one cluster. Return the inertia at k=1, the total squared distance to that center. Do not return the silhouette, or the inertia at another k.</p>
 <h3>Exercise 2 — Best k by Silhouette</h3>
 <p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? </p>
-<p><strong>Follow-up:</strong> What is the silhouette score at k=5?</p>
+<p><strong>Follow-up:</strong> Fit k-means with five clusters. Return the silhouette score at k=5. Do not return the inertia.</p>
 <h3>Exercise 3 — Name the Segments</h3>
 <p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., "Young Enthusiasts: age ~25, high spend"). Report the cluster sizes. </p>
 <p><strong>Follow-up:</strong> Which cluster has the highest average income?</p>

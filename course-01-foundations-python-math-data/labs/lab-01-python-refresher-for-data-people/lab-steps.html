@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-01-python-refresher-for-data-people/lab-01-python-refresher-for-data-people.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>sales_spreadsheet.csv</code></li></ul>
@@ -356,16 +356,16 @@ print(json.dumps(analyse(sales), indent=2))
 </ul>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — High-value orders (lists + loops)</h3>
 <p>Using <code>sales</code> (raw), print <code>OrderID</code> and <code>Total</code> for every order where <code>Quantity</code> and <code>Price</code> exist and <code>Total &gt; 500</code>. Also print how many such orders exist. </p>
-<p><strong>Follow-up:</strong> What share of valid revenue comes from those high-value orders?</p>
+<p><strong>Follow-up:</strong> An order is high-value when quantity times price is greater than 500, even if the product name is blank. Valid revenue includes only orders that have a product name, a quantity, and a price. What share of that valid revenue comes from the high-value orders? Return that share.</p>
 <details><summary>Hint</summary>
 <p>Loop, compute <code>qty * price</code>, collect matches in a list, then print.</p>
 </details>
 <h3>Exercise 2 — Category counter (dicts + functions)</h3>
 <p>Write a function <code>category(product)</code> that returns <code>"Computer"</code> for Laptop/Monitor/Keyboard/Mouse (any case/spaces), <code>"Audio"</code> for Headset, else <code>"Other"</code> (and <code>"Unknown"</code> for blank). Then loop over <code>sales</code>, clean each product with <code>clean_text</code>, categorise it, and build a dict <code>{category: count}</code>. <em>Expected counts approx: Computer 10, Audio 1, Unknown 1. Hint: reuse <code>clean_text</code> from Section 4.</em></p>
-<p><strong>Follow-up:</strong> What share of the 12 orders are Computers?</p>
+<p><strong>Follow-up:</strong> A Computer order is a Laptop, Monitor, Keyboard, or Mouse. Of all 12 orders, what share are Computers? Return that share of orders, not a share of revenue.</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">def category(product):
     p = clean_text(product)

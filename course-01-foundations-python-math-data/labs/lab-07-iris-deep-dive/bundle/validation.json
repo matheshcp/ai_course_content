@@ -1,24 +1,74 @@
 {
   "exercises": {
     "petal_gap": {
-      "question": "How far apart are virginica and setosa mean petal lengths?",
-      "reference": "g = df.groupby(\"species\")[\"petal_length\"].mean()\ngap = round(float(g[\"virginica\"] - g[\"setosa\"]), 3)\n"
+      "question": "Subtract the setosa mean petal length from the virginica mean petal length. Return how far apart those two means are.",
+      "reference": "g = df.groupby(\"species\")[\"petal_length\"].mean()\ngap = round(float(g[\"virginica\"] - g[\"setosa\"]), 3)\n",
+      "cases": [
+        {
+          "input": "Virginica mean petal length 5 and setosa mean petal length 1.",
+          "expect": "The gap is virginica minus setosa."
+        },
+        {
+          "input": "The two means are equal.",
+          "expect": "The gap is zero."
+        }
+      ]
     },
     "mean_low": {
-      "question": "What is the lower end of the virginica sepal-width confidence interval?",
-      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\n"
+      "question": "Build the 95 percent confidence interval for virginica sepal width. Return the lower end only, the mean minus the margin. Do not return the upper end or the width.",
+      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\nmean_low = lo\n",
+      "cases": [
+        {
+          "input": "A confidence interval from 2.1 to 3.4.",
+          "expect": "The result is the lower end, not the upper end and not the width."
+        },
+        {
+          "input": "An interval centered on a mean.",
+          "expect": "The lower end is the mean minus the margin."
+        }
+      ]
     },
     "mean_high": {
-      "question": "What is the upper end of the virginica sepal-width confidence interval?",
-      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\n"
+      "question": "Build the 95 percent confidence interval for virginica sepal width. Return the upper end only, the mean plus the margin. Do not return the lower end or the width.",
+      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\nmean_high = hi\n",
+      "cases": [
+        {
+          "input": "A confidence interval from 2.1 to 3.4.",
+          "expect": "The result is the upper end, not the lower end and not the width."
+        },
+        {
+          "input": "An interval centered on a mean.",
+          "expect": "The upper end is the mean plus the margin."
+        }
+      ]
     },
     "ci_width": {
-      "question": "How wide is the virginica sepal-width confidence interval?",
-      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\n"
+      "question": "Build the 95 percent confidence interval for virginica sepal width. Return how wide it is: the upper end minus the lower end. Do not return either end by itself.",
+      "reference": "sv = df[df.species.isin([\"setosa\", \"versicolor\"])]\nbest, best_d = None, 0\nfor c in [\"sepal_length\", \"sepal_width\", \"petal_length\", \"petal_width\"]:\n    a = sv.loc[sv.species == \"setosa\", c]\n    b = sv.loc[sv.species == \"versicolor\", c]\n    pooled = math.sqrt(((len(a)-1)*a.var(ddof=1)+(len(b)-1)*b.var(ddof=1))/(len(a)+len(b)-2))\n    d = abs((b.mean()-a.mean())/pooled)\n    if d > best_d:\n        best, best_d = c, d\n\nimport numpy as _np\nfrom scipy import stats as _ss\nxv = df.loc[df.species == \"virginica\", \"sepal_width\"]\nnn = len(xv)\nmm = xv.mean()\nsse = xv.std(ddof=1) / _np.sqrt(nn)\nlo, hi = _ss.t.interval(0.95, nn - 1, loc=mm, scale=sse)\nw = round(round(hi, 4) - round(lo, 4), 4)\nci_width = w\n",
+      "cases": [
+        {
+          "input": "A confidence interval from 2.1 to 3.4.",
+          "expect": "The width is the upper end minus the lower end, not either end."
+        },
+        {
+          "input": "The margin is zero.",
+          "expect": "The width is zero."
+        }
+      ]
     },
     "anova_f": {
-      "question": "Re-run the ANOVA yourself — how extreme is F?",
-      "reference": "x = df.loc[df.species == \"virginica\", \"sepal_width\"]\nn = len(x); m = x.mean(); s = x.std(ddof=1)\nt = stats.t.ppf(0.975, n-1)\nlo, hi = m - t*s/math.sqrt(n), m + t*s/math.sqrt(n)\n\nfrom scipy import stats as _ss\ngrps = [df.loc[df.species == s, \"petal_length\"] for s in [\"setosa\", \"versicolor\", \"virginica\"]]\nFv, pv = _ss.f_oneway(*grps)\n"
+      "question": "Run an ANOVA on petal length across the three species. F measures how far apart the group means are compared with the spread inside the groups. Return that F statistic, not the p-value by itself.",
+      "reference": "x = df.loc[df.species == \"virginica\", \"sepal_width\"]\nn = len(x); m = x.mean(); s = x.std(ddof=1)\nt = stats.t.ppf(0.975, n-1)\nlo, hi = m - t*s/math.sqrt(n), m + t*s/math.sqrt(n)\n\nfrom scipy import stats as _ss\ngrps = [df.loc[df.species == s, \"petal_length\"] for s in [\"setosa\", \"versicolor\", \"virginica\"]]\nFv, pv = _ss.f_oneway(*grps)\n",
+      "cases": [
+        {
+          "input": "Group means far apart compared with the spread inside groups.",
+          "expect": "The result is a large F statistic, not a p-value by itself."
+        },
+        {
+          "input": "The group means are equal.",
+          "expect": "F is near zero."
+        }
+      ]
     }
   }
 }

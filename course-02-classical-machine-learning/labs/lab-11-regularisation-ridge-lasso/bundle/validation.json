@@ -1,16 +1,46 @@
 {
   "exercises": {
     "poly_features": {
-      "question": "How many features does degree 10 create?",
-      "reference": "poly_features = int(res.loc[res.degree == 10, \"n_features\"].iloc[0])\n"
+      "question": "Expand the input with a polynomial of degree 10. Return how many features that degree creates. Do not return the degree with the lowest error.",
+      "reference": "poly_features = int(res.loc[res.degree == 10, \"n_features\"].iloc[0])\n",
+      "cases": [
+        {
+          "input": "Degree 10 expands one input, and another degree has lower error.",
+          "expect": "The result is the feature count at degree 10, not the best degree."
+        },
+        {
+          "input": "Degree 1 would create fewer features.",
+          "expect": "Still report the degree-10 count."
+        }
+      ]
     },
     "ridge_savings": {
-      "question": "How much lower is the ridge test MAE than the degree-10 linear regression test MAE?",
-      "reference": "ols3 = Pipeline([(\"scaler\", StandardScaler()),\n                 (\"poly\", PolynomialFeatures(degree=3, include_bias=False)),\n                 (\"lr\", LinearRegression())]).fit(X_train, y_train)\nols3_test = mean_absolute_error(y_test, ols3.predict(X_test))\nridge_test = mean_absolute_error(y_test, grid.best_estimator_.predict(X_test))\nridge_savings = res.loc[res.degree == 10, 'test_MAE'].iloc[0] - ridge_test\n"
+      "question": "Subtract the ridge test MAE from the degree-10 linear regression test MAE. Return how much lower the ridge error is. Do not use the degree-3 error.",
+      "reference": "ols3 = Pipeline([(\"scaler\", StandardScaler()),\n                 (\"poly\", PolynomialFeatures(degree=3, include_bias=False)),\n                 (\"lr\", LinearRegression())]).fit(X_train, y_train)\nols3_test = mean_absolute_error(y_test, ols3.predict(X_test))\nridge_test = mean_absolute_error(y_test, grid.best_estimator_.predict(X_test))\nridge_savings = res.loc[res.degree == 10, 'test_MAE'].iloc[0] - ridge_test\n",
+      "cases": [
+        {
+          "input": "Degree-10 linear test MAE is 50 and ridge test MAE is 20.",
+          "expect": "The savings is how much lower ridge is, not the degree-3 error."
+        },
+        {
+          "input": "Ridge is not lower than degree-10 linear regression.",
+          "expect": "The savings is zero or negative."
+        }
+      ]
     },
     "lasso_dropped": {
-      "question": "Refit lasso with `alpha=10000` — how many survive?",
-      "reference": "lasso_hard = Pipeline([(\"scaler\", StandardScaler()),\n                       (\"poly\", PolynomialFeatures(degree=3, include_bias=False)),\n                       (\"lasso\", Lasso(alpha=10000, max_iter=10000))]).fit(X_train, y_train)\nnz_hard = int((lasso_hard.named_steps[\"lasso\"].coef_ != 0).sum())\n"
+      "question": "Refit lasso with alpha set to 10000. Return how many coefficients are still non-zero. Do not use a smaller alpha.",
+      "reference": "lasso_hard = Pipeline([(\"scaler\", StandardScaler()),\n                       (\"poly\", PolynomialFeatures(degree=3, include_bias=False)),\n                       (\"lasso\", Lasso(alpha=10000, max_iter=10000))]).fit(X_train, y_train)\nnz_hard = int((lasso_hard.named_steps[\"lasso\"].coef_ != 0).sum())\n",
+      "cases": [
+        {
+          "input": "At alpha 10000, three coefficients stay non-zero, and the default alpha keeps more.",
+          "expect": "The count is the survivors at alpha 10000."
+        },
+        {
+          "input": "Every coefficient is zero at alpha 10000.",
+          "expect": "The count is zero."
+        }
+      ]
     }
   }
 }

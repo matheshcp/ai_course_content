@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-02-sensor-time-series-pure-python/lab-02-sensor-time-series-pure-python.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>daily-min-temperatures.csv</code></li></ul>
@@ -237,10 +237,10 @@ print(&quot;sample:&quot;, anomalies[:5])</code></pre>
 <blockquote><strong>Pitfall:</strong> Section 6 uses <code>statistics.pstdev</code> (population SD), while the Exercise 3 solution recomputes with <code>statistics.stdev</code> (sample SD). With n = 3650 the two are nearly identical and both still report <code>170</code> flagged days here — but if you switch datasets or small samples, pick one SD definition and use it consistently, or your z-scores and thresholds will quietly disagree between cells.</blockquote>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Monthly mean temps dict</h3>
 <p>Build <code>monthly_mean</code> as above (you may already have it). Print the mean for <strong>1981-01</strong> and for <strong>1990-12</strong>. </p>
-<p><strong>Follow-up:</strong> What is the full temperature range over the decade?</p>
+<p><strong>Follow-up:</strong> From the daily temperature readings, subtract the lowest temperature from the highest temperature. That difference is the full range over the decade. Return that range.</p>
 <details><summary>Hint</summary>
 <pre><code class="language-python">by_month = defaultdict(list)
 for d, t in temps:

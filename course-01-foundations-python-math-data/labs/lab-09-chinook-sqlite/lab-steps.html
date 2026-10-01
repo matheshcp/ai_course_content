@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-09-chinook-sqlite/lab-09-chinook-sqlite.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>chinook.sqlite</code></li></ul>
@@ -237,16 +237,16 @@ print(genres.to_string(index=False))
 <pre><code class="language-python">conn.close()</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Top 5 tracks by revenue</h3>
 <p>Run the Section 2 query. List track name and revenue for all 5. </p>
-<p><strong>Follow-up:</strong> What is mean monthly revenue?</p>
+<p><strong>Follow-up:</strong> Divide total invoice revenue by the number of months. Return that mean monthly revenue, not the revenue of one invoice.</p>
 <details><summary>Hint</summary>
 <p>Join <code>InvoiceLine → Track → Album → Artist</code>, <code>SUM(Quantity*UnitPrice)</code>, <code>ORDER BY revenue DESC LIMIT 5</code>.</p>
 </details>
 <h3>Exercise 2 — Customers with no purchases</h3>
 <p>LEFT JOIN customers to invoices; count rows where invoice is NULL. </p>
-<p><strong>Follow-up:</strong> What share of revenue is Rock?</p>
+<p><strong>Follow-up:</strong> Divide Rock revenue by total revenue. Return Rock's share of revenue, not the Rock revenue amount.</p>
 <details><summary>Hint</summary>
 <p><code>WHERE i.InvoiceId IS NULL</code> after <code>LEFT JOIN Invoice</code>.</p>
 </details>

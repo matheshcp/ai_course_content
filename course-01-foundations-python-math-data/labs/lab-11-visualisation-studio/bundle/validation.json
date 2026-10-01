@@ -1,16 +1,46 @@
 {
   "exercises": {
     "weekday_gap": {
-      "question": "How large is the Fri minus Sat tip gap in points?",
-      "reference": "tips[\"tip_pct\"] = tips[\"tip\"] / tips[\"total_bill\"]\nby_day = tips.groupby(\"day\")[\"tip_pct\"].mean().sort_values(ascending=False)\n\nbd = tips.groupby(\"day\")[\"tip_pct\"].mean().round(4)\ngap = round(bd[\"Fri\"] - bd[\"Sat\"], 4)\n"
+      "question": "Turn each tip into a fraction of the bill. Subtract Saturday's mean tip fraction from Friday's mean tip fraction. Return that Friday-minus-Saturday gap.",
+      "reference": "tips[\"tip_pct\"] = tips[\"tip\"] / tips[\"total_bill\"]\nby_day = tips.groupby(\"day\")[\"tip_pct\"].mean().sort_values(ascending=False)\n\nbd = tips.groupby(\"day\")[\"tip_pct\"].mean().round(4)\ngap = round(bd[\"Fri\"] - bd[\"Sat\"], 4)\n",
+      "cases": [
+        {
+          "input": "Friday mean tip 18 and Saturday mean tip 15.",
+          "expect": "The gap is Friday minus Saturday, not the reverse."
+        },
+        {
+          "input": "The two day means are equal.",
+          "expect": "The gap is zero."
+        }
+      ]
     },
     "online_share": {
-      "question": "What share of tickets are open?",
-      "reference": "ct = pd.crosstab(tickets_clean[\"priority\"], tickets_clean[\"status\"])\n\n# --- Solution 3 --- (example annotations used above)\ninsights = [\n    \"Overall mean tip ≈ 16.1% across 244 bills\",\n    \"Lunch mean tip% 16.4% slightly above Dinner 16.0%\",\n    \"42 open / 34 in-progress / 31 closed (PII redacted)\",\n    f\"Max bill ${tips['total_bill'].max():.2f} still ~15–20% tip band\",\n]\nfor s in insights:\n\nosh = round((tickets_clean[\"status\"] == \"open\").mean(), 4)\n"
+      "question": "What share of the tickets have status open? Return that share. Do not return the share that are closed.",
+      "reference": "ct = pd.crosstab(tickets_clean[\"priority\"], tickets_clean[\"status\"])\n\n# --- Solution 3 --- (example annotations used above)\ninsights = [\n    \"Overall mean tip ≈ 16.1% across 244 bills\",\n    \"Lunch mean tip% 16.4% slightly above Dinner 16.0%\",\n    \"42 open / 34 in-progress / 31 closed (PII redacted)\",\n    f\"Max bill ${tips['total_bill'].max():.2f} still ~15–20% tip band\",\n]\nfor s in insights:\n\nosh = round((tickets_clean[\"status\"] == \"open\").mean(), 4)\n",
+      "cases": [
+        {
+          "input": "Four open tickets out of ten.",
+          "expect": "The result is the share that are open, not the closed share."
+        },
+        {
+          "input": "No ticket is open.",
+          "expect": "The share is zero."
+        }
+      ]
     },
     "customer_share": {
-      "question": "What share are closed?",
-      "reference": "csh = round((tickets_clean[\"status\"] == \"closed\").mean(), 4)\n"
+      "question": "What share of the tickets have status closed? Return that share. Do not return the share that are open.",
+      "reference": "csh = round((tickets_clean[\"status\"] == \"closed\").mean(), 4)\n",
+      "cases": [
+        {
+          "input": "Six closed tickets out of ten.",
+          "expect": "The result is the share that are closed, not the open share."
+        },
+        {
+          "input": "No ticket is closed.",
+          "expect": "The share is zero."
+        }
+      ]
     }
   }
 }

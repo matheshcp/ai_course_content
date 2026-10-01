@@ -1,20 +1,60 @@
 {
   "exercises": {
     "spam_recall": {
-      "question": "What is spam recall on the holdout?",
-      "reference": "lift = []\nfor w in vocab:\n    ps = (word_counts[\"spam\"][w] + ALPHA) / totals[\"spam\"]\n    ph = (word_counts[\"ham\"][w] + ALPHA) / totals[\"ham\"]\n    s = word_counts[\"spam\"][w]; h = word_counts[\"ham\"][w]\n    if s + h >= 10:\n        lift.append((w, math.log(ps/ph), s, h))\nlift.sort(key=lambda x: -x[1])\n\nrec = sum(1 for g, p in zip(gold, preds) if g == \"spam\" and p == \"spam\") / sum(1 for g in gold if g == \"spam\")\nrec = round(rec, 4)\n"
+      "question": "On the holdout, spam recall is the fraction of true spam messages that the model labels spam. Return that recall. Do not return precision.",
+      "reference": "lift = []\nfor w in vocab:\n    ps = (word_counts[\"spam\"][w] + ALPHA) / totals[\"spam\"]\n    ph = (word_counts[\"ham\"][w] + ALPHA) / totals[\"ham\"]\n    s = word_counts[\"spam\"][w]; h = word_counts[\"ham\"][w]\n    if s + h >= 10:\n        lift.append((w, math.log(ps/ph), s, h))\nlift.sort(key=lambda x: -x[1])\n\nrec = sum(1 for g, p in zip(gold, preds) if g == \"spam\" and p == \"spam\") / sum(1 for g in gold if g == \"spam\")\nrec = round(rec, 4)\n",
+      "cases": [
+        {
+          "input": "Ten spam messages and eight are labeled spam.",
+          "expect": "Recall is 8 of 10 spam messages found, not precision."
+        },
+        {
+          "input": "No spam message is labeled spam.",
+          "expect": "Recall is zero."
+        }
+      ]
     },
     "ham_precision": {
-      "question": "What is ham precision?",
-      "reference": "preds = [classify(t) for _, t in test]\ngold  = [l for l, _ in test]\nacc = sum(p == g for p, g in zip(preds, gold)) / len(gold)\n\nhp = sum(1 for g, p in zip(gold, preds) if g == \"ham\" and p == \"ham\") / sum(1 for p in preds if p == \"ham\")\nhp = round(hp, 4)\n"
+      "question": "Ham precision is the fraction of messages labeled ham that really are ham. Return that precision. Do not return spam recall.",
+      "reference": "preds = [classify(t) for _, t in test]\ngold  = [l for l, _ in test]\nacc = sum(p == g for p, g in zip(preds, gold)) / len(gold)\n\nhp = sum(1 for g, p in zip(gold, preds) if g == \"ham\" and p == \"ham\") / sum(1 for p in preds if p == \"ham\")\nhp = round(hp, 4)\n",
+      "cases": [
+        {
+          "input": "Ten messages labeled ham and nine are truly ham.",
+          "expect": "Precision is 9 of 10 ham labels that are correct, not recall."
+        },
+        {
+          "input": "Every ham label is actually spam.",
+          "expect": "Precision is zero."
+        }
+      ]
     },
     "p_free_spam": {
-      "question": "What is the probability of the word free given spam on the test set?",
-      "reference": "free_test = [(t, g) for (g, t) in test if \"free\" in t.lower()]\nn_free = len(free_test)\nn_ham = sum(1 for _, g in free_test if g == \"ham\")\nexample = next(t for t, g in free_test if g == \"ham\")\n# e.g. \"When you get free, call me\" / \"Now am free call me pa.\"\n\nn_spam = sum(1 for g in gold if g == \"spam\")\nn_ham = sum(1 for g in gold if g == \"ham\")\np_fs = round(sum(1 for _, g in free_test if g == \"spam\") / n_spam, 4)\np_fh = round(n_ham and sum(1 for _, g in free_test if g == \"ham\") / n_ham, 4)\n"
+      "question": "On the test set, look only at spam messages. What fraction of them contain the word free? Return the probability of free given spam, not given ham.",
+      "reference": "free_test = [(t, g) for (g, t) in test if \"free\" in t.lower()]\nn_free = len(free_test)\nn_ham = sum(1 for _, g in free_test if g == \"ham\")\nexample = next(t for t, g in free_test if g == \"ham\")\n# e.g. \"When you get free, call me\" / \"Now am free call me pa.\"\n\nn_spam = sum(1 for g in gold if g == \"spam\")\nn_ham = sum(1 for g in gold if g == \"ham\")\np_fs = round(sum(1 for _, g in free_test if g == \"spam\") / n_spam, 4)\np_fh = round(n_ham and sum(1 for _, g in free_test if g == \"ham\") / n_ham, 4)\np_free_spam = p_fs\n",
+      "cases": [
+        {
+          "input": "Half of the spam messages contain the word free.",
+          "expect": "The probability is free given spam, not free given ham."
+        },
+        {
+          "input": "No spam message contains free.",
+          "expect": "The probability is zero."
+        }
+      ]
     },
     "p_free_ham": {
-      "question": "What is the probability of the word free given ham on the test set?",
-      "reference": "free_test = [(t, g) for (g, t) in test if \"free\" in t.lower()]\nn_free = len(free_test)\nn_ham = sum(1 for _, g in free_test if g == \"ham\")\nexample = next(t for t, g in free_test if g == \"ham\")\n# e.g. \"When you get free, call me\" / \"Now am free call me pa.\"\n\nn_spam = sum(1 for g in gold if g == \"spam\")\nn_ham = sum(1 for g in gold if g == \"ham\")\np_fs = round(sum(1 for _, g in free_test if g == \"spam\") / n_spam, 4)\np_fh = round(n_ham and sum(1 for _, g in free_test if g == \"ham\") / n_ham, 4)\n"
+      "question": "On the test set, look only at ham messages. What fraction of them contain the word free? Return the probability of free given ham, not given spam.",
+      "reference": "free_test = [(t, g) for (g, t) in test if \"free\" in t.lower()]\nn_free = len(free_test)\nn_ham = sum(1 for _, g in free_test if g == \"ham\")\nexample = next(t for t, g in free_test if g == \"ham\")\n# e.g. \"When you get free, call me\" / \"Now am free call me pa.\"\n\nn_spam = sum(1 for g in gold if g == \"spam\")\nn_ham = sum(1 for g in gold if g == \"ham\")\np_fs = round(sum(1 for _, g in free_test if g == \"spam\") / n_spam, 4)\np_fh = round(n_ham and sum(1 for _, g in free_test if g == \"ham\") / n_ham, 4)\np_free_ham = p_fh\n",
+      "cases": [
+        {
+          "input": "One of ten ham messages contains the word free.",
+          "expect": "The probability is free given ham, not free given spam."
+        },
+        {
+          "input": "No ham message contains free.",
+          "expect": "The probability is zero."
+        }
+      ]
     }
   }
 }

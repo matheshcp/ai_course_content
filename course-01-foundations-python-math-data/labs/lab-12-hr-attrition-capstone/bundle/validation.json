@@ -1,16 +1,46 @@
 {
   "exercises": {
     "leavers": {
-      "question": "How many leavers is that in absolute terms?",
-      "reference": "rates = df.groupby(\"OverTime\")[\"Attrition\"].apply(lambda s: (s == \"Yes\").mean())\ngap = rates[\"Yes\"] - rates[\"No\"]\n\nn_leavers = int((df[\"Attrition\"] == \"Yes\").sum())\n"
+      "question": "Count the employees whose Attrition is Yes. Return that number of leavers, not the attrition rate.",
+      "reference": "rates = df.groupby(\"OverTime\")[\"Attrition\"].apply(lambda s: (s == \"Yes\").mean())\ngap = rates[\"Yes\"] - rates[\"No\"]\n\nn_leavers = int((df[\"Attrition\"] == \"Yes\").sum())\n",
+      "cases": [
+        {
+          "input": "An attrition rate of 0.1 among 100 employees.",
+          "expect": "The result is the absolute count of leavers, 10, not the rate."
+        },
+        {
+          "input": "Nobody left.",
+          "expect": "The count is zero."
+        }
+      ]
     },
     "quartile_gap": {
-      "question": "How large is the Q4 minus Q2 attrition gap?",
-      "reference": "df[\"IncomeQ\"] = pd.qcut(df[\"MonthlyIncome\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\n\nbq = df.groupby(\"IncomeQ\", observed=True)[\"Attrition\"].apply(lambda s: (s == \"Yes\").mean()).round(4)\nqgap = round(bq[\"Q4\"] - bq[\"Q2\"], 4)\n"
+      "question": "Compare attrition in income quartile Q4 with attrition in Q2. Return the Q4 rate minus the Q2 rate.",
+      "reference": "df[\"IncomeQ\"] = pd.qcut(df[\"MonthlyIncome\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\n\nbq = df.groupby(\"IncomeQ\", observed=True)[\"Attrition\"].apply(lambda s: (s == \"Yes\").mean()).round(4)\nqgap = round(bq[\"Q4\"] - bq[\"Q2\"], 4)\n",
+      "cases": [
+        {
+          "input": "Q4 attrition 0.4 and Q2 attrition 0.1.",
+          "expect": "The gap is Q4 minus Q2, not the reverse."
+        },
+        {
+          "input": "The two quartiles have the same attrition.",
+          "expect": "The gap is zero."
+        }
+      ]
     },
     "rd_leavers": {
-      "question": "How many R and D leavers?",
-      "reference": "# Template (fill with your own numbers from above):\nhypotheses = \"\"\"\n1. Reducing mandatory overtime in R&D will cut attrition — OT yes 18.7% vs no 13.9%.\n2. Q4 earners need external-market comp review — Q4 attrition 17.8% vs Q2 12.4%.\n3. Promotion clarity in R&D should be audited — dept rate 16.2% (n=1098).\nValidate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.\n\"\"\"\n\nn_rd = int(((df[\"Department\"] == \"Research & Development\") & (df[\"Attrition\"] == \"Yes\")).sum())\n"
+      "question": "Count only leavers in Research and Development. Return that count. Do not include leavers from other departments.",
+      "reference": "# Template (fill with your own numbers from above):\nhypotheses = \"\"\"\n1. Reducing mandatory overtime in R&D will cut attrition — OT yes 18.7% vs no 13.9%.\n2. Q4 earners need external-market comp review — Q4 attrition 17.8% vs Q2 12.4%.\n3. Promotion clarity in R&D should be audited — dept rate 16.2% (n=1098).\nValidate: matched cohorts / pilot teams / exit-interview themes; not one-shot correlations.\n\"\"\"\n\nn_rd = int(((df[\"Department\"] == \"Research & Development\") & (df[\"Attrition\"] == \"Yes\")).sum())\n",
+      "cases": [
+        {
+          "input": "Five leavers in Research and Development and nine in Sales.",
+          "expect": "The result is the Research and Development count only."
+        },
+        {
+          "input": "No Research and Development leaver.",
+          "expect": "The count is zero."
+        }
+      ]
     }
   }
 }

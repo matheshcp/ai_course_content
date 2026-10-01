@@ -49,7 +49,7 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <li>Open the hosted notebook: <a href="https://colab.research.google.com/github/matheshcp/ai_course_content/blob/main/course-01-foundations-python-math-data/labs/lab-07-iris-deep-dive/lab-07-iris-deep-dive.ipynb">Open in Colab</a> (loads under your Google account; Colab auto-saves a copy to your Drive).</li>
 <li>Run <strong>Cell 0</strong> first — it downloads <code>dataset.zip</code> with wget and unzips it.</li>
 <li><strong>Runtime → Run all</strong> (no GPU required for Course 1).</li>
-<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</li>
+<li>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</li>
 </ol>
 <p style="margin:0.4rem 0 0"><strong>Datasets in this folder:</strong></p>
 <ul style="margin:0.2rem 0; padding-left:1.2rem"><li><code>iris.csv</code></li></ul>
@@ -208,10 +208,10 @@ except ImportError:
 </ul>
 <hr/>
 <h2>Exercises (do these!)</h2>
-<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function. A different implementation is fine. It does not require the same lines of code or an exact number.</p>
+<p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Mean petal_length by species</h3>
 <p>Print mean <code>petal_length</code> for each species (3 d.p.). </p>
-<p><strong>Follow-up:</strong> How far apart are virginica and setosa mean petal lengths?</p>
+<p><strong>Follow-up:</strong> Subtract the setosa mean petal length from the virginica mean petal length. Return how far apart those two means are.</p>
 <details><summary>Hint</summary>
 <p><code>df.groupby("species")["petal_length"].mean().round(3)</code></p>
 </details>
@@ -223,7 +223,7 @@ except ImportError:
 </details>
 <h3>Exercise 3 — 95% CI for virginica sepal_width</h3>
 <p>Using t with df = n−1, report mean and CI to 4 d.p. </p>
-<p><strong>Follow-up:</strong> Re-run the ANOVA yourself — how extreme is F?</p>
+<p><strong>Follow-up:</strong> Run an ANOVA on petal length across the three species. F measures how far apart the group means are compared with the spread inside the groups. Return that F statistic, not the p-value by itself.</p>
 <details><summary>Hint</summary>
 <p><code>mean ± t.ppf(0.975, n-1) * std(ddof=1) / sqrt(n)</code>.</p>
 </details>

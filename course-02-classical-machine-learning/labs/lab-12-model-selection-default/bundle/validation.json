@@ -1,8 +1,18 @@
 {
   "exercises": {
     "calibration_headroom": {
-      "question": "How far is the chosen model's accuracy from a better-calibrated score?",
-      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nfor mp, fp in zip(mean_pred, frac_pos):\n\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\n"
+      "question": "Compare the chosen model's accuracy with a better-calibrated score. Return how far the accuracy sits below that better score, not the accuracy by itself.",
+      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nfor mp, fp in zip(mean_pred, frac_pos):\n\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\n",
+      "cases": [
+        {
+          "input": "Chosen accuracy 0.80 and a better-calibrated score 0.90.",
+          "expect": "The result is the gap, not the accuracy itself."
+        },
+        {
+          "input": "The chosen model already matches the better-calibrated score.",
+          "expect": "The headroom is zero."
+        }
+      ]
     }
   }
 }

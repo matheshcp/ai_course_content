@@ -1,12 +1,32 @@
 {
   "exercises": {
     "churn_rate": {
-      "question": "What fraction of customers churn?",
-      "reference": "churn_rate = y.mean()\nchurn_count = y.sum()\n"
+      "question": "Divide the number of customers who churn by the number of customers. Return that fraction, not the count of churners.",
+      "reference": "churn_rate = y.mean()\nchurn_count = y.sum()\n",
+      "cases": [
+        {
+          "input": "25 churners out of 100 customers.",
+          "expect": "The result is the fraction, not the count."
+        },
+        {
+          "input": "Nobody churns.",
+          "expect": "The fraction is zero."
+        }
+      ]
     },
     "recall_at_best": {
-      "question": "What is the recall at the lowest threshold whose recall is still at least 0.80?",
-      "reference": "thresholds = np.arange(0.1, 0.9, 0.05)\nbest_t = None\nfor t in thresholds:\n    y_pred_t = (y_proba >= t).astype(int)\n    if recall_score(y_test, y_pred_t) >= 0.80:\n        best_t = t\n\ny_pred_best = (y_proba >= best_t).astype(int)\nprec_at_best = precision_score(y_test, y_pred_best)\nrec_at_best = recall_score(y_test, y_pred_best)\n"
+      "question": "Look through the decision thresholds and take the lowest one whose recall is still at least 0.80. Return the recall at that threshold, not the precision.",
+      "reference": "thresholds = np.arange(0.1, 0.9, 0.05)\nbest_t = None\nfor t in thresholds:\n    y_pred_t = (y_proba >= t).astype(int)\n    if recall_score(y_test, y_pred_t) >= 0.80:\n        best_t = t\n\ny_pred_best = (y_proba >= best_t).astype(int)\nprec_at_best = precision_score(y_test, y_pred_best)\nrec_at_best = recall_score(y_test, y_pred_best)\n",
+      "cases": [
+        {
+          "input": "One threshold has recall 0.90, a lower one has 0.80, and another has 0.70.",
+          "expect": "Use the lowest threshold whose recall is still at least 0.80, and return that recall, not the precision."
+        },
+        {
+          "input": "No threshold reaches recall 0.80.",
+          "expect": "Do not return a threshold that misses the recall requirement."
+        }
+      ]
     }
   }
 }

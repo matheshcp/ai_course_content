@@ -1,16 +1,46 @@
 {
   "exercises": {
     "sleeps": {
-      "question": "How many seconds did the demo backoff sleep in total?",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n"
+      "question": "The demo backoff sleeps on failed tries before a request succeeds. Add those sleep times. Return the total seconds, not the attempt number of the success.",
+      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n",
+      "cases": [
+        {
+          "input": "The demo sleeps 1 second, then 2 seconds, then succeeds.",
+          "expect": "The result is the total sleep, 3 seconds, not the attempt number."
+        },
+        {
+          "input": "The first attempt succeeds.",
+          "expect": "The total sleep is zero."
+        }
+      ]
     },
     "success_attempt": {
-      "question": "On which attempt did the demo backoff succeed?",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n"
+      "question": "The demo backoff fails, sleeps, and then succeeds. Return the attempt value the demo reports for that success. Do not return the total seconds slept.",
+      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\nsuccess_attempt = data[\"attempt\"]\n",
+      "cases": [
+        {
+          "input": "Two failures, then success.",
+          "expect": "The result is attempt 3, not the seconds slept."
+        },
+        {
+          "input": "The first attempt succeeds.",
+          "expect": "The attempt number is 1."
+        }
+      ]
     },
     "n_days": {
-      "question": "Does the number of parsed rows equal the number of days in the API response?",
-      "reference": "daily = payload[\"daily\"]\nrows = [\n    {\"date\": t,\n     \"tmax\": daily[\"temperature_2m_max\"][i],\n     \"tmin\": daily[\"temperature_2m_min\"][i],\n     \"precip_prob\": daily[\"precipitation_probability_max\"][i]}\n    for i, t in enumerate(daily[\"time\"])\n]\nn_days = len(rows) == len(daily[\"time\"])\n"
+      "question": "Count the rows you parsed from the API and count the days in the response. Return whether those two counts are equal.",
+      "reference": "daily = payload[\"daily\"]\nrows = [\n    {\"date\": t,\n     \"tmax\": daily[\"temperature_2m_max\"][i],\n     \"tmin\": daily[\"temperature_2m_min\"][i],\n     \"precip_prob\": daily[\"precipitation_probability_max\"][i]}\n    for i, t in enumerate(daily[\"time\"])\n]\nn_days = len(rows) == len(daily[\"time\"])\n",
+      "cases": [
+        {
+          "input": "Seven parsed rows and seven days in the response.",
+          "expect": "The result is true because the counts match."
+        },
+        {
+          "input": "Six parsed rows and seven days in the response.",
+          "expect": "The result is false."
+        }
+      ]
     }
   }
 }

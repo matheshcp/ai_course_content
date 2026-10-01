@@ -1,16 +1,46 @@
 {
   "exercises": {
     "r2": {
-      "question": "What fraction of Sales variance does TV alone explain (R squared)?",
-      "reference": "r = round(float(corr.loc[\"TV\", \"Sales\"]), 4)\nr2 = round(r ** 2, 4)\n"
+      "question": "Using TV spend alone, what fraction of the variation in Sales does TV explain? Return that R squared. Do not return the slope.",
+      "reference": "r = round(float(corr.loc[\"TV\", \"Sales\"]), 4)\nr2 = round(r ** 2, 4)\n",
+      "cases": [
+        {
+          "input": "TV predicts Sales perfectly on a tiny set.",
+          "expect": "The result is the fraction of variance explained, not the slope."
+        },
+        {
+          "input": "TV and Sales are unrelated.",
+          "expect": "The fraction is near zero."
+        }
+      ]
     },
     "tv_lift": {
-      "question": "How large is the Q4 minus Q1 mean-sales lift?",
-      "reference": "s = df.corr(numeric_only=True)[\"Sales\"].drop(\"Sales\")\ntop = s.abs().idxmax()\n\nlift = round(tv_bins[\"mean\"][\"Q4\"] - tv_bins[\"mean\"][\"Q1\"], 3)\n"
+      "question": "Compare mean Sales when TV spend is in Q4 with mean Sales when TV spend is in Q1. Return the Q4 mean minus the Q1 mean.",
+      "reference": "s = df.corr(numeric_only=True)[\"Sales\"].drop(\"Sales\")\ntop = s.abs().idxmax()\n\nlift = round(tv_bins[\"mean\"][\"Q4\"] - tv_bins[\"mean\"][\"Q1\"], 3)\n",
+      "cases": [
+        {
+          "input": "Q4 mean sales 20 and Q1 mean sales 12.",
+          "expect": "The lift is Q4 minus Q1, not Q1 minus Q4."
+        },
+        {
+          "input": "The two quarter means are equal.",
+          "expect": "The lift is zero."
+        }
+      ]
     },
     "shared": {
-      "question": "How much variance do Radio and Newspaper share (r squared)?",
-      "reference": "df[\"TV_bin\"] = pd.qcut(df[\"TV\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\n\nr_rn = round(float(corr.loc[\"Radio\", \"Newspaper\"]), 4)\nshared = round(r_rn ** 2, 4)\n"
+      "question": "Compute the correlation of Radio and Newspaper, then square it. That r squared is the variance those two columns share. Return that shared variance, not a TV effect.",
+      "reference": "df[\"TV_bin\"] = pd.qcut(df[\"TV\"], 4, labels=[\"Q1\", \"Q2\", \"Q3\", \"Q4\"])\n\nr_rn = round(float(corr.loc[\"Radio\", \"Newspaper\"]), 4)\nshared = round(r_rn ** 2, 4)\n",
+      "cases": [
+        {
+          "input": "Radio and Newspaper move together.",
+          "expect": "The result is the variance they share, not a TV effect."
+        },
+        {
+          "input": "Radio and Newspaper are unrelated.",
+          "expect": "The shared variance is near zero."
+        }
+      ]
     }
   }
 }
