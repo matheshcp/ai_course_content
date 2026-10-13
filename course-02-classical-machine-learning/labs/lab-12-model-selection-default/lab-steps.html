@@ -199,15 +199,12 @@ print(&quot;saved lab12_reliability.png&quot;)</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — Majority-class baseline</h3>
-<p>Compute the accuracy of always predicting "no default" on the test set. </p>
-<p><strong>Follow-up:</strong> What is the test-set default rate?</p>
-<h3>Exercise 2 — PR-AUC for all three models</h3>
-<p>Report PR-AUC for Logistic, RandomForest, and GradientBoosting on the test set. </p>
-<p><strong>Follow-up:</strong> Which model wins on ROC-AUC?</p>
-<h3>Exercise 3 — Reliability diagram</h3>
-<p>Sketch the reliability diagram and report the logistic model's mean predicted probability vs actual fraction of positives in the highest bin. </p>
-<p><strong>Follow-up:</strong> Is logistic regression close to the diagonal in the high bins?</p>
+<h3>Exercise 1 — Calibration headroom</h3>
+<p>Compare the chosen model's accuracy with a better-calibrated score from the reliability diagram.</p>
+<p><strong>Follow-up:</strong> Compare the chosen model's accuracy with a better-calibrated score. Return how far the accuracy sits below that better score, not the accuracy by itself.</p>
+<details><summary>Hint</summary>
+<p><code>calibration_curve(y_test, probs["Logistic"], n_bins=10)</code> gives predicted probability versus the actual fraction of positives. The follow-up wants the gap under the better score, not the accuracy number alone.</p>
+</details>
 <hr/>
 <h3>What to learn next</h3>
 <ul>

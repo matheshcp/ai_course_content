@@ -275,15 +275,18 @@ print(card[:600])</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — Reproduce the metrics with the new encoding</h3>
-<p>Using the pipeline encoding from section 2, report test ROC-AUC and PR-AUC for both models. </p>
-<p><strong>Follow-up:</strong> Which model has higher PR-AUC?</p>
-<h3>Exercise 2 — Fairness slice table</h3>
-<p>Build a table of churn rate by <code>Contract</code> and by <code>gender</code>. </p>
-<p><strong>Follow-up:</strong> Which slice has the highest churn rate?</p>
-<h3>Exercise 3 — Fill the model card</h3>
-<p>Run the model-card writer and verify the file exists with all five required sections. </p>
-<p><strong>Follow-up:</strong> What is the F1-optimal threshold?</p>
+<h3>Exercise 1 — PR-AUC gap</h3>
+<p>Using the pipeline encoding from section 2, compute test PR-AUC for both models.</p>
+<p><strong>Follow-up:</strong> Compare the two models on PR-AUC. Return how much higher the better score is than the other score, not either score by itself.</p>
+<details><summary>Hint</summary>
+<p><code>average_precision_score</code> on each model's positive-class probabilities, then subtract the lower score from the higher score.</p>
+</details>
+<h3>Exercise 2 — F1-optimal threshold</h3>
+<p>Sweep decision thresholds on the gradient boosting scores and compute F1 at each one.</p>
+<p><strong>Follow-up:</strong> Compute F1 at each decision threshold. Return the threshold where F1 is highest, not the F1 number itself.</p>
+<details><summary>Hint</summary>
+<p><code>precision_recall_curve</code> returns thresholds aligned with <code>prec[:-1]</code> and <code>rec[:-1]</code>. F1 is <code>2 * prec * rec / (prec + rec)</code>. Return <code>thr</code> at the best F1, not the F1 value.</p>
+</details>
 <hr/>
 <h3>What to learn next</h3>
 <ul>

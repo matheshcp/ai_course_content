@@ -196,17 +196,17 @@ print(&quot;Saved mall_segments.png&quot;)</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — Elbow Method</h3>
-<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most) and report the inertia at k=5. </p>
+<h3>Exercise 1 — Elbow method</h3>
+<p>Run K-Means for k = 1 through 10 and plot inertia vs k. Identify the elbow (the k where the curve bends most).</p>
 <p><strong>Follow-up:</strong> Fit k-means with one cluster. Return the inertia at k=1, the total squared distance to that center. Do not return the silhouette, or the inertia at another k.</p>
-<h3>Exercise 2 — Best k by Silhouette</h3>
-<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score, and what is that score? </p>
-<p><strong>Follow-up:</strong> Fit k-means with five clusters. Return the silhouette score at k=5. Do not return the inertia.</p>
-<h3>Exercise 3 — Name the Segments</h3>
-<p>Fit K-Means with k=5, inverse-transform the centroids, and write a one-line marketing persona for each cluster (e.g., "Young Enthusiasts: age ~25, high spend"). Report the cluster sizes. </p>
-<p><strong>Follow-up:</strong> Which cluster has the highest average income?</p>
 <details><summary>Hint</summary>
-<p>For Exercise 3, use <code>scaler.inverse_transform(km.cluster_centers_)</code> to get centroids in original units, then loop over clusters and print <code>mall[labels == c].mean()</code>.</p>
+<p><code>KMeans(n_clusters=1, random_state=42, n_init=10).fit(X_scaled).inertia_</code>.</p>
+</details>
+<h3>Exercise 2 — Silhouette at k=5</h3>
+<p>Compute the silhouette score for k = 2 through 10. Which k has the highest score?</p>
+<p><strong>Follow-up:</strong> Fit k-means with five clusters. Return the silhouette score at k=5. Do not return the inertia.</p>
+<details><summary>Hint</summary>
+<p><code>silhouette_score(X_scaled, KMeans(n_clusters=5, random_state=42, n_init=10).fit(X_scaled).labels_)</code>.</p>
 </details>
 <hr/>
 <h3>What to learn next</h3>

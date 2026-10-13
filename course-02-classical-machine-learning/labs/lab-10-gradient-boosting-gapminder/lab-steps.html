@@ -173,15 +173,12 @@ print(&quot;saved lab10_partial_dependence.png&quot;)</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — Find the tercile cut points</h3>
-<p>Compute the exact <code>lifeExp</code> values at the 1/3 and 2/3 quantiles that <code>pd.qcut</code> used. </p>
-<p><strong>Follow-up:</strong> How many rows fall in each band?</p>
-<h3>Exercise 2 — Honest test accuracy</h3>
-<p>Refit the GBM <strong>without</strong> <code>year</code> (features: <code>gdpPercap</code>, <code>pop</code>) and report test accuracy. </p>
-<p><strong>Follow-up:</strong> How much accuracy did the year leak buy you?</p>
-<h3>Exercise 3 — Partial dependence endpoints</h3>
-<p>Using the PD array from section 4, print the softmax probability for the <strong>High</strong> band at the smallest and largest <code>gdpPercap</code> grid points. </p>
-<p><strong>Follow-up:</strong> Does the High-band curve rise overall?</p>
+<h3>Exercise 1 — Year-leak accuracy gap</h3>
+<p>Score a gradient boosting model on <code>gdpPercap</code> and <code>pop</code> only, then score the model that also uses <code>year</code>.</p>
+<p><strong>Follow-up:</strong> Score the honest model, then score the model that uses the leaked feature. Return how much the leaked score improves on the honest score, not the leaked score by itself.</p>
+<details><summary>Hint</summary>
+<p>Subtract the honest test accuracy from the leaked test accuracy. Do not return the leaked accuracy alone.</p>
+</details>
 <hr/>
 <h3>What to learn next</h3>
 <ul>

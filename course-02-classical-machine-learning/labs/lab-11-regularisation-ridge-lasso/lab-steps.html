@@ -197,14 +197,14 @@ print(nonzero.head(8).round(0))</code></pre>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
 <h3>Exercise 1 — Locate the overfitting knee</h3>
-<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000. </p>
+<p>From the degree sweep in section 2, find the degree with the <strong>lowest test MAE</strong> and the degree where the overfit gap first exceeds $10,000.</p>
 <p><strong>Follow-up:</strong> Expand the input with a polynomial of degree 10. Return how many features that degree creates. Do not return the degree with the lowest error.</p>
 <h3>Exercise 2 — Best ridge alpha</h3>
-<p>Run the ridge grid search and report the best alpha and its CV MAE. </p>
-<p><strong>Follow-up:</strong> Does ridge beat unregularised degree-10 OLS on test MAE?</p>
+<p>Run the ridge grid search and report the best alpha and its CV MAE.</p>
+<p><strong>Follow-up:</strong> Subtract the ridge test MAE from the degree-10 linear regression test MAE. Return how much lower the ridge error is. Do not use the degree-3 error.</p>
 <h3>Exercise 3 — Lasso sparsity</h3>
-<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature. </p>
-<p><strong>Follow-up:</strong> Refit lasso with <code>alpha=10000</code> — how many survive?</p>
+<p>Report how many of the 34 degree-3 coefficients are non-zero at lasso's best alpha, and name the top feature.</p>
+<p><strong>Follow-up:</strong> Refit lasso with alpha set to 10000. Return how many coefficients are still non-zero. Do not use a smaller alpha.</p>
 <hr/>
 <h3>What to learn next</h3>
 <ul>

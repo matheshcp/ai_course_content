@@ -68,8 +68,8 @@ footer { font-family: system-ui, sans-serif; font-size: 0.85rem; color: #555; ma
 <tr><td>ReLU / softmax</td><td>Section 1</td><td>Non-linearity + probability distribution</td></tr>
 <tr><td>Cross-entropy loss</td><td>Section 2</td><td>How wrong are we, numerically?</td></tr>
 <tr><td>Backpropagation</td><td>Section 2</td><td>Chain rule assigns blame to each weight</td></tr>
-<tr><td>Learning rate</td><td>Exercise 2</td><td>Too big diverges, too small crawls</td></tr>
-<tr><td>Confusion matrix</td><td>Exercise 3</td><td>Which digits get mixed up?</td></tr>
+<tr><td>Learning rate</td><td>Section 2</td><td>Too big diverges, too small crawls</td></tr>
+<tr><td>Confusion matrix</td><td>Exercise 2</td><td>Which digits get mixed up?</td></tr>
 </tbody></table>
 <hr/>
 <h2>1. From Perceptron to MLP: The Forward Pass</h2>
@@ -200,17 +200,17 @@ print(&quot;Saved mnist_training_curve.png&quot;)</code></pre>
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — 200-Epoch Training Curve</h3>
-<p>Run the training loop above and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90. </p>
-<p><strong>Follow-up:</strong> What is the loss value at epoch 0, and why is it close to 2.30?</p>
-<h3>Exercise 2 — Learning Rate Showdown</h3>
-<p>Train two identical networks (same seed) with <code>lr=0.1</code> and <code>lr=0.01</code> for 200 epochs each. Plot both accuracy curves on the same axes. Report the final accuracy for each. </p>
-<p><strong>Follow-up:</strong> At epoch 50, what is the accuracy gap between the two?</p>
-<h3>Exercise 3 — Confusion Matrix: 3 vs 8</h3>
-<p>Digits 3 and 8 are the most commonly confused pair. Train the network, then build a 2×2 confusion matrix using only the test rows whose true label is 3 or 8. Report the matrix and the accuracy on this subset. </p>
-<p><strong>Follow-up:</strong> How many true 8s were misclassified as 3?</p>
+<h3>Exercise 1 — 200-epoch training curve</h3>
+<p>Run the training loop and plot both loss and accuracy over 200 epochs. Report the final accuracy and the epoch where accuracy first exceeds 0.90.</p>
+<p><strong>Follow-up:</strong> Return the cross-entropy loss after the first training epoch. Do not return the accuracy, and do not return the loss from a later epoch.</p>
 <details><summary>Hint</summary>
-<p>For Exercise 3, filter with <code>mask = (y == 3) | (y == 8)</code>, then loop over <code>(true, pred)</code> pairs and increment <code>cm[int(true==8), int(pred==8)]</code>.</p>
+<p>The loss list is appended once per epoch. The first entry is the loss after epoch 1, not the accuracy curve.</p>
+</details>
+<h3>Exercise 2 — Eights predicted as threes</h3>
+<p>After training, count images whose true digit is 8 and whose predicted digit is 3.</p>
+<p><strong>Follow-up:</strong> Count images whose true digit is 8 and whose predicted digit is 3. Return that count. Do not count eights labeled as another digit, or other digits labeled as 3.</p>
+<details><summary>Hint</summary>
+<p><code>pred = probs.argmax(axis=1)</code>, then <code>int(((y == 8) &amp; (pred == 3)).sum())</code>.</p>
 </details>
 <hr/>
 <h3>What to learn next</h3>

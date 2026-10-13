@@ -274,51 +274,17 @@ print(f&quot;\nHighest threshold with recall &gt;= {target_recall}: {best_thresh
 <hr/>
 <h2>Exercises (do these!)</h2>
 <p>Do not modify the validation function. Write your code in the exercise cells, run those cells to verify, then run the validation cell. It checks the logic of your function against small cases. A different implementation is fine. It does not require the same lines of code or an exact number. If a check fails, the lab page says what is wrong and what to change. It does not give the answer.</p>
-<h3>Exercise 1 — Churn Base Rate</h3>
-<p>What percentage of customers in the dataset churned? </p>
-<p><strong>Follow-up:</strong> Why is the base rate important for evaluating classifier performance?</p>
-<h3>Exercise 2 — Precision and Recall at Threshold 0.5</h3>
-<p>Compute precision and recall using the default 0.5 threshold. </p>
-<p><strong>Follow-up:</strong> Which metric matters more for a retention campaign — precision or recall?</p>
-<h3>Exercise 3 — Threshold for Recall ≥ 0.80</h3>
-<p>Find the highest threshold that achieves recall of at least 0.80. </p>
-<p><strong>Follow-up:</strong> What happens to precision at this threshold?</p>
+<h3>Exercise 1 — Churn base rate</h3>
+<p>What share of customers in the dataset churned?</p>
+<p><strong>Follow-up:</strong> Divide the number of customers who churn by the number of customers. Return that fraction, not the count of churners.</p>
 <details><summary>Hint</summary>
-<pre><code class="language-python">import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import precision_score, recall_score
-
-df = pd.read_csv(r&quot;Telco-Customer-Churn.csv&quot;)
-df[&quot;TotalCharges&quot;] = pd.to_numeric(df[&quot;TotalCharges&quot;], errors=&quot;coerce&quot;)
-df[&quot;TotalCharges&quot;] = df[&quot;TotalCharges&quot;].fillna(0)
-df = df.drop(columns=[&quot;customerID&quot;])
-df[&quot;Churn&quot;] = df[&quot;Churn&quot;].map({&quot;Yes&quot;: 1, &quot;No&quot;: 0})
-X = df.drop(columns=[&quot;Churn&quot;])
-y = df[&quot;Churn&quot;]
-cat_cols = X.select_dtypes(include=&quot;object&quot;).columns.tolist()
-X = pd.get_dummies(X, columns=cat_cols, drop_first=True)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-model = LogisticRegression(max_iter=1000, random_state=42)
-model.fit(X_train, y_train)
-y_proba = model.predict_proba(X_test)[:, 1]
-
-# Exercise 1
-print(f&quot;Churn rate: {y.mean():.4f}&quot;)
-print(f&quot;Churn count: {y.sum()} / {len(y)}&quot;)
-
-# Exercise 2
-y_pred = (y_proba &gt;= 0.5).astype(int)
-print(f&quot;Precision: {precision_score(y_test, y_pred):.4f}&quot;)
-print(f&quot;Recall:    {recall_score(y_test, y_pred):.4f}&quot;)
-
-# Exercise 3
-for t in np.arange(0.1, 0.9, 0.05):
-    y_pred_t = (y_proba &gt;= t).astype(int)
-    r = recall_score(y_test, y_pred_t)
-    if r &gt;= 0.80:
-        print(f&quot;Threshold {t:.2f}: recall = {r:.4f}&quot;)</code></pre>
+<p><code>y.mean()</code> is the fraction. <code>y.sum()</code> is the count.</p>
+</details>
+<h3>Exercise 2 — Threshold for recall ≥ 0.80</h3>
+<p>Sweep decision thresholds and keep the lowest one whose recall is still at least 0.80.</p>
+<p><strong>Follow-up:</strong> Look through the decision thresholds and take the lowest one whose recall is still at least 0.80. Return the recall at that threshold, not the precision.</p>
+<details><summary>Hint</summary>
+<p>Loop <code>np.arange(0.1, 0.9, 0.05)</code>, predict with <code>(y_proba &gt;= t)</code>, and keep <code>recall_score</code> once it is still at least 0.80. Return that recall.</p>
 </details>
 <hr/>
 <h3>What to learn next</h3>
