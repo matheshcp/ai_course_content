@@ -1,8 +1,8 @@
 {
   "exercises": {
     "sleeps": {
-      "question": "The demo backoff sleeps on failed tries before a request succeeds. Add those sleep times. Return the total seconds, not the attempt number of the success.",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\n\nwaited = sum(schedule)\n",
+      "question": "Sum only the backoff sleeps that occur before the request succeeds. Each failed try i, counted from 0, sleeps 2**i seconds, and only when another try follows. Do not add a sleep for the successful try. Return the total seconds, not the attempt number. When the first try succeeds, the total is zero.",
+      "reference": "def sleeps():\n    total = 0\n    for i, ok in enumerate(outcomes):\n        if ok:\n            return total\n        if i + 1 < len(outcomes):\n            total += 2 ** i\n    return total\n",
       "cases": [
         {
           "input": "The demo sleeps 1 second, then 2 seconds, then succeeds.",
@@ -15,8 +15,8 @@
       ]
     },
     "success_attempt": {
-      "question": "The demo backoff fails, sleeps, and then succeeds. Return the attempt value the demo reports for that success. Do not return the total seconds slept.",
-      "reference": "import time\ndef retry_demo(max_retries=4, sleep=time.sleep):\n    sleeps = []\n    for attempt in range(max_retries):\n        if attempt < 2:\n            w = 2 ** attempt\n            sleeps.append(w)\n            sleep(w)\n            continue\n        return {\"ok\": True, \"attempt\": attempt}, sleeps\n    return None, sleeps\n# Use real time.sleep in production; in tests inject sleep=lambda s: None.\ndata, schedule = retry_demo(sleep=lambda s: None)\nsuccess_attempt = data[\"attempt\"]\n",
+      "question": "Return the try on which the request succeeds, counting the first try as 1. Compute that try from the retry outcomes. Do not return the seconds slept, and do not return a fixed number.",
+      "reference": "def success_attempt():\n    for i, ok in enumerate(outcomes):\n        if ok:\n            return i + 1\n    return None\n",
       "cases": [
         {
           "input": "Two failures, then success.",
