@@ -1,15 +1,15 @@
 {
   "exercises": {
     "calibration_headroom": {
-      "question": "Compare the chosen model's accuracy with a better-calibrated score. Return how far the accuracy sits below that better score, not the accuracy by itself.",
-      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nfor mp, fp in zip(mean_pred, frac_pos):\n\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\n",
+      "question": "Using the chosen model's predicted probabilities, compare the observed fraction of defaults with the mean predicted probability in each calibration bin where that mean is above 0.5. Return the mean of those absolute differences. When the observed fraction matches the mean prediction in every such bin, the result is zero. Do not subtract classification accuracies.",
+      "reference": "frac_pos, mean_pred = calibration_curve(y_test, probs[\"Logistic\"], n_bins=10)\nhigh = mean_pred > 0.5\ndev = np.abs(frac_pos[high] - mean_pred[high])\ncalibration_headroom = float(np.mean(dev)) if np.any(high) else 0.0\n",
       "cases": [
         {
-          "input": "Chosen accuracy 0.80 and a better-calibrated score 0.90.",
-          "expect": "The result is the gap, not the accuracy itself."
+          "input": "Bins above 0.5 where the observed default rate differs from the mean predicted probability.",
+          "expect": "The result is the mean absolute gap between observed outcomes and mean predictions in those bins, not an accuracy."
         },
         {
-          "input": "The chosen model already matches the better-calibrated score.",
+          "input": "In every bin above 0.5, the observed default rate equals the mean predicted probability.",
           "expect": "The headroom is zero."
         }
       ]
